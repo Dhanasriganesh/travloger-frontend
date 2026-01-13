@@ -34,7 +34,7 @@ const Activities: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null)
-  
+
   const [formData, setFormData] = useState({
     name: '',
     state: '',
@@ -52,12 +52,12 @@ const Activities: React.FC = () => {
     notes: '',
     status: 'Active'
   })
-  
+
   const [destinations, setDestinations] = useState<any[]>([])
   const [states, setStates] = useState<any[]>([])
   const [destinationInput, setDestinationInput] = useState('')
   const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false)
-  const [suppliers, setSuppliers] = useState<{id:number, name:string, city:string}[]>([])
+  const [suppliers, setSuppliers] = useState<{ id: number, name: string, city: string }[]>([])
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
 
   useEffect(() => {
@@ -73,13 +73,13 @@ const Activities: React.FC = () => {
       setDestinations([])
     }
   }, [formData.state])
-  
+
   const filteredSuppliers = useMemo(() => {
     const target = formData.destination || destinationInput
     if (!target) return suppliers
     return suppliers.filter(s => (s.city || '').toLowerCase() === target.toLowerCase())
   }, [suppliers, formData.destination, destinationInput])
-  
+
   const fetchSuppliers = async () => {
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
@@ -98,7 +98,7 @@ const Activities: React.FC = () => {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
       const response = await fetch(`${API_URL}/api/states`)
       const data = await response.json()
-      
+
       if (response.ok) {
         setStates(data.states || [])
       }
@@ -113,7 +113,7 @@ const Activities: React.FC = () => {
       const url = state ? `${API_URL}/api/destinations?state=${encodeURIComponent(state)}` : `${API_URL}/api/destinations`
       const response = await fetch(url)
       const data = await response.json()
-      
+
       if (response.ok) {
         setDestinations(data.destinations || [])
       }
@@ -129,7 +129,7 @@ const Activities: React.FC = () => {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
       const response = await fetch(`${API_URL}/api/activities`)
       const data = await response.json()
-      
+
       if (response.ok) {
         setActivities(data.activities || [])
       } else {
@@ -151,7 +151,7 @@ const Activities: React.FC = () => {
     try {
       setSaving(true)
       const method = editingActivity ? 'PUT' : 'POST'
-      const body = editingActivity 
+      const body = editingActivity
         ? { id: editingActivity.id, ...formData, supplierId: formData.supplierId ? Number(formData.supplierId) : null, timeSlots: formData.timeSlots ? formData.timeSlots.split(',').map(s => s.trim()).filter(Boolean) : [], gallery: formData.gallery }
         : { ...formData, supplierId: formData.supplierId ? Number(formData.supplierId) : null, timeSlots: formData.timeSlots ? formData.timeSlots.split(',').map(s => s.trim()).filter(Boolean) : [], gallery: formData.gallery }
 
@@ -167,7 +167,7 @@ const Activities: React.FC = () => {
       if (response.ok) {
         await fetchActivities() // Refresh the list
         setShowAddForm(false)
-        setFormData({ name: '', destination: '', supplierId: '', type: '', duration: '', inclusions: '', exclusions: '', price: 0, costType: 'per_person', operatingDays: '', timeSlots: '', gallery: [], notes: '', status: 'Active' })
+        setFormData({ name: '', state: '', destination: '', supplierId: '', type: '', duration: '', inclusions: '', exclusions: '', price: 0, costType: 'per_person', operatingDays: '', timeSlots: '', gallery: [], notes: '', status: 'Active' })
         setEditingActivity(null)
         alert(data.message || 'Activity saved successfully')
       } else {
@@ -368,7 +368,7 @@ const Activities: React.FC = () => {
                         {activity.date}
                       </td>
                       <td className="px-3 py-4 text-sm text-gray-500">
-                        <button 
+                        <button
                           onClick={() => handleEditClick(activity)}
                           className="hover:text-gray-700"
                         >
@@ -376,7 +376,7 @@ const Activities: React.FC = () => {
                         </button>
                       </td>
                       <td className="px-3 py-4 text-sm text-gray-500">
-                        <button 
+                        <button
                           onClick={() => handleDeleteActivity(activity.id, activity.name)}
                           className="hover:text-red-600"
                         >
@@ -401,11 +401,11 @@ const Activities: React.FC = () => {
       {showAddForm && (
         <div className="fixed inset-0 z-50 overflow-hidden">
           {/* Backdrop */}
-          <div 
+          <div
             className="absolute inset-0 backdrop-blur-sm"
             onClick={() => setShowAddForm(false)}
           />
-          
+
           {/* Sliding Panel */}
           <div className="absolute right-0 top-0 h-full w-[500px] bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
             <div className="flex flex-col h-full">
@@ -433,94 +433,94 @@ const Activities: React.FC = () => {
                     </label>
                     <div className="relative">
                       <div className="absolute left-0 top-0 h-full w-0.5 bg-red-500 rounded-l-sm"></div>
-                      <Input 
-                        type="text" 
+                      <Input
+                        type="text"
                         className="pl-3.5"
                         placeholder="Enter activity name"
                         value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       />
                     </div>
                   </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        State <span className="text-red-500">*</span>
-                      </label>
-                      <select 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={formData.state}
-                        onChange={(e) => {
-                          setFormData({...formData, state: e.target.value, destination: '', supplierId: ''})
-                          setDestinationInput('')
-                        }}
-                      >
-                        <option value="">Select state</option>
-                        {states.filter(s => s.status === 'Active').map(state => (
-                          <option key={state.id} value={state.name}>{state.name}</option>
-                        ))}
-                      </select>
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      State <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={formData.state}
+                      onChange={(e) => {
+                        setFormData({ ...formData, state: e.target.value, destination: '', supplierId: '' })
+                        setDestinationInput('')
+                      }}
+                    >
+                      <option value="">Select state</option>
+                      {states.filter(s => s.status === 'Active').map(state => (
+                        <option key={state.id} value={state.name}>{state.name}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Destination <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <Input 
-                          type="text" 
-                          placeholder={formData.state ? "Type to search destinations..." : "Select state first"}
-                          value={destinationInput}
-                          onChange={(e) => {
-                            setDestinationInput(e.target.value)
-                            setShowDestinationSuggestions(true)
-                          }}
-                          onFocus={() => formData.state && setShowDestinationSuggestions(true)}
-                          className="border-l-2 border-red-500"
-                          disabled={!formData.state}
-                        />
-                        
-                        {showDestinationSuggestions && destinationInput && formData.state && (
-                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                            {destinations
-                              .filter(d => {
-                                const destName = (d.name || d).toLowerCase()
-                                return destName.includes(destinationInput.toLowerCase())
-                              })
-                              .map((destination, idx) => {
-                                const destName = destination.name || destination
-                                return (
-                                  <button
-                                    key={destination.id || idx}
-                                    type="button"
-                                    className="w-full text-left px-4 py-2 hover:bg-blue-50 text-sm"
-                                    onClick={() => {
-                                      setFormData({...formData, destination: destName, supplierId: ''})
-                                      setDestinationInput(destName)
-                                      setShowDestinationSuggestions(false)
-                                    }}
-                                  >
-                                    {destName}
-                                  </button>
-                                )
-                              })}
-                            {destinations.filter(d => {
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Destination <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        placeholder={formData.state ? "Type to search destinations..." : "Select state first"}
+                        value={destinationInput}
+                        onChange={(e) => {
+                          setDestinationInput(e.target.value)
+                          setShowDestinationSuggestions(true)
+                        }}
+                        onFocus={() => formData.state && setShowDestinationSuggestions(true)}
+                        className="border-l-2 border-red-500"
+                        disabled={!formData.state}
+                      />
+
+                      {showDestinationSuggestions && destinationInput && formData.state && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                          {destinations
+                            .filter(d => {
                               const destName = (d.name || d).toLowerCase()
                               return destName.includes(destinationInput.toLowerCase())
-                            }).length === 0 && (
+                            })
+                            .map((destination, idx) => {
+                              const destName = destination.name || destination
+                              return (
+                                <button
+                                  key={destination.id || idx}
+                                  type="button"
+                                  className="w-full text-left px-4 py-2 hover:bg-blue-50 text-sm"
+                                  onClick={() => {
+                                    setFormData({ ...formData, destination: destName, supplierId: '' })
+                                    setDestinationInput(destName)
+                                    setShowDestinationSuggestions(false)
+                                  }}
+                                >
+                                  {destName}
+                                </button>
+                              )
+                            })}
+                          {destinations.filter(d => {
+                            const destName = (d.name || d).toLowerCase()
+                            return destName.includes(destinationInput.toLowerCase())
+                          }).length === 0 && (
                               <div className="px-4 py-2 text-sm text-gray-500">No destinations found</div>
                             )}
-                          </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
+                  </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Linked Supplier</label>
-                    <select 
+                    <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.supplierId}
-                      onChange={(e) => setFormData({...formData, supplierId: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, supplierId: e.target.value })}
                     >
                       <option value="">Select supplier</option>
                       {filteredSuppliers.map(s => (
@@ -531,10 +531,10 @@ const Activities: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                    <select 
+                    <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.type}
-                      onChange={(e) => setFormData({...formData, type: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                     >
                       <option value="">Select type</option>
                       <option value="Sightseeing">Sightseeing</option>
@@ -547,52 +547,52 @@ const Activities: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
-                    <Input 
-                      type="text" 
+                    <Input
+                      type="text"
                       placeholder="e.g., 2 hours, Half Day, Full Day"
                       value={formData.duration}
-                      onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Inclusions</label>
-                    <textarea 
+                    <textarea
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       rows={2}
                       placeholder="What's included"
                       value={formData.inclusions}
-                      onChange={(e) => setFormData({...formData, inclusions: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, inclusions: e.target.value })}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Exclusions</label>
-                    <textarea 
+                    <textarea
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       rows={2}
                       placeholder="What's excluded"
                       value={formData.exclusions}
-                      onChange={(e) => setFormData({...formData, exclusions: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, exclusions: e.target.value })}
                     />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
-                      <Input 
-                        type="number" 
+                      <Input
+                        type="number"
                         placeholder="Enter price"
                         value={formData.price}
-                        onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value) || 0})}
+                        onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Cost Type</label>
-                      <select 
+                      <select
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={formData.costType}
-                        onChange={(e) => setFormData({...formData, costType: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, costType: e.target.value })}
                       >
                         <option value="per_person">Per Person</option>
                         <option value="per_group">Per Group</option>
@@ -602,21 +602,21 @@ const Activities: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Operating Days</label>
-                    <Input 
-                      type="text" 
+                    <Input
+                      type="text"
                       placeholder="e.g., Monday-Sunday, Daily"
                       value={formData.operatingDays}
-                      onChange={(e) => setFormData({...formData, operatingDays: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, operatingDays: e.target.value })}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Time Slots</label>
-                    <Input 
-                      type="text" 
+                    <Input
+                      type="text"
                       placeholder="e.g., 9:00 AM, 2:00 PM, 6:00 PM (comma separated)"
                       value={formData.timeSlots}
-                      onChange={(e) => setFormData({...formData, timeSlots: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, timeSlots: e.target.value })}
                     />
                   </div>
 
@@ -642,7 +642,7 @@ const Activities: React.FC = () => {
                                 reader.readAsDataURL(f)
                               })
                             })).then(base64Array => {
-                              setFormData({...formData, gallery: base64Array})
+                              setFormData({ ...formData, gallery: base64Array })
                             })
                           }
                         }}
@@ -659,12 +659,12 @@ const Activities: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                    <textarea 
+                    <textarea
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       rows={2}
                       placeholder="Additional notes"
                       value={formData.notes}
-                      onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     />
                   </div>
 
@@ -672,10 +672,10 @@ const Activities: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Status <span className="text-red-500">*</span>
                     </label>
-                    <select 
+                    <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.status}
-                      onChange={(e) => setFormData({...formData, status: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                     >
                       <option value="Active">Active</option>
                       <option value="Inactive">Inactive</option>
