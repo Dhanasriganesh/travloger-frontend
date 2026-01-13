@@ -61,7 +61,7 @@ const LeadScoringMaster: React.FC = () => {
   const [saving, setSaving] = useState(false)
   const [editingRule, setEditingRule] = useState<ScoringRule | null>(null)
   const [filterLeadType, setFilterLeadType] = useState<string>('all')
-  
+
   const [formData, setFormData] = useState({
     scoringCriteriaName: '',
     fieldChecked: 'budget',
@@ -80,14 +80,13 @@ const LeadScoringMaster: React.FC = () => {
 
   useEffect(() => {
     fetchScoringRules()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterLeadType])
 
   const fetchScoringRules = async () => {
     try {
       setLoading(true)
-      const url = filterLeadType === 'all' 
-        ? '/api/lead-scoring' 
+      const url = filterLeadType === 'all'
+        ? '/api/lead-scoring'
         : `/api/lead-scoring?lead_type=${filterLeadType}`
       const data = await fetchApi(url)
       setScoringRules(data.scoringRules || [])
@@ -233,7 +232,7 @@ const LeadScoringMaster: React.FC = () => {
                 type="text"
                 required
                 value={formData.scoringCriteriaName}
-                onChange={(e) => setFormData({...formData, scoringCriteriaName: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, scoringCriteriaName: e.target.value })}
                 placeholder="e.g., High Budget Group Lead"
               />
             </div>
@@ -245,7 +244,7 @@ const LeadScoringMaster: React.FC = () => {
               <select
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.fieldChecked}
-                onChange={(e) => setFormData({...formData, fieldChecked: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, fieldChecked: e.target.value })}
               >
                 <option value="budget">Budget (Total)</option>
                 <option value="budget_per_person">Budget Per Person</option>
@@ -269,7 +268,7 @@ const LeadScoringMaster: React.FC = () => {
               <select
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.conditionType}
-                onChange={(e) => setFormData({...formData, conditionType: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, conditionType: e.target.value })}
               >
                 <option value="equals">Equals</option>
                 <option value="not_equals">Not Equals</option>
@@ -296,7 +295,7 @@ const LeadScoringMaster: React.FC = () => {
               <Input
                 type="text"
                 value={formData.conditionValue}
-                onChange={(e) => setFormData({...formData, conditionValue: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, conditionValue: e.target.value })}
                 placeholder="e.g., 500000 or 5,9 for between"
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -312,7 +311,7 @@ const LeadScoringMaster: React.FC = () => {
                 type="number"
                 required
                 value={formData.scoreValue}
-                onChange={(e) => setFormData({...formData, scoreValue: parseInt(e.target.value) || 0})}
+                onChange={(e) => setFormData({ ...formData, scoreValue: parseInt(e.target.value) || 0 })}
                 placeholder="10"
                 min="0"
                 max="100"
@@ -326,7 +325,7 @@ const LeadScoringMaster: React.FC = () => {
               <select
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.leadType}
-                onChange={(e) => setFormData({...formData, leadType: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, leadType: e.target.value })}
               >
                 <option value="Group">Group</option>
                 <option value="FIT">FIT</option>
@@ -342,7 +341,7 @@ const LeadScoringMaster: React.FC = () => {
               <select
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.automationTrigger}
-                onChange={(e) => setFormData({...formData, automationTrigger: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, automationTrigger: e.target.value })}
               >
                 <option value="On Lead Create">On Lead Create</option>
                 <option value="On Lead Update">On Lead Update</option>
@@ -362,7 +361,7 @@ const LeadScoringMaster: React.FC = () => {
                 <Input
                   type="number"
                   value={formData.priorityRangeHot}
-                  onChange={(e) => setFormData({...formData, priorityRangeHot: parseInt(e.target.value) || 40})}
+                  onChange={(e) => setFormData({ ...formData, priorityRangeHot: parseInt(e.target.value) || 40 })}
                   min="0"
                 />
               </div>
@@ -373,7 +372,7 @@ const LeadScoringMaster: React.FC = () => {
                 <Input
                   type="number"
                   value={formData.priorityRangeWarmMin}
-                  onChange={(e) => setFormData({...formData, priorityRangeWarmMin: parseInt(e.target.value) || 25})}
+                  onChange={(e) => setFormData({ ...formData, priorityRangeWarmMin: parseInt(e.target.value) || 25 })}
                   min="0"
                 />
               </div>
@@ -384,7 +383,7 @@ const LeadScoringMaster: React.FC = () => {
                 <Input
                   type="number"
                   value={formData.priorityRangeWarmMax}
-                  onChange={(e) => setFormData({...formData, priorityRangeWarmMax: parseInt(e.target.value) || 39})}
+                  onChange={(e) => setFormData({ ...formData, priorityRangeWarmMax: parseInt(e.target.value) || 39 })}
                   min="0"
                 />
               </div>
@@ -395,7 +394,7 @@ const LeadScoringMaster: React.FC = () => {
                 <Input
                   type="number"
                   value={formData.priorityRangeColdMax}
-                  onChange={(e) => setFormData({...formData, priorityRangeColdMax: parseInt(e.target.value) || 24})}
+                  onChange={(e) => setFormData({ ...formData, priorityRangeColdMax: parseInt(e.target.value) || 24 })}
                   min="0"
                 />
               </div>
@@ -411,7 +410,7 @@ const LeadScoringMaster: React.FC = () => {
               <select
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.status}
-                onChange={(e) => setFormData({...formData, status: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
               >
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
@@ -426,7 +425,7 @@ const LeadScoringMaster: React.FC = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={3}
                 value={formData.notes}
-                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 placeholder="Admin or developer remarks"
               />
             </div>
@@ -541,7 +540,7 @@ const LeadScoringMaster: React.FC = () => {
                           <h3 className="text-lg font-semibold text-gray-900">
                             {rule.scoring_criteria_name}
                           </h3>
-                          <Badge 
+                          <Badge
                             variant={rule.status === 'Active' ? 'default' : 'secondary'}
                             className={rule.status === 'Active' ? 'bg-green-500' : 'bg-gray-400'}
                           >

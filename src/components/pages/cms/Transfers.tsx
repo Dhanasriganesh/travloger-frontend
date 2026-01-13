@@ -45,6 +45,23 @@ interface TransferRate {
   updated_at: string
 }
 
+interface TransferFormData {
+  queryName: string
+  state: string
+  destination: string
+  supplierId: string | number
+  vehicleType: string
+  distanceDuration: string
+  rateType: string
+  baseRate: number
+  extraKmRate: number
+  waitingCharge: number
+  price: number
+  content: string
+  notes: string
+  status: string
+}
+
 const Transfers: React.FC = () => {
   const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
@@ -53,8 +70,8 @@ const Transfers: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editingTransfer, setEditingTransfer] = useState<Transfer | null>(null)
-  
-  const [formData, setFormData] = useState({
+
+  const [formData, setFormData] = useState<TransferFormData>({
     queryName: '',
     state: '',
     destination: '',
@@ -70,12 +87,12 @@ const Transfers: React.FC = () => {
     notes: '',
     status: 'Active'
   })
-  
+
   const [destinations, setDestinations] = useState<any[]>([])
   const [states, setStates] = useState<any[]>([])
   const [destinationInput, setDestinationInput] = useState('')
   const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false)
-  const [suppliers, setSuppliers] = useState<{id:number,name:string,city:string}[]>([])
+  const [suppliers, setSuppliers] = useState<{ id: number, name: string, city: string }[]>([])
 
   // File upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -100,15 +117,15 @@ const Transfers: React.FC = () => {
         alert('Please select an image file')
         return
       }
-      
+
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         alert('File size must be less than 5MB')
         return
       }
-      
+
       setSelectedFile(file)
-      
+
       // Create preview
       const reader = new FileReader()
       reader.onload = (e) => {
@@ -130,7 +147,7 @@ const Transfers: React.FC = () => {
   const [transferRates, setTransferRates] = useState<TransferRate[]>([])
   const [loadingRates, setLoadingRates] = useState(false)
   const [savingRate, setSavingRate] = useState(false)
-  
+
   const [rateFormData, setRateFormData] = useState({
     fromDate: '',
     toDate: '',
@@ -168,15 +185,15 @@ const Transfers: React.FC = () => {
   const fetchSuppliers = async () => {
     try {
       const data = await fetchApi('/suppliers')
-      setSuppliers((data.suppliers || []).map((s:any)=>({id:s.id,name:s.company_name,city:s.city})))
-    } catch (e) { 
+      setSuppliers((data.suppliers || []).map((s: any) => ({ id: s.id, name: s.company_name, city: s.city })))
+    } catch (e) {
       console.error('Error fetching suppliers:', handleApiError(e))
       // Provide fallback empty array
       setSuppliers([])
     }
   }
 
-  const filteredSuppliers = suppliers.filter(s => (s.city||'').toLowerCase() === (formData.destination||destinationInput).toLowerCase())
+  const filteredSuppliers = suppliers.filter(s => (s.city || '').toLowerCase() === (formData.destination || destinationInput).toLowerCase())
 
   const fetchDestinations = async (state?: string) => {
     try {
@@ -209,29 +226,29 @@ const Transfers: React.FC = () => {
 
     try {
       setSaving(true)
-      
+
       let photoUrl = ''
-      
+
       // Convert file to base64 if selected
       if (selectedFile) {
         photoUrl = await convertFileToBase64(selectedFile)
       }
-      
+
       const method = editingTransfer ? 'PUT' : 'POST'
-      const body = editingTransfer 
-        ? { 
-            id: editingTransfer.id, 
-            ...formData,
-            supplierId: formData.supplierId ? Number(formData.supplierId) : null,
-            baseRate: formData.baseRate || formData.price,
-            photoUrl
-          }
+      const body = editingTransfer
+        ? {
+          id: editingTransfer.id,
+          ...formData,
+          supplierId: formData.supplierId ? Number(formData.supplierId) : null,
+          baseRate: formData.baseRate || formData.price,
+          photoUrl
+        }
         : {
-            ...formData,
-            supplierId: formData.supplierId ? Number(formData.supplierId) : null,
-            baseRate: formData.baseRate || formData.price,
-            photoUrl
-          }
+          ...formData,
+          supplierId: formData.supplierId ? Number(formData.supplierId) : null,
+          baseRate: formData.baseRate || formData.price,
+          photoUrl
+        }
 
       const data = await fetchApi('/transfers', {
         method,
@@ -240,7 +257,7 @@ const Transfers: React.FC = () => {
 
       await fetchTransfers() // Refresh the list
       setShowAddForm(false)
-      setFormData({ queryName: '', state: '', destination: '', supplierId:'', vehicleType:'', distanceDuration:'', rateType:'fixed', baseRate:0, extraKmRate:0, waitingCharge:0, price: 0, content: '', notes:'', status: 'Active' })
+      setFormData({ queryName: '', state: '', destination: '', supplierId: '', vehicleType: '', distanceDuration: '', rateType: 'fixed', baseRate: 0, extraKmRate: 0, waitingCharge: 0, price: 0, content: '', notes: '', status: 'Active' })
       setSelectedFile(null)
       setImagePreview(null)
       setEditingTransfer(null)
@@ -275,6 +292,7 @@ const Transfers: React.FC = () => {
     setEditingTransfer(transfer)
     setFormData({
       queryName: transfer.query_name,
+      state: '',
       destination: transfer.destination,
       supplierId: transfer.supplier_id || '',
       vehicleType: transfer.vehicle_type || '',
@@ -297,7 +315,7 @@ const Transfers: React.FC = () => {
   const handleCloseForm = () => {
     setShowAddForm(false)
     setEditingTransfer(null)
-    setFormData({ queryName: '', destination: '', supplierId:'', vehicleType:'', distanceDuration:'', rateType:'fixed', baseRate:0, extraKmRate:0, waitingCharge:0, price: 0, content: '', notes:'', status: 'Active' })
+    setFormData({ queryName: '', state: '', destination: '', supplierId: '', vehicleType: '', distanceDuration: '', rateType: 'fixed', baseRate: 0, extraKmRate: 0, waitingCharge: 0, price: 0, content: '', notes: '', status: 'Active' })
     setDestinationInput('')
     setShowDestinationSuggestions(false)
     setSelectedFile(null)
@@ -509,7 +527,7 @@ const Transfers: React.FC = () => {
                         <td className="px-3 py-4 text-sm font-medium text-gray-900">
                           <div className="flex items-center gap-2">
                             <span className="text-lg">{getTransferIcon(transfer.query_name)}</span>
-                            <button 
+                            <button
                               onClick={() => handleTransferNameClick(transfer)}
                               className="truncate text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
                             >
@@ -542,7 +560,7 @@ const Transfers: React.FC = () => {
                           {transfer.date}
                         </td>
                         <td className="px-3 py-4 text-sm text-gray-500">
-                          <button 
+                          <button
                             onClick={() => handleEditClick(transfer)}
                             className="hover:text-gray-700"
                           >
@@ -550,7 +568,7 @@ const Transfers: React.FC = () => {
                           </button>
                         </td>
                         <td className="px-3 py-4 text-sm text-gray-500">
-                          <button 
+                          <button
                             onClick={() => handleDeleteTransfer(transfer.id, transfer.query_name)}
                             className="hover:text-red-600"
                           >
@@ -575,11 +593,11 @@ const Transfers: React.FC = () => {
         {showAddForm && (
           <div className="fixed inset-0 z-50 overflow-hidden">
             {/* Backdrop */}
-            <div 
+            <div
               className="absolute inset-0 backdrop-blur-sm"
               onClick={() => setShowAddForm(false)}
             />
-            
+
             {/* Sliding Panel */}
             <div className="absolute right-0 top-0 h-full w-[500px] bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
               <div className="flex flex-col h-full">
@@ -607,12 +625,12 @@ const Transfers: React.FC = () => {
                       </label>
                       <div className="relative">
                         <div className="absolute left-0 top-0 h-full w-0.5 bg-red-500 rounded-l-sm"></div>
-                        <Input 
-                          type="text" 
+                        <Input
+                          type="text"
                           className="pl-3.5"
                           placeholder="Enter transfer name"
                           value={formData.queryName}
-                          onChange={(e) => setFormData({...formData, queryName: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, queryName: e.target.value })}
                         />
                       </div>
                     </div>
@@ -621,11 +639,11 @@ const Transfers: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         State <span className="text-red-500">*</span>
                       </label>
-                      <select 
+                      <select
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={formData.state}
                         onChange={(e) => {
-                          setFormData({...formData, state: e.target.value, destination: '', supplierId: ''})
+                          setFormData({ ...formData, state: e.target.value, destination: '', supplierId: '' })
                           setDestinationInput('')
                         }}
                       >
@@ -641,8 +659,8 @@ const Transfers: React.FC = () => {
                         Destination <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
-                        <Input 
-                          type="text" 
+                        <Input
+                          type="text"
                           placeholder={formData.state ? "Type to search destinations..." : "Select state first"}
                           value={destinationInput}
                           onChange={(e) => {
@@ -653,7 +671,7 @@ const Transfers: React.FC = () => {
                           className="border-l-2 border-red-500 pl-3.5"
                           disabled={!formData.state}
                         />
-                        
+
                         {showDestinationSuggestions && destinationInput && formData.state && (
                           <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
                             {destinations
@@ -669,7 +687,7 @@ const Transfers: React.FC = () => {
                                     type="button"
                                     className="w-full text-left px-4 py-2 hover:bg-blue-50 text-sm"
                                     onClick={() => {
-                                      setFormData({...formData, destination: destName, supplierId: ''})
+                                      setFormData({ ...formData, destination: destName, supplierId: '' })
                                       setDestinationInput(destName)
                                       setShowDestinationSuggestions(false)
                                     }}
@@ -682,8 +700,8 @@ const Transfers: React.FC = () => {
                               const destName = (d.name || d).toLowerCase()
                               return destName.includes(destinationInput.toLowerCase())
                             }).length === 0 && (
-                              <div className="px-4 py-2 text-sm text-gray-500">No destinations found</div>
-                            )}
+                                <div className="px-4 py-2 text-sm text-gray-500">No destinations found</div>
+                              )}
                           </div>
                         )}
                       </div>
@@ -691,10 +709,10 @@ const Transfers: React.FC = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Linked Supplier</label>
-                      <select 
+                      <select
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={formData.supplierId}
-                        onChange={(e) => setFormData({...formData, supplierId: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, supplierId: e.target.value })}
                       >
                         <option value="">Select supplier</option>
                         {filteredSuppliers.map(s => (
@@ -706,20 +724,20 @@ const Transfers: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Type</label>
-                        <Input 
-                          type="text" 
+                        <Input
+                          type="text"
                           placeholder="e.g., Sedan, SUV, Tempo Traveller"
                           value={formData.vehicleType}
-                          onChange={(e) => setFormData({...formData, vehicleType: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, vehicleType: e.target.value })}
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Distance / Duration</label>
-                        <Input 
-                          type="text" 
+                        <Input
+                          type="text"
                           placeholder="e.g., 35 km / 1 hr"
                           value={formData.distanceDuration}
-                          onChange={(e) => setFormData({...formData, distanceDuration: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, distanceDuration: e.target.value })}
                         />
                       </div>
                     </div>
@@ -727,10 +745,10 @@ const Transfers: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Rate Type</label>
-                        <select 
+                        <select
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={formData.rateType}
-                          onChange={(e) => setFormData({...formData, rateType: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, rateType: e.target.value })}
                         >
                           <option value="fixed">Fixed</option>
                           <option value="per_km">Per KM</option>
@@ -739,11 +757,11 @@ const Transfers: React.FC = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Base Rate</label>
-                        <Input 
-                          type="number" 
+                        <Input
+                          type="number"
                           placeholder="Enter base rate"
                           value={formData.baseRate}
-                          onChange={(e) => setFormData({...formData, baseRate: parseFloat(e.target.value) || 0})}
+                          onChange={(e) => setFormData({ ...formData, baseRate: parseFloat(e.target.value) || 0 })}
                         />
                       </div>
                     </div>
@@ -751,31 +769,31 @@ const Transfers: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Extra KM Rate</label>
-                        <Input 
-                          type="number" 
+                        <Input
+                          type="number"
                           placeholder="0"
                           value={formData.extraKmRate}
-                          onChange={(e) => setFormData({...formData, extraKmRate: parseFloat(e.target.value) || 0})}
+                          onChange={(e) => setFormData({ ...formData, extraKmRate: parseFloat(e.target.value) || 0 })}
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Waiting Charge</label>
-                        <Input 
-                          type="number" 
+                        <Input
+                          type="number"
                           placeholder="0"
                           value={formData.waitingCharge}
-                          onChange={(e) => setFormData({...formData, waitingCharge: parseFloat(e.target.value) || 0})}
+                          onChange={(e) => setFormData({ ...formData, waitingCharge: parseFloat(e.target.value) || 0 })}
                         />
                       </div>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                      <Input 
-                        type="text" 
+                      <Input
+                        type="text"
                         placeholder="Any notes"
                         value={formData.notes}
-                        onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                       />
                     </div>
 
@@ -783,11 +801,11 @@ const Transfers: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Price
                       </label>
-                      <Input 
-                        type="number" 
+                      <Input
+                        type="number"
                         placeholder="Enter price"
                         value={formData.price}
-                        onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value) || 0})}
+                        onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
                       />
                     </div>
 
@@ -795,11 +813,11 @@ const Transfers: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Content
                       </label>
-                      <Input 
-                        type="text" 
+                      <Input
+                        type="text"
                         placeholder="Enter content (e.g., CRYSTA 4N/5D MAV)"
                         value={formData.content}
-                        onChange={(e) => setFormData({...formData, content: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                       />
                     </div>
 
@@ -816,9 +834,9 @@ const Transfers: React.FC = () => {
                         />
                         {imagePreview && (
                           <div className="relative w-32 h-32">
-                            <Image 
-                              src={imagePreview} 
-                              alt="Transfer preview" 
+                            <Image
+                              src={imagePreview}
+                              alt="Transfer preview"
                               fill
                               sizes="128px"
                               className="object-cover rounded-lg border border-gray-200"
@@ -843,10 +861,10 @@ const Transfers: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Status <span className="text-red-500">*</span>
                       </label>
-                      <select 
+                      <select
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={formData.status}
-                        onChange={(e) => setFormData({...formData, status: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                       >
                         <option value="Active">Active</option>
                         <option value="Inactive">Inactive</option>
@@ -884,11 +902,11 @@ const Transfers: React.FC = () => {
         {showPriceModal && selectedTransfer && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Backdrop */}
-            <div 
+            <div
               className="absolute inset-0 bg-black bg-opacity-50"
               onClick={handleClosePriceModal}
             />
-            
+
             {/* Modal */}
             <div className="relative bg-white rounded-lg shadow-xl w-[800px] max-h-[90vh] flex flex-col">
               {/* Header */}
@@ -915,7 +933,7 @@ const Transfers: React.FC = () => {
                       <Input
                         type="date"
                         value={rateFormData.fromDate}
-                        onChange={(e) => setRateFormData({...rateFormData, fromDate: e.target.value})}
+                        onChange={(e) => setRateFormData({ ...rateFormData, fromDate: e.target.value })}
                         className="w-full"
                       />
                     </div>
@@ -924,7 +942,7 @@ const Transfers: React.FC = () => {
                       <Input
                         type="date"
                         value={rateFormData.toDate}
-                        onChange={(e) => setRateFormData({...rateFormData, toDate: e.target.value})}
+                        onChange={(e) => setRateFormData({ ...rateFormData, toDate: e.target.value })}
                         className="w-full"
                       />
                     </div>
@@ -932,7 +950,7 @@ const Transfers: React.FC = () => {
                       <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
                       <select
                         value={rateFormData.type}
-                        onChange={(e) => setRateFormData({...rateFormData, type: e.target.value as 'SIC' | 'PVT'})}
+                        onChange={(e) => setRateFormData({ ...rateFormData, type: e.target.value as 'SIC' | 'PVT' })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="SIC">SIC</option>
@@ -944,7 +962,7 @@ const Transfers: React.FC = () => {
                       <Input
                         type="number"
                         value={rateFormData.adultCount}
-                        onChange={(e) => setRateFormData({...rateFormData, adultCount: parseInt(e.target.value) || 0})}
+                        onChange={(e) => setRateFormData({ ...rateFormData, adultCount: parseInt(e.target.value) || 0 })}
                         className="w-full"
                       />
                     </div>
@@ -953,7 +971,7 @@ const Transfers: React.FC = () => {
                       <Input
                         type="number"
                         value={rateFormData.childCount}
-                        onChange={(e) => setRateFormData({...rateFormData, childCount: parseInt(e.target.value) || 0})}
+                        onChange={(e) => setRateFormData({ ...rateFormData, childCount: parseInt(e.target.value) || 0 })}
                         className="w-full"
                       />
                     </div>

@@ -48,7 +48,7 @@ const ProfitCalculationMaster: React.FC = () => {
   const [saving, setSaving] = useState(false)
   const [editingCalculation, setEditingCalculation] = useState<ProfitCalculation | null>(null)
   const [filterStatus, setFilterStatus] = useState<string>('all')
-  
+
   const [formData, setFormData] = useState({
     tripId: '',
     totalSalesValue: 0,
@@ -61,14 +61,14 @@ const ProfitCalculationMaster: React.FC = () => {
 
   useEffect(() => {
     fetchCalculations()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [filterStatus])
 
   const fetchCalculations = async () => {
     try {
       setLoading(true)
-      const url = filterStatus === 'all' 
-        ? '/api/profit-calculation' 
+      const url = filterStatus === 'all'
+        ? '/api/profit-calculation'
         : `/api/profit-calculation?status=${filterStatus}`
       const data = await fetchApi(url)
       setCalculations(data.profitCalculations || [])
@@ -215,8 +215,8 @@ const ProfitCalculationMaster: React.FC = () => {
     const totalExpenses = calculations.reduce((sum, c) => sum + c.total_expenses, 0)
     const totalPayouts = calculations.reduce((sum, c) => sum + c.total_vendor_payouts, 0)
     const totalProfit = calculations.reduce((sum, c) => sum + c.gross_profit, 0)
-    const avgMargin = calculations.length > 0 
-      ? calculations.reduce((sum, c) => sum + c.profit_margin, 0) / calculations.length 
+    const avgMargin = calculations.length > 0
+      ? calculations.reduce((sum, c) => sum + c.profit_margin, 0) / calculations.length
       : 0
 
     return { totalRevenue, totalExpenses, totalPayouts, totalProfit, avgMargin }
@@ -247,7 +247,7 @@ const ProfitCalculationMaster: React.FC = () => {
                   type="text"
                   required
                   value={formData.tripId}
-                  onChange={(e) => setFormData({...formData, tripId: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, tripId: e.target.value })}
                   placeholder="TRIP-XXX-2025-001"
                 />
               </div>
@@ -262,7 +262,7 @@ const ProfitCalculationMaster: React.FC = () => {
                   min="0"
                   step="0.01"
                   value={formData.totalSalesValue}
-                  onChange={(e) => setFormData({...formData, totalSalesValue: parseFloat(e.target.value) || 0})}
+                  onChange={(e) => setFormData({ ...formData, totalSalesValue: parseFloat(e.target.value) || 0 })}
                 />
               </div>
 
@@ -275,7 +275,7 @@ const ProfitCalculationMaster: React.FC = () => {
                   min="0"
                   step="0.01"
                   value={formData.totalExpenses}
-                  onChange={(e) => setFormData({...formData, totalExpenses: parseFloat(e.target.value) || 0})}
+                  onChange={(e) => setFormData({ ...formData, totalExpenses: parseFloat(e.target.value) || 0 })}
                   disabled={formData.autoCalculate}
                 />
                 {formData.autoCalculate && (
@@ -292,7 +292,7 @@ const ProfitCalculationMaster: React.FC = () => {
                   min="0"
                   step="0.01"
                   value={formData.vendorPayouts}
-                  onChange={(e) => setFormData({...formData, vendorPayouts: parseFloat(e.target.value) || 0})}
+                  onChange={(e) => setFormData({ ...formData, vendorPayouts: parseFloat(e.target.value) || 0 })}
                   disabled={formData.autoCalculate}
                 />
                 {formData.autoCalculate && (
@@ -307,7 +307,7 @@ const ProfitCalculationMaster: React.FC = () => {
                 <select
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   value={formData.status}
-                  onChange={(e) => setFormData({...formData, status: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                 >
                   <option value="Draft">Draft</option>
                   <option value="Finalized">Finalized</option>
@@ -319,7 +319,7 @@ const ProfitCalculationMaster: React.FC = () => {
                   <input
                     type="checkbox"
                     checked={formData.autoCalculate}
-                    onChange={(e) => setFormData({...formData, autoCalculate: e.target.checked})}
+                    onChange={(e) => setFormData({ ...formData, autoCalculate: e.target.checked })}
                     className="rounded border-gray-300"
                   />
                   <span className="text-sm font-medium text-gray-700">
@@ -358,7 +358,7 @@ const ProfitCalculationMaster: React.FC = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   rows={3}
                   value={formData.notes}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   placeholder="Additional notes or remarks"
                 />
               </div>
@@ -548,9 +548,9 @@ const ProfitCalculationMaster: React.FC = () => {
                     </div>
 
                     <div className="flex gap-2 ml-4">
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         onClick={() => handleRecalculate(calculation)}
                         title="Recalculate from expenses & payouts"
                       >

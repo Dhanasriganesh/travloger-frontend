@@ -58,12 +58,12 @@ interface ReviewsContent {
   heading: string
   subheading: string
   reviews: {
-  id: string
+    id: string
     name: string
     review: string
     images: {
       src: string
-  alt: string
+      alt: string
     }[]
   }[]
 }
@@ -180,23 +180,23 @@ const WebsiteEdit: React.FC = () => {
     const handleSearch = (event: any) => {
       const query = event.detail.toLowerCase()
       setSearchQuery(query)
-      
+
       if (!query) {
         setFilteredSections([])
         return
       }
-      
+
       const sections = [
         'header', 'hero', 'trip options', 'reviews', 'usp', 'brands', 'faq'
       ]
-      
-      const filtered = sections.filter(section => 
+
+      const filtered = sections.filter(section =>
         section.toLowerCase().includes(query)
       )
-      
+
       setFilteredSections(filtered)
     }
-    
+
     window.addEventListener('searchQuery', handleSearch)
     return () => window.removeEventListener('searchQuery', handleSearch)
   }, [])
@@ -750,7 +750,7 @@ const WebsiteEdit: React.FC = () => {
     try {
       const form = new FormData()
       form.append('file', file)
-      const data = await fetchApi<{ url: string }>('/api/upload', {
+      const data = await fetchApi<{ url: string; error?: string }>('/api/upload', {
         method: 'POST',
         body: form
       })
@@ -787,13 +787,13 @@ const WebsiteEdit: React.FC = () => {
     try {
       setSaving(true)
       console.log(`Saving ${sectionName} for ${citySlug}:`, data)
-      
+
       // Debug: Check for base64 data in payload
       const payloadString = JSON.stringify(data)
       const hasBase64 = payloadString.includes('data:image')
       console.log(`Saving ${sectionName} - Payload size: ${payloadString.length} bytes`)
       console.log(`Saving ${sectionName} - Contains base64: ${hasBase64}`)
-      
+
       if (hasBase64) {
         console.warn('WARNING: Payload contains base64 data! This may cause 413 errors.')
         // Find and log base64 data
@@ -802,15 +802,15 @@ const WebsiteEdit: React.FC = () => {
           console.log('Base64 data found:', base64Matches.map(match => match.substring(0, 50) + '...'))
         }
       }
-      
+
       const result = await fetchApi(`/api/cms/cities/${citySlug}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: payloadString
       })
-      
+
       console.log('Save successful:', result)
-      
+
       setError(null)
       alert(`${sectionName} saved successfully`)
     } catch (e: any) {
@@ -829,7 +829,7 @@ const WebsiteEdit: React.FC = () => {
         const cacheKey = 'cmsHeroThumbs:v2'
         const cached = typeof window !== 'undefined' ? localStorage.getItem(cacheKey) : null
         if (!thumbsLoadedRef.current && cached) {
-          try { 
+          try {
             const parsed = JSON.parse(cached)
             // Check if cache is not too old (24 hours)
             if (parsed.timestamp && Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
@@ -847,7 +847,7 @@ const WebsiteEdit: React.FC = () => {
             try {
               const data = await fetchApi(`/api/cms/cities/${loc.slug}`).catch(() => ({}))
               const url = data?.hero?.backgroundImageUrl || ''
-              
+
               // Preload image with better error handling
               if (url) {
                 return new Promise<[string, string]>((resolve) => {
@@ -865,7 +865,7 @@ const WebsiteEdit: React.FC = () => {
             }
           })
         )
-        
+
         const map: Record<string, string> = {}
         entries.forEach((result) => {
           if (result.status === 'fulfilled') {
@@ -873,10 +873,10 @@ const WebsiteEdit: React.FC = () => {
             if (url) map[slug] = url
           }
         })
-        
+
         if (Object.keys(map).length) {
           setHeroThumbs(map)
-          try { 
+          try {
             localStorage.setItem(cacheKey, JSON.stringify({
               data: map,
               timestamp: Date.now()
@@ -983,1179 +983,709 @@ const WebsiteEdit: React.FC = () => {
 
       {/* Header Section */}
       {isSectionVisible('header') && (
-      <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        {/* Section Header */}
-        <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-                </svg>
+        <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          {/* Section Header */}
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">1. Header Section</h2>
+                  <p className="text-xs text-gray-500">Navigation menu and contact details</p>
+                </div>
+              </div>
+              <button
+                onClick={() => saveSection('Header', { header })}
+                disabled={saving}
+                className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 shadow-sm transition-colors"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+
+          {/* Section Content */}
+          <div className="p-6">
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Navigation Items
+                </label>
+                <div className="space-y-2">
+                  {header.navItems.map((item, index) => (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={item.label}
+                        onChange={(e) => {
+                          const newNavItems = [...header.navItems]
+                          newNavItems[index] = { ...item, label: e.target.value }
+                          setHeader({ ...header, navItems: newNavItems })
+                        }}
+                        className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                        placeholder="Label"
+                      />
+                      <input
+                        type="text"
+                        value={item.href}
+                        onChange={(e) => {
+                          const newNavItems = [...header.navItems]
+                          newNavItems[index] = { ...item, href: e.target.value }
+                          setHeader({ ...header, navItems: newNavItems })
+                        }}
+                        className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                        placeholder="Link"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-900">1. Header Section</h2>
-                <p className="text-xs text-gray-500">Navigation menu and contact details</p>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Enquire Label
+                </label>
+                <input
+                  type="text"
+                  value={header.enquireLabel}
+                  onChange={(e) => setHeader({ ...header, enquireLabel: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  placeholder="Enquire now"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Call Number
+                </label>
+                <input
+                  type="text"
+                  value={header.callNumber}
+                  onChange={(e) => setHeader({ ...header, callNumber: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  placeholder="+919876543210"
+                />
               </div>
             </div>
-            <button
-              onClick={() => saveSection('Header', { header })}
-              disabled={saving}
-              className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 shadow-sm transition-colors"
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
           </div>
         </div>
-        
-        {/* Section Content */}
-        <div className="p-6">
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Navigation Items
-            </label>
-            <div className="space-y-2">
-              {header.navItems.map((item, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={item.label}
-                    onChange={(e) => {
-                      const newNavItems = [...header.navItems]
-                      newNavItems[index] = { ...item, label: e.target.value }
-                      setHeader({ ...header, navItems: newNavItems })
-                    }}
-                    className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                    placeholder="Label"
-                  />
-                  <input
-                    type="text"
-                    value={item.href}
-                    onChange={(e) => {
-                      const newNavItems = [...header.navItems]
-                      newNavItems[index] = { ...item, href: e.target.value }
-                      setHeader({ ...header, navItems: newNavItems })
-                    }}
-                    className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                    placeholder="Link"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Enquire Label
-            </label>
-            <input
-              type="text"
-              value={header.enquireLabel}
-              onChange={(e) => setHeader({ ...header, enquireLabel: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              placeholder="Enquire now"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Call Number
-            </label>
-            <input
-              type="text"
-              value={header.callNumber}
-              onChange={(e) => setHeader({ ...header, callNumber: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              placeholder="+919876543210"
-            />
-          </div>
-        </div>
-      </div>
-      </div>
       )}
 
       {/* Hero Section */}
       {isSectionVisible('hero') && (
-      <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        {/* Section Header */}
-        <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
+        <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          {/* Section Header */}
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">2. Hero Section</h2>
+                  <p className="text-xs text-gray-500">Main banner with title, subtitle & background</p>
+                </div>
               </div>
+              <button
+                onClick={() => saveSection('Hero', { hero })}
+                disabled={saving}
+                className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 shadow-sm transition-colors"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+
+          {/* Section Content */}
+          <div className="p-6">
+            <div className="space-y-3">
               <div>
-                <h2 className="text-lg font-bold text-gray-900">2. Hero Section</h2>
-                <p className="text-xs text-gray-500">Main banner with title, subtitle & background</p>
-              </div>
-            </div>
-            <button
-              onClick={() => saveSection('Hero', { hero })}
-              disabled={saving}
-              className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 shadow-sm transition-colors"
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </div>
-        
-        {/* Section Content */}
-        <div className="p-6">
-        <div className="space-y-3">
-            <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Title
-            </label>
-              <input
-                type="text"
-                value={hero.title}
-              onChange={(e) => setHero(prev => ({ ...prev, title: e.target.value }))}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              placeholder="Hero title"
-              />
-            </div>
-            <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Subtitle
-            </label>
-              <input
-                type="text"
-                value={hero.subtitle}
-              onChange={(e) => setHero(prev => ({ ...prev, subtitle: e.target.value }))}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              placeholder="Hero subtitle"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Background Image URL
-            </label>
-            <input
-              type="url"
-              value={hero.backgroundImageUrl}
-              onChange={(e) => setHero(prev => ({ ...prev, backgroundImageUrl: e.target.value }))}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              placeholder="https://example.com/image.jpg"
-            />
-            <div className="mt-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Or upload image
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0]
-                  if (!file) return
-
-                  // Check file size (4MB limit)
-                  const maxSize = 4 * 1024 * 1024 // 4MB
-                  if (file.size > maxSize) {
-                    alert(`File too large. Maximum size is 4MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB. Please compress the image and try again.`)
-                    return
-                  }
-
-                  try {
-                    const form = new FormData()
-                    form.append('file', file)
-                    form.append('slug', citySlug || 'common')
-                    form.append('folder', 'hero')
-
-                    const data = await fetchApi<{ url: string }>('/api/upload', { method: 'POST', body: form })
-                    setHero(prev => ({ ...prev, backgroundImageUrl: data.url }))
-                  } catch (err: any) {
-                    setError(err?.message || 'Failed to upload image')
-                  }
-                }}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              />
-            </div>
-
-            {hero.backgroundImageUrl && (
-              <div className="mt-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Preview</label>
-                <div className="relative w-full h-32 rounded-md overflow-hidden border border-gray-200">
-                  <Image
-                    src={hero.backgroundImageUrl}
-                    alt="Hero background preview"
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                </div>
-                <div className="mt-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setHero(prev => ({ ...prev, backgroundImageUrl: '' }))}
-                    className="text-xs text-red-600 hover:text-red-800"
-                  >
-                    Remove Image
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Mobile Video (MP4/WebM)
-            </label>
-            <input
-              type="file"
-              accept="video/mp4,video/webm"
-              onChange={async (e) => {
-                const file = e.target.files?.[0]
-                if (file) {
-                  // Check file size (20MB limit for videos)
-                  const maxSize = 20 * 1024 * 1024 // 20MB
-                  if (file.size > maxSize) {
-                    alert(`File too large. Maximum size is 20MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB. Please compress the video and try again.`)
-                    return
-                  }
-
-                  try {
-                    const form = new FormData()
-                    form.append('file', file)
-                    form.append('slug', citySlug || 'common')
-                    form.append('folder', 'hero')
-
-                    const data = await fetchApi<{ url: string }>('/api/upload', { method: 'POST', body: form })
-                    setHero(prev => ({ ...prev, mobileVideoUrl: data.url }))
-                  } catch (err: any) {
-                    setError(err?.message || 'Failed to upload video')
-                  }
-                }
-              }}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-            />
-          </div>
-
-          {hero.mobileVideoUrl && (
-            <div className="mt-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Video Preview</label>
-              <div className="relative w-full h-32 rounded-md overflow-hidden border border-gray-200">
-                <video
-                  src={hero.mobileVideoUrl}
-                  className="w-full h-full object-cover"
-                  controls
-                  muted
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  value={hero.title}
+                  onChange={(e) => setHero(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  placeholder="Hero title"
                 />
               </div>
-              <div className="mt-1.5">
-                <button
-                  type="button"
-                  onClick={() => setHero(prev => ({ ...prev, mobileVideoUrl: '' }))}
-                  className="text-xs text-red-600 hover:text-red-800"
-                >
-                  Remove Video
-                </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Subtitle
+                </label>
+                <input
+                  type="text"
+                  value={hero.subtitle}
+                  onChange={(e) => setHero(prev => ({ ...prev, subtitle: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  placeholder="Hero subtitle"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Background Image URL
+                </label>
+                <input
+                  type="url"
+                  value={hero.backgroundImageUrl}
+                  onChange={(e) => setHero(prev => ({ ...prev, backgroundImageUrl: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  placeholder="https://example.com/image.jpg"
+                />
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Or upload image
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+
+                      // Check file size (4MB limit)
+                      const maxSize = 4 * 1024 * 1024 // 4MB
+                      if (file.size > maxSize) {
+                        alert(`File too large. Maximum size is 4MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB. Please compress the image and try again.`)
+                        return
+                      }
+
+                      try {
+                        const form = new FormData()
+                        form.append('file', file)
+                        form.append('slug', citySlug || 'common')
+                        form.append('folder', 'hero')
+
+                        const data = await fetchApi<{ url: string }>('/api/upload', { method: 'POST', body: form })
+                        setHero(prev => ({ ...prev, backgroundImageUrl: data.url }))
+                      } catch (err: any) {
+                        setError(err?.message || 'Failed to upload image')
+                      }
+                    }}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  />
+                </div>
+
+                {hero.backgroundImageUrl && (
+                  <div className="mt-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Preview</label>
+                    <div className="relative w-full h-32 rounded-md overflow-hidden border border-gray-200">
+                      <Image
+                        src={hero.backgroundImageUrl}
+                        alt="Hero background preview"
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                    <div className="mt-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setHero(prev => ({ ...prev, backgroundImageUrl: '' }))}
+                        className="text-xs text-red-600 hover:text-red-800"
+                      >
+                        Remove Image
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Mobile Video (MP4/WebM)
+                </label>
+                <input
+                  type="file"
+                  accept="video/mp4,video/webm"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      // Check file size (20MB limit for videos)
+                      const maxSize = 20 * 1024 * 1024 // 20MB
+                      if (file.size > maxSize) {
+                        alert(`File too large. Maximum size is 20MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB. Please compress the video and try again.`)
+                        return
+                      }
+
+                      try {
+                        const form = new FormData()
+                        form.append('file', file)
+                        form.append('slug', citySlug || 'common')
+                        form.append('folder', 'hero')
+
+                        const data = await fetchApi<{ url: string }>('/api/upload', { method: 'POST', body: form })
+                        setHero(prev => ({ ...prev, mobileVideoUrl: data.url }))
+                      } catch (err: any) {
+                        setError(err?.message || 'Failed to upload video')
+                      }
+                    }
+                  }}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                />
+              </div>
+
+              {hero.mobileVideoUrl && (
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Video Preview</label>
+                  <div className="relative w-full h-32 rounded-md overflow-hidden border border-gray-200">
+                    <video
+                      src={hero.mobileVideoUrl}
+                      className="w-full h-full object-cover"
+                      controls
+                      muted
+                    />
+                  </div>
+                  <div className="mt-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setHero(prev => ({ ...prev, mobileVideoUrl: '' }))}
+                      className="text-xs text-red-600 hover:text-red-800"
+                    >
+                      Remove Video
+                    </button>
+                  </div>
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  WhatsApp Phone
+                </label>
+                <input
+                  type="text"
+                  value={hero.whatsappPhone}
+                  onChange={(e) => setHero(prev => ({ ...prev, whatsappPhone: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  placeholder="+919876543210"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  WhatsApp Message
+                </label>
+                <textarea
+                  value={hero.whatsappMessage}
+                  onChange={(e) => setHero(prev => ({ ...prev, whatsappMessage: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  rows={3}
+                  placeholder="WhatsApp message template"
+                />
               </div>
             </div>
-          )}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              WhatsApp Phone
-            </label>
-            <input
-              type="text"
-              value={hero.whatsappPhone}
-              onChange={(e) => setHero(prev => ({ ...prev, whatsappPhone: e.target.value }))}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              placeholder="+919876543210"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              WhatsApp Message
-            </label>
-            <textarea
-              value={hero.whatsappMessage}
-              onChange={(e) => setHero(prev => ({ ...prev, whatsappMessage: e.target.value }))}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              rows={3}
-              placeholder="WhatsApp message template"
-            />
           </div>
         </div>
-        </div>
-      </div>
       )}
 
       {/* Trip Options Section */}
       {isSectionVisible('trip options') && (
-      <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        {/* Section Header */}
-        <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+        <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          {/* Section Header */}
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">3. Trip Options Section</h2>
+                  <p className="text-xs text-gray-500">Custom & Group trip packages</p>
+                </div>
+              </div>
+              <button
+                onClick={() => saveSection('TripOptions', { tripOptions })}
+                disabled={saving}
+                className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 shadow-sm transition-colors"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+
+          {/* Section Content */}
+          <div className="p-6">
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Heading
+                </label>
+                <input
+                  type="text"
+                  value={tripOptions.heading}
+                  onChange={(e) => setTripOptions(prev => ({ ...prev, heading: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  placeholder="Trip options heading"
+                />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-900">3. Trip Options Section</h2>
-                <p className="text-xs text-gray-500">Custom & Group trip packages</p>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Subheading
+                </label>
+                <input
+                  type="text"
+                  value={tripOptions.subheading}
+                  onChange={(e) => setTripOptions(prev => ({ ...prev, subheading: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  placeholder="Trip options subheading"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Custom Label
+                </label>
+                <input
+                  type="text"
+                  value={tripOptions.customLabel}
+                  onChange={(e) => setTripOptions(prev => ({ ...prev, customLabel: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  placeholder="Custom trips label"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Group Label
+                </label>
+                <input
+                  type="text"
+                  value={tripOptions.groupLabel}
+                  onChange={(e) => setTripOptions(prev => ({ ...prev, groupLabel: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  placeholder="Group trips label"
+                />
               </div>
             </div>
-            <button
-              onClick={() => saveSection('TripOptions', { tripOptions })}
-              disabled={saving}
-              className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 shadow-sm transition-colors"
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </div>
-        
-        {/* Section Content */}
-        <div className="p-6">
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Heading
-            </label>
-            <input
-              type="text"
-              value={tripOptions.heading}
-              onChange={(e) => setTripOptions(prev => ({ ...prev, heading: e.target.value }))}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              placeholder="Trip options heading"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Subheading
-            </label>
-            <input
-              type="text"
-              value={tripOptions.subheading}
-              onChange={(e) => setTripOptions(prev => ({ ...prev, subheading: e.target.value }))}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              placeholder="Trip options subheading"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Custom Label
-            </label>
-            <input
-              type="text"
-              value={tripOptions.customLabel}
-              onChange={(e) => setTripOptions(prev => ({ ...prev, customLabel: e.target.value }))}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              placeholder="Custom trips label"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Group Label
-            </label>
-            <input
-              type="text"
-              value={tripOptions.groupLabel}
-              onChange={(e) => setTripOptions(prev => ({ ...prev, groupLabel: e.target.value }))}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              placeholder="Group trips label"
-            />
-          </div>
-        </div>
 
-        {/* Custom Trips Section */}
-        <div className="mt-6 pt-6 border-t-2 border-gray-200">
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            </div>
-            <h3 className="text-base font-bold text-gray-900">Custom Trips</h3>
-          </div>
-          
-          {/* Custom Trip Selector Dropdown */}
-          <div className="mb-4">
-            <select
-              value={selectedCustomTrip}
-              onChange={(e) => setSelectedCustomTrip(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-            >
-              <option value="">Select a custom trip to edit</option>
-              {(tripOptions.customTrips || []).map((trip, index) => (
-                <option key={trip.id} value={trip.id}>
-                  Custom Trip {index + 1} - {trip.title || 'Untitled Trip'}
-                </option>
-              ))}
-            </select>
-          </div>
+            {/* Custom Trips Section */}
+            <div className="mt-6 pt-6 border-t-2 border-gray-200">
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </div>
+                <h3 className="text-base font-bold text-gray-900">Custom Trips</h3>
+              </div>
 
-          {/* Add New Custom Trip Button */}
-          <div className="mb-4">
-            <button
-              onClick={() => {
-                const newTrip: TripOption = {
-                  id: `custom-${Date.now()}`,
-                  title: 'New Custom Trip',
-                  description: 'Custom trip description',
-                  image: '/cards/1.jpg',
-                  nights: 3,
-                  days: 4,
-                  price: 12000,
-                  category: 'custom',
-                  route: '',
-                  trending: false,
-                  detailedItinerary: {
-                    subtitle: 'Custom Travel Experience',
-                    briefItinerary: [
-                      { day: 1, title: 'Day 1', description: 'Day 1 description' }
-                    ],
-                    keyAttractions: ['Attraction 1'],
-                    inclusions: ['Inclusion 1']
-                  }
-                }
-                setTripOptions({ ...tripOptions, customTrips: [...(tripOptions.customTrips || []), newTrip] })
-                setSelectedCustomTrip(newTrip.id)
-              }}
-              className="w-full py-2 text-sm border-2 border-dashed border-gray-200 rounded-md text-gray-600 hover:border-gray-300 hover:text-gray-700 transition-colors"
-            >
-              Add New Custom Trip
-            </button>
-          </div>
+              {/* Custom Trip Selector Dropdown */}
+              <div className="mb-4">
+                <select
+                  value={selectedCustomTrip}
+                  onChange={(e) => setSelectedCustomTrip(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value="">Select a custom trip to edit</option>
+                  {(tripOptions.customTrips || []).map((trip, index) => (
+                    <option key={trip.id} value={trip.id}>
+                      Custom Trip {index + 1} - {trip.title || 'Untitled Trip'}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          {/* Selected Custom Trip Edit Form */}
-          {selectedCustomTrip && tripOptions.customTrips?.find(t => t.id === selectedCustomTrip) && (
-            <div className="border border-gray-200 rounded-lg p-4 mb-4">
-              {(() => {
-                const trip = tripOptions.customTrips?.find(t => t.id === selectedCustomTrip)!
-                const tripIndex = tripOptions.customTrips?.findIndex(t => t.id === selectedCustomTrip) || 0
-                
-                return (
-                  <>
-                    <div className="flex justify-between items-center mb-4">
-                      <h4 className="text-md font-medium text-gray-800">Custom Trip {tripIndex + 1}</h4>
-                      <button
-                        onClick={() => {
-                          setTripOptions({
-                            ...tripOptions,
-                            customTrips: (tripOptions.customTrips || []).filter(t => t.id !== selectedCustomTrip)
-                          })
-                          setSelectedCustomTrip('')
-                        }}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Remove Trip
-                      </button>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Trip Title</label>
-                        <input
-                          type="text"
-                          value={trip.title}
-                          onChange={(e) => {
-                            const newTrips = [...(tripOptions.customTrips || [])]
-                            newTrips[tripIndex] = { ...trip, title: e.target.value }
-                            setTripOptions({ ...tripOptions, customTrips: newTrips })
-                          }}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <input
-                          type="text"
-                          value={trip.description}
-                          onChange={(e) => {
-                            const newTrips = [...(tripOptions.customTrips || [])]
-                            newTrips[tripIndex] = { ...trip, description: e.target.value }
-                            setTripOptions({ ...tripOptions, customTrips: newTrips })
-                          }}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Trip Image</label>
-                        <div className="flex items-center gap-4">
-                          {trip.image && (
-                            <div className="relative w-16 h-16 rounded-lg border border-gray-300 overflow-hidden">
-                              <Image
-                                src={trip.image} 
-                                alt={trip.title}
-                                fill
-                                className="object-cover"
-                                unoptimized
+              {/* Add New Custom Trip Button */}
+              <div className="mb-4">
+                <button
+                  onClick={() => {
+                    const newTrip: TripOption = {
+                      id: `custom-${Date.now()}`,
+                      title: 'New Custom Trip',
+                      description: 'Custom trip description',
+                      image: '/cards/1.jpg',
+                      nights: 3,
+                      days: 4,
+                      price: 12000,
+                      category: 'custom',
+                      route: '',
+                      trending: false,
+                      detailedItinerary: {
+                        subtitle: 'Custom Travel Experience',
+                        briefItinerary: [
+                          { day: 1, title: 'Day 1', description: 'Day 1 description' }
+                        ],
+                        keyAttractions: ['Attraction 1'],
+                        inclusions: ['Inclusion 1']
+                      }
+                    }
+                    setTripOptions({ ...tripOptions, customTrips: [...(tripOptions.customTrips || []), newTrip] })
+                    setSelectedCustomTrip(newTrip.id)
+                  }}
+                  className="w-full py-2 text-sm border-2 border-dashed border-gray-200 rounded-md text-gray-600 hover:border-gray-300 hover:text-gray-700 transition-colors"
+                >
+                  Add New Custom Trip
+                </button>
+              </div>
+
+              {/* Selected Custom Trip Edit Form */}
+              {selectedCustomTrip && tripOptions.customTrips?.find(t => t.id === selectedCustomTrip) && (
+                <div className="border border-gray-200 rounded-lg p-4 mb-4">
+                  {(() => {
+                    const trip = tripOptions.customTrips?.find(t => t.id === selectedCustomTrip)!
+                    const tripIndex = tripOptions.customTrips?.findIndex(t => t.id === selectedCustomTrip) || 0
+
+                    return (
+                      <>
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 className="text-md font-medium text-gray-800">Custom Trip {tripIndex + 1}</h4>
+                          <button
+                            onClick={() => {
+                              setTripOptions({
+                                ...tripOptions,
+                                customTrips: (tripOptions.customTrips || []).filter(t => t.id !== selectedCustomTrip)
+                              })
+                              setSelectedCustomTrip('')
+                            }}
+                            className="text-red-600 hover:text-red-800 text-sm"
+                          >
+                            Remove Trip
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Trip Title</label>
+                            <input
+                              type="text"
+                              value={trip.title}
+                              onChange={(e) => {
+                                const newTrips = [...(tripOptions.customTrips || [])]
+                                newTrips[tripIndex] = { ...trip, title: e.target.value }
+                                setTripOptions({ ...tripOptions, customTrips: newTrips })
+                              }}
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <input
+                              type="text"
+                              value={trip.description}
+                              onChange={(e) => {
+                                const newTrips = [...(tripOptions.customTrips || [])]
+                                newTrips[tripIndex] = { ...trip, description: e.target.value }
+                                setTripOptions({ ...tripOptions, customTrips: newTrips })
+                              }}
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Trip Image</label>
+                            <div className="flex items-center gap-4">
+                              {trip.image && (
+                                <div className="relative w-16 h-16 rounded-lg border border-gray-300 overflow-hidden">
+                                  <Image
+                                    src={trip.image}
+                                    alt={trip.title}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                  />
+                                </div>
+                              )}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0]
+                                  if (file) {
+                                    // Check file size (4MB limit)
+                                    const maxSize = 4 * 1024 * 1024 // 4MB
+                                    if (file.size > maxSize) {
+                                      alert(`File too large. Maximum size is 4MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB. Please compress the image and try again.`)
+                                      return
+                                    }
+
+                                    try {
+                                      const formData = new FormData()
+                                      formData.append('file', file)
+                                      formData.append('path', `trip-options/${citySlug}/custom-${trip.id}`)
+
+                                      const uploadData = await fetchApi<{ url: string; error?: string }>('/api/upload', {
+                                        method: 'POST',
+                                        body: formData
+                                      })
+
+                                      if (uploadData.url) {
+                                        const { url } = uploadData
+                                        const newTrips = [...(tripOptions.customTrips || [])]
+                                        newTrips[tripIndex] = { ...trip, image: url }
+                                        setTripOptions({ ...tripOptions, customTrips: newTrips })
+                                      } else {
+                                        const errorData = uploadData
+                                        console.error('Upload failed:', errorData)
+                                        alert(`Upload failed: ${errorData.error || 'Unknown error'}`)
+                                      }
+                                    } catch (error) {
+                                      console.error('Upload error:', error)
+                                      alert('Upload failed. Please try again.')
+                                    }
+                                  }
+                                }}
+                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                               />
                             </div>
-                          )}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0]
-                              if (file) {
-                                // Check file size (4MB limit)
-                                const maxSize = 4 * 1024 * 1024 // 4MB
-                                if (file.size > maxSize) {
-                                  alert(`File too large. Maximum size is 4MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB. Please compress the image and try again.`)
-                                  return
-                                }
-
-                                try {
-                                  const formData = new FormData()
-                                  formData.append('file', file)
-                                  formData.append('path', `trip-options/${citySlug}/custom-${trip.id}`)
-                                  
-                                  const uploadData = await fetchApi<{ url: string }>('/api/upload', {
-                                    method: 'POST',
-                                    body: formData
-                                  })
-                                  
-                                  if (uploadData.url) {
-                                    const { url } = uploadData
-                                    const newTrips = [...(tripOptions.customTrips || [])]
-                                    newTrips[tripIndex] = { ...trip, image: url }
-                                    setTripOptions({ ...tripOptions, customTrips: newTrips })
-                                  } else {
-                                    const errorData = await uploadRes.json()
-                                    console.error('Upload failed:', errorData)
-                                    alert(`Upload failed: ${errorData.error || 'Unknown error'}`)
-                                  }
-                                } catch (error) {
-                                  console.error('Upload error:', error)
-                                  alert('Upload failed. Please try again.')
-                                }
-                              }
-                            }}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Route</label>
-                        <input
-                          type="text"
-                          value={trip.route || ''}
-                          onChange={(e) => {
-                            const newTrips = [...(tripOptions.customTrips || [])]
-                            newTrips[tripIndex] = { ...trip, route: e.target.value }
-                            setTripOptions({ ...tripOptions, customTrips: newTrips })
-                          }}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Nights</label>
-                        <input
-                          type="number"
-                          value={trip.nights || ''}
-                          onChange={(e) => {
-                            const newTrips = [...(tripOptions.customTrips || [])]
-                            newTrips[tripIndex] = { ...trip, nights: parseInt(e.target.value) || 0 }
-                            setTripOptions({ ...tripOptions, customTrips: newTrips })
-                          }}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Days</label>
-                        <input
-                          type="number"
-                          value={trip.days || ''}
-                          onChange={(e) => {
-                            const newTrips = [...(tripOptions.customTrips || [])]
-                            newTrips[tripIndex] = { ...trip, days: parseInt(e.target.value) || 0 }
-                            setTripOptions({ ...tripOptions, customTrips: newTrips })
-                          }}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
-                        <input
-                          type="number"
-                          value={trip.price || ''}
-                          onChange={(e) => {
-                            const newTrips = [...(tripOptions.customTrips || [])]
-                            newTrips[tripIndex] = { ...trip, price: parseInt(e.target.value) || 0 }
-                            setTripOptions({ ...tripOptions, customTrips: newTrips })
-                          }}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Detailed Itinerary Section */}
-                    <div className="mt-6 border-t border-gray-200 pt-4">
-                      <h5 className="text-sm font-semibold text-gray-800 mb-3">Detailed Itinerary</h5>
-                      
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Itinerary Subtitle</label>
-                          <input
-                            type="text"
-                            value={trip.detailedItinerary?.subtitle || ''}
-                            onChange={(e) => {
-                              const newTrips = [...(tripOptions.customTrips || [])]
-                              newTrips[tripIndex] = {
-                                ...trip,
-                                detailedItinerary: {
-                                  ...trip.detailedItinerary,
-                                  subtitle: e.target.value,
-                                  briefItinerary: trip.detailedItinerary?.briefItinerary || [],
-                                  keyAttractions: trip.detailedItinerary?.keyAttractions || [],
-                                  inclusions: trip.detailedItinerary?.inclusions || []
-                                }
-                              }
-                              setTripOptions({ ...tripOptions, customTrips: newTrips })
-                            }}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                            placeholder="Custom Travel Experience"
-                          />
-                        </div>
-
-                        {/* Brief Itinerary */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Brief Itinerary</label>
-                          <div className="space-y-2">
-                            {(trip.detailedItinerary?.briefItinerary || []).map((day, dayIndex) => (
-                              <div key={dayIndex} className="flex gap-2 items-center">
-                                <input
-                                  type="number"
-                                  value={day.day}
-                                  onChange={(e) => {
-                                    const newTrips = [...(tripOptions.customTrips || [])]
-                                    const newItinerary = [...(trip.detailedItinerary?.briefItinerary || [])]
-                                    newItinerary[dayIndex] = { ...day, day: parseInt(e.target.value) || 1 }
-                                    newTrips[tripIndex] = {
-                                      ...trip,
-                                      detailedItinerary: {
-                                        subtitle: trip.detailedItinerary?.subtitle || '',
-                                        briefItinerary: newItinerary,
-                                        keyAttractions: trip.detailedItinerary?.keyAttractions || [],
-                                        inclusions: trip.detailedItinerary?.inclusions || []
-                                      }
-                                    }
-                                    setTripOptions({ ...tripOptions, customTrips: newTrips })
-                                  }}
-                                  className="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                  placeholder="Day"
-                                />
-                                <input
-                                  type="text"
-                                  value={day.title}
-                                  onChange={(e) => {
-                                    const newTrips = [...(tripOptions.customTrips || [])]
-                                    const newItinerary = [...(trip.detailedItinerary?.briefItinerary || [])]
-                                    newItinerary[dayIndex] = { ...day, title: e.target.value }
-                                    newTrips[tripIndex] = {
-                                      ...trip,
-                                      detailedItinerary: {
-                                        subtitle: trip.detailedItinerary?.subtitle || '',
-                                        briefItinerary: newItinerary,
-                                        keyAttractions: trip.detailedItinerary?.keyAttractions || [],
-                                        inclusions: trip.detailedItinerary?.inclusions || []
-                                      }
-                                    }
-                                    setTripOptions({ ...tripOptions, customTrips: newTrips })
-                                  }}
-                                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                  placeholder="Day title"
-                                />
-                                <button
-                                  onClick={() => {
-                                    const newTrips = [...(tripOptions.customTrips || [])]
-                                    const newItinerary = (trip.detailedItinerary?.briefItinerary || []).filter((_, i) => i !== dayIndex)
-                                    newTrips[tripIndex] = {
-                                      ...trip,
-                                      detailedItinerary: {
-                                        subtitle: trip.detailedItinerary?.subtitle || '',
-                                        briefItinerary: newItinerary,
-                                        keyAttractions: trip.detailedItinerary?.keyAttractions || [],
-                                        inclusions: trip.detailedItinerary?.inclusions || []
-                                      }
-                                    }
-                                    setTripOptions({ ...tripOptions, customTrips: newTrips })
-                                  }}
-                                  className="text-red-600 hover:text-red-800 text-sm"
-                                >
-                                  Remove
-                                </button>
-                              </div>
-                            ))}
-                            <button
-                              onClick={() => {
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Route</label>
+                            <input
+                              type="text"
+                              value={trip.route || ''}
+                              onChange={(e) => {
                                 const newTrips = [...(tripOptions.customTrips || [])]
-                                const newItinerary = [...(trip.detailedItinerary?.briefItinerary || []), { day: 1, title: '', description: '' }]
-                                newTrips[tripIndex] = {
-                                  ...trip,
-                                  detailedItinerary: {
-                                    subtitle: trip.detailedItinerary?.subtitle || '',
-                                    briefItinerary: newItinerary,
-                                    keyAttractions: trip.detailedItinerary?.keyAttractions || [],
-                                    inclusions: trip.detailedItinerary?.inclusions || []
-                                  }
-                                }
+                                newTrips[tripIndex] = { ...trip, route: e.target.value }
                                 setTripOptions({ ...tripOptions, customTrips: newTrips })
                               }}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
-                            >
-                              + Add Day
-                            </button>
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Nights</label>
+                            <input
+                              type="number"
+                              value={trip.nights || ''}
+                              onChange={(e) => {
+                                const newTrips = [...(tripOptions.customTrips || [])]
+                                newTrips[tripIndex] = { ...trip, nights: parseInt(e.target.value) || 0 }
+                                setTripOptions({ ...tripOptions, customTrips: newTrips })
+                              }}
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Days</label>
+                            <input
+                              type="number"
+                              value={trip.days || ''}
+                              onChange={(e) => {
+                                const newTrips = [...(tripOptions.customTrips || [])]
+                                newTrips[tripIndex] = { ...trip, days: parseInt(e.target.value) || 0 }
+                                setTripOptions({ ...tripOptions, customTrips: newTrips })
+                              }}
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
+                            <input
+                              type="number"
+                              value={trip.price || ''}
+                              onChange={(e) => {
+                                const newTrips = [...(tripOptions.customTrips || [])]
+                                newTrips[tripIndex] = { ...trip, price: parseInt(e.target.value) || 0 }
+                                setTripOptions({ ...tripOptions, customTrips: newTrips })
+                              }}
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
                           </div>
                         </div>
 
-                        {/* Key Attractions */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Key Attractions</label>
-                          <div className="space-y-2">
-                            {(trip.detailedItinerary?.keyAttractions || []).map((attraction, attractionIndex) => (
-                              <div key={attractionIndex} className="flex gap-2 items-center">
-                                <input
-                                  type="text"
-                                  value={attraction}
-                                  onChange={(e) => {
-                                    const newTrips = [...(tripOptions.customTrips || [])]
-                                    const newAttractions = [...(trip.detailedItinerary?.keyAttractions || [])]
-                                    newAttractions[attractionIndex] = e.target.value
-                                    newTrips[tripIndex] = {
-                                      ...trip,
-                                      detailedItinerary: {
-                                        subtitle: trip.detailedItinerary?.subtitle || '',
-                                        briefItinerary: trip.detailedItinerary?.briefItinerary || [],
-                                        keyAttractions: newAttractions,
-                                        inclusions: trip.detailedItinerary?.inclusions || []
-                                      }
+                        {/* Detailed Itinerary Section */}
+                        <div className="mt-6 border-t border-gray-200 pt-4">
+                          <h5 className="text-sm font-semibold text-gray-800 mb-3">Detailed Itinerary</h5>
+
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Itinerary Subtitle</label>
+                              <input
+                                type="text"
+                                value={trip.detailedItinerary?.subtitle || ''}
+                                onChange={(e) => {
+                                  const newTrips = [...(tripOptions.customTrips || [])]
+                                  newTrips[tripIndex] = {
+                                    ...trip,
+                                    detailedItinerary: {
+                                      ...trip.detailedItinerary,
+                                      subtitle: e.target.value,
+                                      briefItinerary: trip.detailedItinerary?.briefItinerary || [],
+                                      keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                      inclusions: trip.detailedItinerary?.inclusions || []
                                     }
-                                    setTripOptions({ ...tripOptions, customTrips: newTrips })
-                                  }}
-                                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                  placeholder="Key attraction"
-                                />
-                                <button
-                                  onClick={() => {
-                                    const newTrips = [...(tripOptions.customTrips || [])]
-                                    const newAttractions = (trip.detailedItinerary?.keyAttractions || []).filter((_, i) => i !== attractionIndex)
-                                    newTrips[tripIndex] = {
-                                      ...trip,
-                                      detailedItinerary: {
-                                        subtitle: trip.detailedItinerary?.subtitle || '',
-                                        briefItinerary: trip.detailedItinerary?.briefItinerary || [],
-                                        keyAttractions: newAttractions,
-                                        inclusions: trip.detailedItinerary?.inclusions || []
-                                      }
-                                    }
-                                    setTripOptions({ ...tripOptions, customTrips: newTrips })
-                                  }}
-                                  className="text-red-600 hover:text-red-800 text-sm"
-                                >
-                                  Remove
-                                </button>
-                              </div>
-                            ))}
-                            <button
-                              onClick={() => {
-                                const newTrips = [...(tripOptions.customTrips || [])]
-                                const newAttractions = [...(trip.detailedItinerary?.keyAttractions || []), '']
-                                newTrips[tripIndex] = {
-                                  ...trip,
-                                  detailedItinerary: {
-                                    subtitle: trip.detailedItinerary?.subtitle || '',
-                                    briefItinerary: trip.detailedItinerary?.briefItinerary || [],
-                                    keyAttractions: newAttractions,
-                                    inclusions: trip.detailedItinerary?.inclusions || []
                                   }
-                                }
-                                setTripOptions({ ...tripOptions, customTrips: newTrips })
-                              }}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
-                            >
-                              + Add Attraction
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Inclusions */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Inclusions</label>
-                          <div className="space-y-2">
-                            {(trip.detailedItinerary?.inclusions || []).map((inclusion, inclusionIndex) => (
-                              <div key={inclusionIndex} className="flex gap-2 items-center">
-                                <input
-                                  type="text"
-                                  value={inclusion}
-                                  onChange={(e) => {
-                                    const newTrips = [...(tripOptions.customTrips || [])]
-                                    const newInclusions = [...(trip.detailedItinerary?.inclusions || [])]
-                                    newInclusions[inclusionIndex] = e.target.value
-                                    newTrips[tripIndex] = { 
-                                      ...trip, 
-                                      detailedItinerary: {
-                                        subtitle: trip.detailedItinerary?.subtitle || '',
-                                        briefItinerary: trip.detailedItinerary?.briefItinerary || [],
-                                        keyAttractions: trip.detailedItinerary?.keyAttractions || [],
-                                        inclusions: newInclusions
-                                      }
-                                    }
-                                    setTripOptions({ ...tripOptions, customTrips: newTrips })
-                                  }}
-                                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                  placeholder="Inclusion"
-                                />
-                                <button
-                                  onClick={() => {
-                                    const newTrips = [...(tripOptions.customTrips || [])]
-                                    const newInclusions = (trip.detailedItinerary?.inclusions || []).filter((_, i) => i !== inclusionIndex)
-                                    newTrips[tripIndex] = { 
-                                      ...trip, 
-                                      detailedItinerary: {
-                                        subtitle: trip.detailedItinerary?.subtitle || '',
-                                        briefItinerary: trip.detailedItinerary?.briefItinerary || [],
-                                        keyAttractions: trip.detailedItinerary?.keyAttractions || [],
-                                        inclusions: newInclusions
-                                      }
-                                    }
-                                    setTripOptions({ ...tripOptions, customTrips: newTrips })
-                                  }}
-                                  className="text-red-600 hover:text-red-800 text-sm"
-                                >
-                                  Remove
-                                </button>
-                              </div>
-                            ))}
-                            <button
-                              onClick={() => {
-                                const newTrips = [...(tripOptions.customTrips || [])]
-                                const newInclusions = [...(trip.detailedItinerary?.inclusions || []), '']
-                                newTrips[tripIndex] = { 
-                                  ...trip, 
-                                  detailedItinerary: {
-                                    subtitle: trip.detailedItinerary?.subtitle || '',
-                                    briefItinerary: trip.detailedItinerary?.briefItinerary || [],
-                                    keyAttractions: trip.detailedItinerary?.keyAttractions || [],
-                                    inclusions: newInclusions
-                                  }
-                                }
-                                setTripOptions({ ...tripOptions, customTrips: newTrips })
-                              }}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
-                            >
-                              + Add Inclusion
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )
-              })()}
-            </div>
-          )}
-        </div>
-
-        {/* Group Trips Section */}
-        <div className="mt-6 pt-6 border-t-2 border-gray-200">
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-            <h3 className="text-base font-bold text-gray-900">Group Departures</h3>
-          </div>
-          
-          {/* Group Trip Selector Dropdown */}
-          <div className="mb-4">
-            <select
-              value={selectedGroupTrip}
-              onChange={(e) => setSelectedGroupTrip(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-            >
-              <option value="">Select a group trip to edit</option>
-              {(tripOptions.groupTrips || []).map((trip, index) => (
-                <option key={trip.id} value={trip.id}>
-                  Group Trip {index + 1} - {trip.title || 'Untitled Trip'}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Add New Group Trip Button */}
-          <div className="mb-4">
-            <button
-              onClick={() => {
-                const newTrip: TripOption = {
-                  id: `group-${Date.now()}`,
-                  title: 'New Group Trip',
-                  description: 'Group trip description',
-                  image: '/cards/1.jpg',
-                  nights: 3,
-                  days: 4,
-                  price: 12000,
-                  category: 'group',
-                  route: '',
-                  trending: false,
-                  detailedItinerary: {
-                    subtitle: 'Group Travel Experience',
-                    briefItinerary: [
-                      { day: 1, title: 'Day 1', description: 'Day 1 description' }
-                    ],
-                    keyAttractions: ['Attraction 1'],
-                    inclusions: ['Inclusion 1']
-                  }
-                }
-                setTripOptions({ ...tripOptions, groupTrips: [...(tripOptions.groupTrips || []), newTrip] })
-                setSelectedGroupTrip(newTrip.id)
-              }}
-              className="w-full py-2 text-sm border-2 border-dashed border-gray-200 rounded-md text-gray-600 hover:border-gray-300 hover:text-gray-700 transition-colors"
-            >
-              Add New Group Trip
-            </button>
-          </div>
-
-          {/* Selected Group Trip Edit Form */}
-          {selectedGroupTrip && tripOptions.groupTrips?.find(t => t.id === selectedGroupTrip) && (
-            <div className="border border-gray-200 rounded-lg p-4 mb-4">
-              {(() => {
-                const trip = tripOptions.groupTrips?.find(t => t.id === selectedGroupTrip)!
-                const tripIndex = tripOptions.groupTrips?.findIndex(t => t.id === selectedGroupTrip) || 0
-                
-                return (
-                  <>
-                    <div className="flex justify-between items-center mb-4">
-                      <h4 className="text-md font-medium text-gray-800">Group Trip {tripIndex + 1}</h4>
-                      <button
-                        onClick={() => {
-                          setTripOptions({
-                            ...tripOptions,
-                            groupTrips: (tripOptions.groupTrips || []).filter(t => t.id !== selectedGroupTrip)
-                          })
-                          setSelectedGroupTrip('')
-                        }}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Remove Trip
-                      </button>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Trip Title</label>
-                        <input
-                          type="text"
-                          value={trip.title}
-                          onChange={(e) => {
-                            const newTrips = [...(tripOptions.groupTrips || [])]
-                            newTrips[tripIndex] = { ...trip, title: e.target.value }
-                            setTripOptions({ ...tripOptions, groupTrips: newTrips })
-                          }}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <input
-                          type="text"
-                          value={trip.description}
-                          onChange={(e) => {
-                            const newTrips = [...(tripOptions.groupTrips || [])]
-                            newTrips[tripIndex] = { ...trip, description: e.target.value }
-                            setTripOptions({ ...tripOptions, groupTrips: newTrips })
-                          }}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Trip Image</label>
-                        <div className="flex items-center gap-4">
-                          {trip.image && (
-                            <div className="relative w-16 h-16 rounded-lg border border-gray-300 overflow-hidden">
-                              <Image
-                                src={trip.image} 
-                                alt={trip.title}
-                                fill
-                                className="object-cover"
-                                unoptimized
+                                  setTripOptions({ ...tripOptions, customTrips: newTrips })
+                                }}
+                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                                placeholder="Custom Travel Experience"
                               />
                             </div>
-                          )}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0]
-                              if (file) {
-                                // Check file size (4MB limit)
-                                const maxSize = 4 * 1024 * 1024 // 4MB
-                                if (file.size > maxSize) {
-                                  alert(`File too large. Maximum size is 4MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB. Please compress the image and try again.`)
-                                  return
-                                }
 
-                                try {
-                                  const formData = new FormData()
-                                  formData.append('file', file)
-                                  formData.append('path', `trip-options/${citySlug}/group-${trip.id}`)
-                                  
-                                  const uploadData = await fetchApi<{ url: string }>('/api/upload', {
-                                    method: 'POST',
-                                    body: formData
-                                  })
-                                  
-                                  if (uploadData.url) {
-                                    const { url } = uploadData
-                                    const newTrips = [...(tripOptions.groupTrips || [])]
-                                    newTrips[tripIndex] = { ...trip, image: url }
-                                    setTripOptions({ ...tripOptions, groupTrips: newTrips })
-                                  } else {
-                                    const errorData = await uploadRes.json()
-                                    console.error('Upload failed:', errorData)
-                                    alert(`Upload failed: ${errorData.error || 'Unknown error'}`)
-                                  }
-                                } catch (error) {
-                                  console.error('Upload error:', error)
-                                  alert('Upload failed. Please try again.')
-                                }
-                              }
-                            }}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Route</label>
-                        <input
-                          type="text"
-                          value={trip.route || ''}
-                          onChange={(e) => {
-                            const newTrips = [...(tripOptions.groupTrips || [])]
-                            newTrips[tripIndex] = { ...trip, route: e.target.value }
-                            setTripOptions({ ...tripOptions, groupTrips: newTrips })
-                          }}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Nights</label>
-                        <input
-                          type="number"
-                          value={trip.nights || ''}
-                          onChange={(e) => {
-                            const newTrips = [...(tripOptions.groupTrips || [])]
-                            newTrips[tripIndex] = { ...trip, nights: parseInt(e.target.value) || 0 }
-                            setTripOptions({ ...tripOptions, groupTrips: newTrips })
-                          }}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Days</label>
-                        <input
-                          type="number"
-                          value={trip.days || ''}
-                          onChange={(e) => {
-                            const newTrips = [...(tripOptions.groupTrips || [])]
-                            newTrips[tripIndex] = { ...trip, days: parseInt(e.target.value) || 0 }
-                            setTripOptions({ ...tripOptions, groupTrips: newTrips })
-                          }}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
-                        <input
-                          type="number"
-                          value={trip.price || ''}
-                          onChange={(e) => {
-                            const newTrips = [...(tripOptions.groupTrips || [])]
-                            newTrips[tripIndex] = { ...trip, price: parseInt(e.target.value) || 0 }
-                            setTripOptions({ ...tripOptions, groupTrips: newTrips })
-                          }}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Detailed Itinerary Section */}
-                    <div className="mt-6 border-t border-gray-200 pt-4">
-                      <h5 className="text-sm font-semibold text-gray-800 mb-3">Detailed Itinerary</h5>
-                      
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Itinerary Subtitle</label>
-                          <input
-                            type="text"
-                            value={trip.detailedItinerary?.subtitle || ''}
-                            onChange={(e) => {
-                              const newTrips = [...(tripOptions.groupTrips || [])]
-                              newTrips[tripIndex] = {
-                                ...trip,
-                                detailedItinerary: {
-                                  ...trip.detailedItinerary,
-                                  subtitle: e.target.value,
-                                  briefItinerary: trip.detailedItinerary?.briefItinerary || [],
-                                  keyAttractions: trip.detailedItinerary?.keyAttractions || [],
-                                  inclusions: trip.detailedItinerary?.inclusions || []
-                                }
-                              }
-                              setTripOptions({ ...tripOptions, groupTrips: newTrips })
-                            }}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                            placeholder="Group Travel Experience"
-                          />
-                        </div>
-
-                        {/* Brief Itinerary */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Brief Itinerary</label>
-                          <div className="space-y-2">
-                            {(trip.detailedItinerary?.briefItinerary || []).map((day, dayIndex) => (
-                              <div key={dayIndex} className="flex gap-2 items-center">
-                                <input
-                                  type="number"
-                                  value={day.day}
-                                  onChange={(e) => {
-                                    const newTrips = [...(tripOptions.groupTrips || [])]
-                                    const newItinerary = [...(trip.detailedItinerary?.briefItinerary || [])]
-                                    newItinerary[dayIndex] = { ...day, day: parseInt(e.target.value) || 1 }
-                                    newTrips[tripIndex] = {
-                                      ...trip,
-                                      detailedItinerary: {
-                                        subtitle: trip.detailedItinerary?.subtitle || '',
-                                        briefItinerary: newItinerary,
-                                        keyAttractions: trip.detailedItinerary?.keyAttractions || [],
-                                        inclusions: trip.detailedItinerary?.inclusions || []
-                                      }
-                                    }
-                                    setTripOptions({ ...tripOptions, groupTrips: newTrips })
-                                  }}
-                                  className="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                  placeholder="Day"
-                                />
-                                <input
-                                  type="text"
-                                  value={day.title}
-                                  onChange={(e) => {
-                                    const newTrips = [...(tripOptions.groupTrips || [])]
-                                    const newItinerary = [...(trip.detailedItinerary?.briefItinerary || [])]
-                                    newItinerary[dayIndex] = { ...day, title: e.target.value }
-                                    newTrips[tripIndex] = {
-                                      ...trip,
-                                      detailedItinerary: {
-                                        subtitle: trip.detailedItinerary?.subtitle || '',
-                                        briefItinerary: newItinerary,
-                                        keyAttractions: trip.detailedItinerary?.keyAttractions || [],
-                                        inclusions: trip.detailedItinerary?.inclusions || []
-                                      }
-                                    }
-                                    setTripOptions({ ...tripOptions, groupTrips: newTrips })
-                                  }}
-                                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                  placeholder="Day title"
-                                />
+                            {/* Brief Itinerary */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Brief Itinerary</label>
+                              <div className="space-y-2">
+                                {(trip.detailedItinerary?.briefItinerary || []).map((day, dayIndex) => (
+                                  <div key={dayIndex} className="flex gap-2 items-center">
+                                    <input
+                                      type="number"
+                                      value={day.day}
+                                      onChange={(e) => {
+                                        const newTrips = [...(tripOptions.customTrips || [])]
+                                        const newItinerary = [...(trip.detailedItinerary?.briefItinerary || [])]
+                                        newItinerary[dayIndex] = { ...day, day: parseInt(e.target.value) || 1 }
+                                        newTrips[tripIndex] = {
+                                          ...trip,
+                                          detailedItinerary: {
+                                            subtitle: trip.detailedItinerary?.subtitle || '',
+                                            briefItinerary: newItinerary,
+                                            keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                            inclusions: trip.detailedItinerary?.inclusions || []
+                                          }
+                                        }
+                                        setTripOptions({ ...tripOptions, customTrips: newTrips })
+                                      }}
+                                      className="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                      placeholder="Day"
+                                    />
+                                    <input
+                                      type="text"
+                                      value={day.title}
+                                      onChange={(e) => {
+                                        const newTrips = [...(tripOptions.customTrips || [])]
+                                        const newItinerary = [...(trip.detailedItinerary?.briefItinerary || [])]
+                                        newItinerary[dayIndex] = { ...day, title: e.target.value }
+                                        newTrips[tripIndex] = {
+                                          ...trip,
+                                          detailedItinerary: {
+                                            subtitle: trip.detailedItinerary?.subtitle || '',
+                                            briefItinerary: newItinerary,
+                                            keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                            inclusions: trip.detailedItinerary?.inclusions || []
+                                          }
+                                        }
+                                        setTripOptions({ ...tripOptions, customTrips: newTrips })
+                                      }}
+                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                      placeholder="Day title"
+                                    />
+                                    <button
+                                      onClick={() => {
+                                        const newTrips = [...(tripOptions.customTrips || [])]
+                                        const newItinerary = (trip.detailedItinerary?.briefItinerary || []).filter((_, i) => i !== dayIndex)
+                                        newTrips[tripIndex] = {
+                                          ...trip,
+                                          detailedItinerary: {
+                                            subtitle: trip.detailedItinerary?.subtitle || '',
+                                            briefItinerary: newItinerary,
+                                            keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                            inclusions: trip.detailedItinerary?.inclusions || []
+                                          }
+                                        }
+                                        setTripOptions({ ...tripOptions, customTrips: newTrips })
+                                      }}
+                                      className="text-red-600 hover:text-red-800 text-sm"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                ))}
                                 <button
                                   onClick={() => {
-                                    const newTrips = [...(tripOptions.groupTrips || [])]
-                                    const newItinerary = (trip.detailedItinerary?.briefItinerary || []).filter((_, i) => i !== dayIndex)
+                                    const newTrips = [...(tripOptions.customTrips || [])]
+                                    const newItinerary = [...(trip.detailedItinerary?.briefItinerary || []), { day: 1, title: '', description: '' }]
                                     newTrips[tripIndex] = {
                                       ...trip,
                                       detailedItinerary: {
@@ -2165,49 +1695,67 @@ const WebsiteEdit: React.FC = () => {
                                         inclusions: trip.detailedItinerary?.inclusions || []
                                       }
                                     }
-                                    setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                    setTripOptions({ ...tripOptions, customTrips: newTrips })
                                   }}
-                                  className="text-red-600 hover:text-red-800 text-sm"
+                                  className="text-blue-600 hover:text-blue-800 text-sm"
                                 >
-                                  Remove
+                                  + Add Day
                                 </button>
                               </div>
-                            ))}
-                            <button
-                              onClick={() => {
-                                const newTrips = [...(tripOptions.groupTrips || [])]
-                                const newItinerary = [...(trip.detailedItinerary?.briefItinerary || []), { day: 1, title: '', description: '' }]
-                                newTrips[tripIndex] = {
-                                  ...trip,
-                                  detailedItinerary: {
-                                    subtitle: trip.detailedItinerary?.subtitle || '',
-                                    briefItinerary: newItinerary,
-                                    keyAttractions: trip.detailedItinerary?.keyAttractions || [],
-                                    inclusions: trip.detailedItinerary?.inclusions || []
-                                  }
-                                }
-                                setTripOptions({ ...tripOptions, groupTrips: newTrips })
-                              }}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
-                            >
-                              + Add Day
-                            </button>
-                          </div>
-                        </div>
+                            </div>
 
-                        {/* Key Attractions */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Key Attractions</label>
-                          <div className="space-y-2">
-                            {(trip.detailedItinerary?.keyAttractions || []).map((attraction, attractionIndex) => (
-                              <div key={attractionIndex} className="flex gap-2 items-center">
-                                <input
-                                  type="text"
-                                  value={attraction}
-                                  onChange={(e) => {
-                                    const newTrips = [...(tripOptions.groupTrips || [])]
-                                    const newAttractions = [...(trip.detailedItinerary?.keyAttractions || [])]
-                                    newAttractions[attractionIndex] = e.target.value
+                            {/* Key Attractions */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Key Attractions</label>
+                              <div className="space-y-2">
+                                {(trip.detailedItinerary?.keyAttractions || []).map((attraction, attractionIndex) => (
+                                  <div key={attractionIndex} className="flex gap-2 items-center">
+                                    <input
+                                      type="text"
+                                      value={attraction}
+                                      onChange={(e) => {
+                                        const newTrips = [...(tripOptions.customTrips || [])]
+                                        const newAttractions = [...(trip.detailedItinerary?.keyAttractions || [])]
+                                        newAttractions[attractionIndex] = e.target.value
+                                        newTrips[tripIndex] = {
+                                          ...trip,
+                                          detailedItinerary: {
+                                            subtitle: trip.detailedItinerary?.subtitle || '',
+                                            briefItinerary: trip.detailedItinerary?.briefItinerary || [],
+                                            keyAttractions: newAttractions,
+                                            inclusions: trip.detailedItinerary?.inclusions || []
+                                          }
+                                        }
+                                        setTripOptions({ ...tripOptions, customTrips: newTrips })
+                                      }}
+                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                      placeholder="Key attraction"
+                                    />
+                                    <button
+                                      onClick={() => {
+                                        const newTrips = [...(tripOptions.customTrips || [])]
+                                        const newAttractions = (trip.detailedItinerary?.keyAttractions || []).filter((_, i) => i !== attractionIndex)
+                                        newTrips[tripIndex] = {
+                                          ...trip,
+                                          detailedItinerary: {
+                                            subtitle: trip.detailedItinerary?.subtitle || '',
+                                            briefItinerary: trip.detailedItinerary?.briefItinerary || [],
+                                            keyAttractions: newAttractions,
+                                            inclusions: trip.detailedItinerary?.inclusions || []
+                                          }
+                                        }
+                                        setTripOptions({ ...tripOptions, customTrips: newTrips })
+                                      }}
+                                      className="text-red-600 hover:text-red-800 text-sm"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                ))}
+                                <button
+                                  onClick={() => {
+                                    const newTrips = [...(tripOptions.customTrips || [])]
+                                    const newAttractions = [...(trip.detailedItinerary?.keyAttractions || []), '']
                                     newTrips[tripIndex] = {
                                       ...trip,
                                       detailedItinerary: {
@@ -2217,875 +1765,927 @@ const WebsiteEdit: React.FC = () => {
                                         inclusions: trip.detailedItinerary?.inclusions || []
                                       }
                                     }
-                                    setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                    setTripOptions({ ...tripOptions, customTrips: newTrips })
                                   }}
-                                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                  placeholder="Key attraction"
-                                />
+                                  className="text-blue-600 hover:text-blue-800 text-sm"
+                                >
+                                  + Add Attraction
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Inclusions */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Inclusions</label>
+                              <div className="space-y-2">
+                                {(trip.detailedItinerary?.inclusions || []).map((inclusion, inclusionIndex) => (
+                                  <div key={inclusionIndex} className="flex gap-2 items-center">
+                                    <input
+                                      type="text"
+                                      value={inclusion}
+                                      onChange={(e) => {
+                                        const newTrips = [...(tripOptions.customTrips || [])]
+                                        const newInclusions = [...(trip.detailedItinerary?.inclusions || [])]
+                                        newInclusions[inclusionIndex] = e.target.value
+                                        newTrips[tripIndex] = {
+                                          ...trip,
+                                          detailedItinerary: {
+                                            subtitle: trip.detailedItinerary?.subtitle || '',
+                                            briefItinerary: trip.detailedItinerary?.briefItinerary || [],
+                                            keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                            inclusions: newInclusions
+                                          }
+                                        }
+                                        setTripOptions({ ...tripOptions, customTrips: newTrips })
+                                      }}
+                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                      placeholder="Inclusion"
+                                    />
+                                    <button
+                                      onClick={() => {
+                                        const newTrips = [...(tripOptions.customTrips || [])]
+                                        const newInclusions = (trip.detailedItinerary?.inclusions || []).filter((_, i) => i !== inclusionIndex)
+                                        newTrips[tripIndex] = {
+                                          ...trip,
+                                          detailedItinerary: {
+                                            subtitle: trip.detailedItinerary?.subtitle || '',
+                                            briefItinerary: trip.detailedItinerary?.briefItinerary || [],
+                                            keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                            inclusions: newInclusions
+                                          }
+                                        }
+                                        setTripOptions({ ...tripOptions, customTrips: newTrips })
+                                      }}
+                                      className="text-red-600 hover:text-red-800 text-sm"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                ))}
                                 <button
                                   onClick={() => {
-                                    const newTrips = [...(tripOptions.groupTrips || [])]
-                                    const newAttractions = (trip.detailedItinerary?.keyAttractions || []).filter((_, i) => i !== attractionIndex)
+                                    const newTrips = [...(tripOptions.customTrips || [])]
+                                    const newInclusions = [...(trip.detailedItinerary?.inclusions || []), '']
                                     newTrips[tripIndex] = {
                                       ...trip,
                                       detailedItinerary: {
                                         subtitle: trip.detailedItinerary?.subtitle || '',
                                         briefItinerary: trip.detailedItinerary?.briefItinerary || [],
-                                        keyAttractions: newAttractions,
-                                        inclusions: trip.detailedItinerary?.inclusions || []
-                                      }
-                                    }
-                                    setTripOptions({ ...tripOptions, groupTrips: newTrips })
-                                  }}
-                                  className="text-red-600 hover:text-red-800 text-sm"
-                                >
-                                  Remove
-                                </button>
-                              </div>
-                            ))}
-                            <button
-                              onClick={() => {
-                                const newTrips = [...(tripOptions.groupTrips || [])]
-                                const newAttractions = [...(trip.detailedItinerary?.keyAttractions || []), '']
-                                newTrips[tripIndex] = {
-                                  ...trip,
-                                  detailedItinerary: {
-                                    subtitle: trip.detailedItinerary?.subtitle || '',
-                                    briefItinerary: trip.detailedItinerary?.briefItinerary || [],
-                                    keyAttractions: newAttractions,
-                                    inclusions: trip.detailedItinerary?.inclusions || []
-                                  }
-                                }
-                                setTripOptions({ ...tripOptions, groupTrips: newTrips })
-                              }}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
-                            >
-                              + Add Attraction
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Inclusions */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Inclusions</label>
-                          <div className="space-y-2">
-                            {(trip.detailedItinerary?.inclusions || []).map((inclusion, inclusionIndex) => (
-                              <div key={inclusionIndex} className="flex gap-2 items-center">
-                                <input
-                                  type="text"
-                                  value={inclusion}
-                                  onChange={(e) => {
-                                    const newTrips = [...(tripOptions.groupTrips || [])]
-                                    const newInclusions = [...(trip.detailedItinerary?.inclusions || [])]
-                                    newInclusions[inclusionIndex] = e.target.value
-                                    newTrips[tripIndex] = { 
-                                      ...trip, 
-                                      detailedItinerary: {
-                                        subtitle: trip.detailedItinerary?.subtitle || '',
-                                        briefItinerary: trip.detailedItinerary?.briefItinerary || [],
                                         keyAttractions: trip.detailedItinerary?.keyAttractions || [],
                                         inclusions: newInclusions
                                       }
                                     }
-                                    setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                    setTripOptions({ ...tripOptions, customTrips: newTrips })
                                   }}
-                                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                  placeholder="Inclusion"
-                                />
-                                <button
-                                  onClick={() => {
-                                    const newTrips = [...(tripOptions.groupTrips || [])]
-                                    const newInclusions = (trip.detailedItinerary?.inclusions || []).filter((_, i) => i !== inclusionIndex)
-                                    newTrips[tripIndex] = { 
-                                      ...trip, 
-                                      detailedItinerary: {
-                                        subtitle: trip.detailedItinerary?.subtitle || '',
-                                        briefItinerary: trip.detailedItinerary?.briefItinerary || [],
-                                        keyAttractions: trip.detailedItinerary?.keyAttractions || [],
-                                        inclusions: newInclusions
-                                      }
-                                    }
-                                    setTripOptions({ ...tripOptions, groupTrips: newTrips })
-                                  }}
-                                  className="text-red-600 hover:text-red-800 text-sm"
+                                  className="text-blue-600 hover:text-blue-800 text-sm"
                                 >
-                                  Remove
+                                  + Add Inclusion
                                 </button>
                               </div>
-                            ))}
-                            <button
-                              onClick={() => {
-                                const newTrips = [...(tripOptions.groupTrips || [])]
-                                const newInclusions = [...(trip.detailedItinerary?.inclusions || []), '']
-                                newTrips[tripIndex] = { 
-                                  ...trip, 
-                                  detailedItinerary: {
-                                    subtitle: trip.detailedItinerary?.subtitle || '',
-                                    briefItinerary: trip.detailedItinerary?.briefItinerary || [],
-                                    keyAttractions: trip.detailedItinerary?.keyAttractions || [],
-                                    inclusions: newInclusions
-                                  }
-                                }
-                                setTripOptions({ ...tripOptions, groupTrips: newTrips })
-                              }}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
-                            >
-                              + Add Inclusion
-                            </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  </>
-                )
-              })()}
+                      </>
+                    )
+                  })()}
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Group Trips Section */}
+            <div className="mt-6 pt-6 border-t-2 border-gray-200">
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-base font-bold text-gray-900">Group Departures</h3>
+              </div>
+
+              {/* Group Trip Selector Dropdown */}
+              <div className="mb-4">
+                <select
+                  value={selectedGroupTrip}
+                  onChange={(e) => setSelectedGroupTrip(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value="">Select a group trip to edit</option>
+                  {(tripOptions.groupTrips || []).map((trip, index) => (
+                    <option key={trip.id} value={trip.id}>
+                      Group Trip {index + 1} - {trip.title || 'Untitled Trip'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Add New Group Trip Button */}
+              <div className="mb-4">
+                <button
+                  onClick={() => {
+                    const newTrip: TripOption = {
+                      id: `group-${Date.now()}`,
+                      title: 'New Group Trip',
+                      description: 'Group trip description',
+                      image: '/cards/1.jpg',
+                      nights: 3,
+                      days: 4,
+                      price: 12000,
+                      category: 'group',
+                      route: '',
+                      trending: false,
+                      detailedItinerary: {
+                        subtitle: 'Group Travel Experience',
+                        briefItinerary: [
+                          { day: 1, title: 'Day 1', description: 'Day 1 description' }
+                        ],
+                        keyAttractions: ['Attraction 1'],
+                        inclusions: ['Inclusion 1']
+                      }
+                    }
+                    setTripOptions({ ...tripOptions, groupTrips: [...(tripOptions.groupTrips || []), newTrip] })
+                    setSelectedGroupTrip(newTrip.id)
+                  }}
+                  className="w-full py-2 text-sm border-2 border-dashed border-gray-200 rounded-md text-gray-600 hover:border-gray-300 hover:text-gray-700 transition-colors"
+                >
+                  Add New Group Trip
+                </button>
+              </div>
+
+              {/* Selected Group Trip Edit Form */}
+              {selectedGroupTrip && tripOptions.groupTrips?.find(t => t.id === selectedGroupTrip) && (
+                <div className="border border-gray-200 rounded-lg p-4 mb-4">
+                  {(() => {
+                    const trip = tripOptions.groupTrips?.find(t => t.id === selectedGroupTrip)!
+                    const tripIndex = tripOptions.groupTrips?.findIndex(t => t.id === selectedGroupTrip) || 0
+
+                    return (
+                      <>
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 className="text-md font-medium text-gray-800">Group Trip {tripIndex + 1}</h4>
+                          <button
+                            onClick={() => {
+                              setTripOptions({
+                                ...tripOptions,
+                                groupTrips: (tripOptions.groupTrips || []).filter(t => t.id !== selectedGroupTrip)
+                              })
+                              setSelectedGroupTrip('')
+                            }}
+                            className="text-red-600 hover:text-red-800 text-sm"
+                          >
+                            Remove Trip
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Trip Title</label>
+                            <input
+                              type="text"
+                              value={trip.title}
+                              onChange={(e) => {
+                                const newTrips = [...(tripOptions.groupTrips || [])]
+                                newTrips[tripIndex] = { ...trip, title: e.target.value }
+                                setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                              }}
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <input
+                              type="text"
+                              value={trip.description}
+                              onChange={(e) => {
+                                const newTrips = [...(tripOptions.groupTrips || [])]
+                                newTrips[tripIndex] = { ...trip, description: e.target.value }
+                                setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                              }}
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Trip Image</label>
+                            <div className="flex items-center gap-4">
+                              {trip.image && (
+                                <div className="relative w-16 h-16 rounded-lg border border-gray-300 overflow-hidden">
+                                  <Image
+                                    src={trip.image}
+                                    alt={trip.title}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                  />
+                                </div>
+                              )}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0]
+                                  if (file) {
+                                    // Check file size (4MB limit)
+                                    const maxSize = 4 * 1024 * 1024 // 4MB
+                                    if (file.size > maxSize) {
+                                      alert(`File too large. Maximum size is 4MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB. Please compress the image and try again.`)
+                                      return
+                                    }
+
+                                    try {
+                                      const formData = new FormData()
+                                      formData.append('file', file)
+                                      formData.append('path', `trip-options/${citySlug}/group-${trip.id}`)
+
+                                      const uploadData = await fetchApi<{ url: string; error?: string }>('/api/upload', {
+                                        method: 'POST',
+                                        body: formData
+                                      })
+
+                                      if (uploadData.url) {
+                                        const { url } = uploadData
+                                        const newTrips = [...(tripOptions.groupTrips || [])]
+                                        newTrips[tripIndex] = { ...trip, image: url }
+                                        setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                      } else {
+                                        const errorData = uploadData
+                                        console.error('Upload failed:', errorData)
+                                        alert(`Upload failed: ${errorData.error || 'Unknown error'}`)
+                                      }
+                                    } catch (error) {
+                                      console.error('Upload error:', error)
+                                      alert('Upload failed. Please try again.')
+                                    }
+                                  }
+                                }}
+                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Route</label>
+                            <input
+                              type="text"
+                              value={trip.route || ''}
+                              onChange={(e) => {
+                                const newTrips = [...(tripOptions.groupTrips || [])]
+                                newTrips[tripIndex] = { ...trip, route: e.target.value }
+                                setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                              }}
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Nights</label>
+                            <input
+                              type="number"
+                              value={trip.nights || ''}
+                              onChange={(e) => {
+                                const newTrips = [...(tripOptions.groupTrips || [])]
+                                newTrips[tripIndex] = { ...trip, nights: parseInt(e.target.value) || 0 }
+                                setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                              }}
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Days</label>
+                            <input
+                              type="number"
+                              value={trip.days || ''}
+                              onChange={(e) => {
+                                const newTrips = [...(tripOptions.groupTrips || [])]
+                                newTrips[tripIndex] = { ...trip, days: parseInt(e.target.value) || 0 }
+                                setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                              }}
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
+                            <input
+                              type="number"
+                              value={trip.price || ''}
+                              onChange={(e) => {
+                                const newTrips = [...(tripOptions.groupTrips || [])]
+                                newTrips[tripIndex] = { ...trip, price: parseInt(e.target.value) || 0 }
+                                setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                              }}
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Detailed Itinerary Section */}
+                        <div className="mt-6 border-t border-gray-200 pt-4">
+                          <h5 className="text-sm font-semibold text-gray-800 mb-3">Detailed Itinerary</h5>
+
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Itinerary Subtitle</label>
+                              <input
+                                type="text"
+                                value={trip.detailedItinerary?.subtitle || ''}
+                                onChange={(e) => {
+                                  const newTrips = [...(tripOptions.groupTrips || [])]
+                                  newTrips[tripIndex] = {
+                                    ...trip,
+                                    detailedItinerary: {
+                                      ...trip.detailedItinerary,
+                                      subtitle: e.target.value,
+                                      briefItinerary: trip.detailedItinerary?.briefItinerary || [],
+                                      keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                      inclusions: trip.detailedItinerary?.inclusions || []
+                                    }
+                                  }
+                                  setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                }}
+                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                                placeholder="Group Travel Experience"
+                              />
+                            </div>
+
+                            {/* Brief Itinerary */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Brief Itinerary</label>
+                              <div className="space-y-2">
+                                {(trip.detailedItinerary?.briefItinerary || []).map((day, dayIndex) => (
+                                  <div key={dayIndex} className="flex gap-2 items-center">
+                                    <input
+                                      type="number"
+                                      value={day.day}
+                                      onChange={(e) => {
+                                        const newTrips = [...(tripOptions.groupTrips || [])]
+                                        const newItinerary = [...(trip.detailedItinerary?.briefItinerary || [])]
+                                        newItinerary[dayIndex] = { ...day, day: parseInt(e.target.value) || 1 }
+                                        newTrips[tripIndex] = {
+                                          ...trip,
+                                          detailedItinerary: {
+                                            subtitle: trip.detailedItinerary?.subtitle || '',
+                                            briefItinerary: newItinerary,
+                                            keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                            inclusions: trip.detailedItinerary?.inclusions || []
+                                          }
+                                        }
+                                        setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                      }}
+                                      className="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                      placeholder="Day"
+                                    />
+                                    <input
+                                      type="text"
+                                      value={day.title}
+                                      onChange={(e) => {
+                                        const newTrips = [...(tripOptions.groupTrips || [])]
+                                        const newItinerary = [...(trip.detailedItinerary?.briefItinerary || [])]
+                                        newItinerary[dayIndex] = { ...day, title: e.target.value }
+                                        newTrips[tripIndex] = {
+                                          ...trip,
+                                          detailedItinerary: {
+                                            subtitle: trip.detailedItinerary?.subtitle || '',
+                                            briefItinerary: newItinerary,
+                                            keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                            inclusions: trip.detailedItinerary?.inclusions || []
+                                          }
+                                        }
+                                        setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                      }}
+                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                      placeholder="Day title"
+                                    />
+                                    <button
+                                      onClick={() => {
+                                        const newTrips = [...(tripOptions.groupTrips || [])]
+                                        const newItinerary = (trip.detailedItinerary?.briefItinerary || []).filter((_, i) => i !== dayIndex)
+                                        newTrips[tripIndex] = {
+                                          ...trip,
+                                          detailedItinerary: {
+                                            subtitle: trip.detailedItinerary?.subtitle || '',
+                                            briefItinerary: newItinerary,
+                                            keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                            inclusions: trip.detailedItinerary?.inclusions || []
+                                          }
+                                        }
+                                        setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                      }}
+                                      className="text-red-600 hover:text-red-800 text-sm"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                ))}
+                                <button
+                                  onClick={() => {
+                                    const newTrips = [...(tripOptions.groupTrips || [])]
+                                    const newItinerary = [...(trip.detailedItinerary?.briefItinerary || []), { day: 1, title: '', description: '' }]
+                                    newTrips[tripIndex] = {
+                                      ...trip,
+                                      detailedItinerary: {
+                                        subtitle: trip.detailedItinerary?.subtitle || '',
+                                        briefItinerary: newItinerary,
+                                        keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                        inclusions: trip.detailedItinerary?.inclusions || []
+                                      }
+                                    }
+                                    setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                  }}
+                                  className="text-blue-600 hover:text-blue-800 text-sm"
+                                >
+                                  + Add Day
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Key Attractions */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Key Attractions</label>
+                              <div className="space-y-2">
+                                {(trip.detailedItinerary?.keyAttractions || []).map((attraction, attractionIndex) => (
+                                  <div key={attractionIndex} className="flex gap-2 items-center">
+                                    <input
+                                      type="text"
+                                      value={attraction}
+                                      onChange={(e) => {
+                                        const newTrips = [...(tripOptions.groupTrips || [])]
+                                        const newAttractions = [...(trip.detailedItinerary?.keyAttractions || [])]
+                                        newAttractions[attractionIndex] = e.target.value
+                                        newTrips[tripIndex] = {
+                                          ...trip,
+                                          detailedItinerary: {
+                                            subtitle: trip.detailedItinerary?.subtitle || '',
+                                            briefItinerary: trip.detailedItinerary?.briefItinerary || [],
+                                            keyAttractions: newAttractions,
+                                            inclusions: trip.detailedItinerary?.inclusions || []
+                                          }
+                                        }
+                                        setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                      }}
+                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                      placeholder="Key attraction"
+                                    />
+                                    <button
+                                      onClick={() => {
+                                        const newTrips = [...(tripOptions.groupTrips || [])]
+                                        const newAttractions = (trip.detailedItinerary?.keyAttractions || []).filter((_, i) => i !== attractionIndex)
+                                        newTrips[tripIndex] = {
+                                          ...trip,
+                                          detailedItinerary: {
+                                            subtitle: trip.detailedItinerary?.subtitle || '',
+                                            briefItinerary: trip.detailedItinerary?.briefItinerary || [],
+                                            keyAttractions: newAttractions,
+                                            inclusions: trip.detailedItinerary?.inclusions || []
+                                          }
+                                        }
+                                        setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                      }}
+                                      className="text-red-600 hover:text-red-800 text-sm"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                ))}
+                                <button
+                                  onClick={() => {
+                                    const newTrips = [...(tripOptions.groupTrips || [])]
+                                    const newAttractions = [...(trip.detailedItinerary?.keyAttractions || []), '']
+                                    newTrips[tripIndex] = {
+                                      ...trip,
+                                      detailedItinerary: {
+                                        subtitle: trip.detailedItinerary?.subtitle || '',
+                                        briefItinerary: trip.detailedItinerary?.briefItinerary || [],
+                                        keyAttractions: newAttractions,
+                                        inclusions: trip.detailedItinerary?.inclusions || []
+                                      }
+                                    }
+                                    setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                  }}
+                                  className="text-blue-600 hover:text-blue-800 text-sm"
+                                >
+                                  + Add Attraction
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Inclusions */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Inclusions</label>
+                              <div className="space-y-2">
+                                {(trip.detailedItinerary?.inclusions || []).map((inclusion, inclusionIndex) => (
+                                  <div key={inclusionIndex} className="flex gap-2 items-center">
+                                    <input
+                                      type="text"
+                                      value={inclusion}
+                                      onChange={(e) => {
+                                        const newTrips = [...(tripOptions.groupTrips || [])]
+                                        const newInclusions = [...(trip.detailedItinerary?.inclusions || [])]
+                                        newInclusions[inclusionIndex] = e.target.value
+                                        newTrips[tripIndex] = {
+                                          ...trip,
+                                          detailedItinerary: {
+                                            subtitle: trip.detailedItinerary?.subtitle || '',
+                                            briefItinerary: trip.detailedItinerary?.briefItinerary || [],
+                                            keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                            inclusions: newInclusions
+                                          }
+                                        }
+                                        setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                      }}
+                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                      placeholder="Inclusion"
+                                    />
+                                    <button
+                                      onClick={() => {
+                                        const newTrips = [...(tripOptions.groupTrips || [])]
+                                        const newInclusions = (trip.detailedItinerary?.inclusions || []).filter((_, i) => i !== inclusionIndex)
+                                        newTrips[tripIndex] = {
+                                          ...trip,
+                                          detailedItinerary: {
+                                            subtitle: trip.detailedItinerary?.subtitle || '',
+                                            briefItinerary: trip.detailedItinerary?.briefItinerary || [],
+                                            keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                            inclusions: newInclusions
+                                          }
+                                        }
+                                        setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                      }}
+                                      className="text-red-600 hover:text-red-800 text-sm"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                ))}
+                                <button
+                                  onClick={() => {
+                                    const newTrips = [...(tripOptions.groupTrips || [])]
+                                    const newInclusions = [...(trip.detailedItinerary?.inclusions || []), '']
+                                    newTrips[tripIndex] = {
+                                      ...trip,
+                                      detailedItinerary: {
+                                        subtitle: trip.detailedItinerary?.subtitle || '',
+                                        briefItinerary: trip.detailedItinerary?.briefItinerary || [],
+                                        keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                        inclusions: newInclusions
+                                      }
+                                    }
+                                    setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                  }}
+                                  className="text-blue-600 hover:text-blue-800 text-sm"
+                                >
+                                  + Add Inclusion
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )
+                  })()}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-        </div>
-      </div>
       )}
 
       {/* Reviews Section */}
       {isSectionVisible('reviews') && (
-      <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        {/* Section Header */}
-        <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
+        <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          {/* Section Header */}
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">4. Reviews Section</h2>
+                  <p className="text-xs text-gray-500">Customer testimonials & feedback</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">4. Reviews Section</h2>
-                <p className="text-xs text-gray-500">Customer testimonials & feedback</p>
-              </div>
-            </div>
-            <button
-              onClick={() => saveSection('Reviews', { reviews })}
-              disabled={saving}
-              className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 shadow-sm transition-colors"
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </div>
-        
-        {/* Section Content */}
-        <div className="p-6">
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Heading
-            </label>
-            <input
-              type="text"
-              value={reviews.heading}
-              onChange={(e) => setReviews(prev => ({ ...prev, heading: e.target.value }))}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              placeholder="Reviews heading"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Subheading
-            </label>
-            <input
-              type="text"
-              value={reviews.subheading}
-              onChange={(e) => setReviews(prev => ({ ...prev, subheading: e.target.value }))}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              placeholder="Reviews subheading"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Reviews ({reviews.reviews.length})
-            </label>
-            
-            {/* Review Selector Dropdown */}
-            <div className="mb-3">
-              <select
-                value={selectedReview}
-                onChange={(e) => setSelectedReview(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+              <button
+                onClick={() => saveSection('Reviews', { reviews })}
+                disabled={saving}
+                className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 shadow-sm transition-colors"
               >
-                <option value="">Select a review to edit</option>
-              {reviews.reviews.map((review, index) => (
-                  <option key={review.id} value={review.id}>
-                    Review {index + 1} - {review.name || 'Unnamed Review'}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Add New Review Button */}
-            <div className="mb-3">
-                    <button
-                onClick={() => {
-                  const newReview = {
-                    id: Date.now().toString(),
-                    name: '',
-                    review: '',
-                    images: [{ src: '', alt: '' }, { src: '', alt: '' }]
-                  }
-                  setReviews(prev => ({
-                        ...prev,
-                    reviews: [...prev.reviews, newReview]
-                  }))
-                  setSelectedReview(newReview.id)
-                }}
-                className="w-full py-2 text-sm border-2 border-dashed border-gray-200 rounded-md text-gray-600 hover:border-gray-300 hover:text-gray-700 transition-colors"
-              >
-                Add New Review
+                {saving ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
+          </div>
 
-            {/* Selected Review Edit Form */}
-            {selectedReview && reviews.reviews.find(r => r.id === selectedReview) && (
-              <div className="border border-gray-200 rounded-md p-3">
-                {(() => {
-                  const review = reviews.reviews.find(r => r.id === selectedReview)!
-                  const index = reviews.reviews.findIndex(r => r.id === selectedReview)
-                  
-                  return (
-                    <>
-                      <div className="flex justify-between items-center mb-3">
-                        <h4 className="text-sm font-medium text-gray-800">Review {index + 1}</h4>
-                        <button
-                          onClick={() => {
-                            setReviews(prev => ({
-                              ...prev,
-                              reviews: prev.reviews.filter(r => r.id !== selectedReview)
-                            }))
-                            setSelectedReview('')
-                          }}
-                          className="text-red-600 hover:text-red-800 text-xs"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                      <div className="space-y-2">
-                    <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Name
-                      </label>
-                      <input
-                        type="text"
-                        value={review.name}
-                        onChange={(e) => setReviews(prev => ({
-                          ...prev,
-                          reviews: prev.reviews.map(r => 
-                            r.id === review.id ? { ...r, name: e.target.value } : r
-                          )
-                        }))}
-                            className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                        placeholder="Reviewer name"
-                      />
-                    </div>
-                    <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Review Text
-                      </label>
-                      <textarea
-                        value={review.review}
-                        onChange={(e) => setReviews(prev => ({
-                          ...prev,
-                          reviews: prev.reviews.map(r => 
-                            r.id === review.id ? { ...r, review: e.target.value } : r
-                          )
-                        }))}
-                            className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                            rows={2}
-                        placeholder="Review text"
-                      />
-                    </div>
-                        <div className="grid grid-cols-2 gap-2">
-                      <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Image 1 URL
-                        </label>
-                        <input
-                          type="url"
-                          value={review.images[0]?.src || ''}
-                          onChange={(e) => setReviews(prev => ({
-                            ...prev,
-                            reviews: prev.reviews.map(r => 
-                              r.id === review.id ? { 
-                                ...r, 
-                                images: [
-                                  { ...r.images[0], src: e.target.value },
-                                  r.images[1] || { src: '', alt: '' }
-                                ]
-                              } : r
-                            )
-                          }))}
-                              className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                          placeholder="First image URL"
-                        />
-                      </div>
-                      <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Image 2 URL
-                        </label>
-                        <input
-                          type="url"
-                          value={review.images[1]?.src || ''}
-                          onChange={(e) => setReviews(prev => ({
-                            ...prev,
-                            reviews: prev.reviews.map(r => 
-                              r.id === review.id ? { 
-                                ...r, 
-                                images: [
-                                  r.images[0] || { src: '', alt: '' },
-                                  { ...r.images[1], src: e.target.value }
-                                ]
-                              } : r
-                            )
-                          }))}
-                              className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                          placeholder="Second image URL"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                    </>
-                  )
-                })()}
+          {/* Section Content */}
+          <div className="p-6">
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Heading
+                </label>
+                <input
+                  type="text"
+                  value={reviews.heading}
+                  onChange={(e) => setReviews(prev => ({ ...prev, heading: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  placeholder="Reviews heading"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Subheading
+                </label>
+                <input
+                  type="text"
+                  value={reviews.subheading}
+                  onChange={(e) => setReviews(prev => ({ ...prev, subheading: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  placeholder="Reviews subheading"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Reviews ({reviews.reviews.length})
+                </label>
+
+                {/* Review Selector Dropdown */}
+                <div className="mb-3">
+                  <select
+                    value={selectedReview}
+                    onChange={(e) => setSelectedReview(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  >
+                    <option value="">Select a review to edit</option>
+                    {reviews.reviews.map((review, index) => (
+                      <option key={review.id} value={review.id}>
+                        Review {index + 1} - {review.name || 'Unnamed Review'}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-            )}
+
+                {/* Add New Review Button */}
+                <div className="mb-3">
+                  <button
+                    onClick={() => {
+                      const newReview = {
+                        id: Date.now().toString(),
+                        name: '',
+                        review: '',
+                        images: [{ src: '', alt: '' }, { src: '', alt: '' }]
+                      }
+                      setReviews(prev => ({
+                        ...prev,
+                        reviews: [...prev.reviews, newReview]
+                      }))
+                      setSelectedReview(newReview.id)
+                    }}
+                    className="w-full py-2 text-sm border-2 border-dashed border-gray-200 rounded-md text-gray-600 hover:border-gray-300 hover:text-gray-700 transition-colors"
+                  >
+                    Add New Review
+                  </button>
+                </div>
+
+                {/* Selected Review Edit Form */}
+                {selectedReview && reviews.reviews.find(r => r.id === selectedReview) && (
+                  <div className="border border-gray-200 rounded-md p-3">
+                    {(() => {
+                      const review = reviews.reviews.find(r => r.id === selectedReview)!
+                      const index = reviews.reviews.findIndex(r => r.id === selectedReview)
+
+                      return (
+                        <>
+                          <div className="flex justify-between items-center mb-3">
+                            <h4 className="text-sm font-medium text-gray-800">Review {index + 1}</h4>
+                            <button
+                              onClick={() => {
+                                setReviews(prev => ({
+                                  ...prev,
+                                  reviews: prev.reviews.filter(r => r.id !== selectedReview)
+                                }))
+                                setSelectedReview('')
+                              }}
+                              className="text-red-600 hover:text-red-800 text-xs"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                          <div className="space-y-2">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Name
+                              </label>
+                              <input
+                                type="text"
+                                value={review.name}
+                                onChange={(e) => setReviews(prev => ({
+                                  ...prev,
+                                  reviews: prev.reviews.map(r =>
+                                    r.id === review.id ? { ...r, name: e.target.value } : r
+                                  )
+                                }))}
+                                className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                placeholder="Reviewer name"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Review Text
+                              </label>
+                              <textarea
+                                value={review.review}
+                                onChange={(e) => setReviews(prev => ({
+                                  ...prev,
+                                  reviews: prev.reviews.map(r =>
+                                    r.id === review.id ? { ...r, review: e.target.value } : r
+                                  )
+                                }))}
+                                className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                rows={2}
+                                placeholder="Review text"
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Image 1 URL
+                                </label>
+                                <input
+                                  type="url"
+                                  value={review.images[0]?.src || ''}
+                                  onChange={(e) => setReviews(prev => ({
+                                    ...prev,
+                                    reviews: prev.reviews.map(r =>
+                                      r.id === review.id ? {
+                                        ...r,
+                                        images: [
+                                          { ...r.images[0], src: e.target.value },
+                                          r.images[1] || { src: '', alt: '' }
+                                        ]
+                                      } : r
+                                    )
+                                  }))}
+                                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                  placeholder="First image URL"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Image 2 URL
+                                </label>
+                                <input
+                                  type="url"
+                                  value={review.images[1]?.src || ''}
+                                  onChange={(e) => setReviews(prev => ({
+                                    ...prev,
+                                    reviews: prev.reviews.map(r =>
+                                      r.id === review.id ? {
+                                        ...r,
+                                        images: [
+                                          r.images[0] || { src: '', alt: '' },
+                                          { ...r.images[1], src: e.target.value }
+                                        ]
+                                      } : r
+                                    )
+                                  }))}
+                                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                  placeholder="Second image URL"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      )
+                    })()}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
       )}
 
       {/* USP Section */}
       {isSectionVisible('usp') && (
-      <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        {/* Section Header */}
-        <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">5. USP Section</h2>
-                <p className="text-xs text-gray-500">Unique selling points & features</p>
-              </div>
-            </div>
-            <button
-              onClick={() => saveSection('USP', { usp })}
-              disabled={saving}
-              className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 shadow-sm transition-colors"
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </div>
-        
-        {/* Section Content */}
-        <div className="p-6">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Heading
-            </label>
-            <input
-              type="text"
-              value={usp.heading}
-              onChange={(e) => setUsp(prev => ({ ...prev, heading: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="USP heading"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Subheading (Optional)
-            </label>
-            <input
-              type="text"
-              value={usp.subheading || ''}
-              onChange={(e) => setUsp(prev => ({ ...prev, subheading: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="USP subheading"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Select USP Item to Edit
-            </label>
-            <select
-              value={selectedUspItem}
-              onChange={(e) => setSelectedUspItem(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
-            >
-              {usp.items.map((item, index) => (
-                <option key={item.id} value={item.id}>
-                  Item {item.id} - {item.title}
-                </option>
-              ))}
-            </select>
-            
-            {/* Debug info */}
-            <div className="text-xs text-gray-500 mb-2">
-              Debug: Found {usp.items.length} items. Items: {usp.items.map(item => `${item.id}(${item.title})`).join(', ')}
-            </div>
-            
-            {(() => {
-              const selectedItem = usp.items.find(item => item.id === selectedUspItem);
-              if (!selectedItem) {
-                return (
-                  <div className="border border-red-200 rounded-lg p-4 bg-red-50">
-                    <p className="text-red-600">Item not found: {selectedUspItem}</p>
-                    <p className="text-sm text-red-500">Available items: {usp.items.map(item => item.id).join(', ')}</p>
-                  </div>
-                );
-              }
-              
-              return (
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h4 className="text-md font-medium text-gray-800 mb-3">
-                    Editing: Item {selectedUspItem} - {selectedItem.title}
-                  </h4>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Title
-                      </label>
-                      <input
-                        type="text"
-                        value={selectedItem.title}
-                        onChange={(e) => setUsp(prev => ({
-                          ...prev,
-                          items: prev.items.map(i => 
-                            i.id === selectedUspItem ? { ...i, title: e.target.value } : i
-                          )
-                        }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Item title"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Description
-                      </label>
-                      <textarea
-                        value={selectedItem.description}
-                        onChange={(e) => setUsp(prev => ({
-                          ...prev,
-                          items: prev.items.map(i => 
-                            i.id === selectedUspItem ? { ...i, description: e.target.value } : i
-                          )
-                        }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={3}
-                        placeholder="Item description"
-                      />
-                    </div>
-                  </div>
+        <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          {/* Section Header */}
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                 </div>
-              );
-            })()}
-          </div>
-        </div>
-        </div>
-      </div>
-      )}
-
-      {/* Brands Section */}
-      {isSectionVisible('brands') && (
-      <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        {/* Section Header */}
-        <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">5. USP Section</h2>
+                  <p className="text-xs text-gray-500">Unique selling points & features</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">6. Brands Section</h2>
-                <p className="text-xs text-gray-500">Partner & client logos</p>
-              </div>
-            </div>
-            <button
-              onClick={() => saveSection('Brands', { brands })}
-              disabled={saving}
-              className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 shadow-sm transition-colors"
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </div>
-        
-        {/* Section Content */}
-        <div className="p-6">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Heading</label>
-            <input
-              type="text"
-              value={brands.heading}
-              onChange={(e) => setBrands({ ...brands, heading: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Brands Who've Worked with Us"
-              />
-            </div>
-            <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Subheading</label>
-            <textarea
-              value={brands.subheading}
-              onChange={(e) => setBrands({ ...brands, subheading: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-              rows={2}
-              placeholder="Corporate clients who trust Travloger for their offsites & escapes"
-            />
-          </div>
-          
-          <div className="mt-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-md font-semibold text-gray-800">Brand Logos ({brands.brands.length})</h3>
               <button
-                onClick={() => {
-                  const newId = Date.now().toString()
-                  setBrands({
-                    ...brands,
-                    brands: [...brands.brands, {
-                      id: newId,
-                      name: '',
-                      logoUrl: '',
-                      width: 120,
-                      height: 60
-                    }]
-                  })
-                  setBrandImageFiles(prev => ({ ...prev, [newId]: null }))
-                  setSelectedBrand(newId)
-                }}
-                className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
+                onClick={() => saveSection('USP', { usp })}
+                disabled={saving}
+                className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 shadow-sm transition-colors"
               >
-                Add Brand
+                {saving ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
-            
-            {/* Brand Selector Dropdown */}
-            <div className="mb-4">
-              <select
-                value={selectedBrand}
-                onChange={(e) => setSelectedBrand(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select a brand to edit</option>
-              {brands.brands.map((brand, index) => (
-                  <option key={brand.id} value={brand.id}>
-                    Brand {index + 1} - {brand.name || 'Unnamed Brand'}
-                  </option>
-                ))}
-              </select>
-            </div>
+          </div>
 
-            {/* Selected Brand Edit Form */}
-            {selectedBrand && brands.brands.find(b => b.id === selectedBrand) && (
-              <div className="border border-gray-200 rounded-lg p-4">
-                {(() => {
-                  const brand = brands.brands.find(b => b.id === selectedBrand)!
-                  const index = brands.brands.findIndex(b => b.id === selectedBrand)
-                  
-                  return (
-                    <>
-                  <div className="flex justify-between items-center mb-3">
-                        <h4 className="text-sm font-medium text-gray-800">Brand {index + 1}</h4>
-                    <button
-                      onClick={() => {
-                        setBrands({
-                          ...brands,
-                              brands: brands.brands.filter(b => b.id !== selectedBrand)
-                        })
-                        setBrandImageFiles(prev => {
-                          const newFiles = { ...prev }
-                              delete newFiles[selectedBrand]
-                          return newFiles
-                        })
-                            setSelectedBrand('')
-                      }}
-                          className="text-red-600 hover:text-red-800 text-xs"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                      <div className="space-y-3">
-                    <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">Brand Name</label>
-                      <input
-                        type="text"
-                        value={brand.name}
-                        onChange={(e) => setBrands({
-                          ...brands,
-                          brands: brands.brands.map(b => 
-                            b.id === brand.id ? { ...b, name: e.target.value } : b
-                          )
-                        })}
-                            className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                        placeholder="Microsoft"
-                      />
-                    </div>
-                    
-                    <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">Logo Image</label>
+          {/* Section Content */}
+          <div className="p-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Heading
+                </label>
                 <input
-                  type="file"
-                  accept="image/*"
-                        onChange={async (e) => {
-                    const file = e.target.files?.[0]
-                          if (file) {
-                                // Check file size (4MB limit)
-                                const maxSize = 4 * 1024 * 1024 // 4MB
-                                if (file.size > maxSize) {
-                                  alert(`File too large. Maximum size is 4MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB. Please compress the image and try again.`)
-                                  return
-                                }
-
-                                try {
-                                  const formData = new FormData()
-                                  formData.append('file', file)
-                                  formData.append('path', `brands/${brand.id}`)
-                                  
-                                  const uploadData = await fetchApi<{ url: string }>('/api/upload', {
-                                    method: 'POST',
-                                    body: formData
-                                  })
-                                  
-                                  if (uploadData.url) {
-                                    const { url } = uploadData
-                              setBrandImageFiles(prev => ({ ...prev, [brand.id]: file }))
-                              setBrands({
-                                ...brands,
-                                brands: brands.brands.map(b => 
-                                        b.id === brand.id ? { ...b, logoUrl: url } : b
-                                )
-                              })
-                                  } else {
-                                    const errorData = await uploadRes.json()
-                                    console.error('Upload failed:', errorData)
-                                    alert(`Upload failed: ${errorData.error || 'Unknown error'}`)
-                                  }
-                            } catch (error) {
-                                  console.error('Upload error:', error)
-                                  alert('Upload failed. Please try again.')
-                            }
-                          }
-                        }}
-                            className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                      />
-                      {brand.logoUrl && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          Current: {brand.logoUrl.startsWith('data:') ? 'Uploaded image' : 'URL image'}
-                        </p>
-                )}
-              </div>
-                    
-                        <div className="grid grid-cols-2 gap-2">
-                    <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Width (px)</label>
-                      <input
-                        type="number"
-                        value={brand.width || 120}
-                        onChange={(e) => setBrands({
-                          ...brands,
-                          brands: brands.brands.map(b => 
-                            b.id === brand.id ? { ...b, width: parseInt(e.target.value) || 120 } : b
-                          )
-                        })}
-                              className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                        min="50"
-                        max="500"
-                      />
-            </div>
-                    
-                    <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Height (px)</label>
-                      <input
-                        type="number"
-                        value={brand.height || 60}
-                        onChange={(e) => setBrands({
-                          ...brands,
-                          brands: brands.brands.map(b => 
-                            b.id === brand.id ? { ...b, height: parseInt(e.target.value) || 60 } : b
-                          )
-                        })}
-                              className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                        min="30"
-                        max="200"
-                      />
-          </div>
-        </div>
-
-                  {brand.logoUrl && (
-                          <div className="mt-2">
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Preview</label>
-                            <div className="w-24 h-12 border border-gray-200 rounded-md flex items-center justify-center bg-gray-50">
-                              <div className="relative w-full h-full">
-                                <Image
-                          src={brand.logoUrl} 
-                          alt={brand.name || 'Brand logo'} 
-                                  fill
-                                  className="object-contain"
-                                  unoptimized
-                        />
-                      </div>
-                            </div>
-                            <div className="mt-1.5">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setBrands({
-                              ...brands,
-                              brands: brands.brands.map(b => 
-                                b.id === brand.id ? { ...b, logoUrl: '' } : b
-                              )
-                            })
-                            setBrandImageFiles(prev => ({ ...prev, [brand.id]: null }))
-                          }}
-                          className="text-xs text-red-600 hover:text-red-800"
-                        >
-                          Remove Image
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                    </>
-                  )
-                })()}
-            </div>
-            )}
-          </div>
-        </div>
-        </div>
-      </div>
-      )}
-
-      {/* FAQ Section */}
-      {isSectionVisible('faq') && (
-      <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        {/* Section Header */}
-        <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                  type="text"
+                  value={usp.heading}
+                  onChange={(e) => setUsp(prev => ({ ...prev, heading: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="USP heading"
+                />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-900">7. FAQ Section</h2>
-                <p className="text-xs text-gray-500">Frequently asked questions</p>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Subheading (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={usp.subheading || ''}
+                  onChange={(e) => setUsp(prev => ({ ...prev, subheading: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="USP subheading"
+                />
               </div>
-            </div>
-            <button
-              onClick={() => saveSection('FAQ', { faq })}
-              disabled={saving}
-              className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 shadow-sm transition-colors"
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </div>
-        
-        {/* Section Content */}
-        <div className="p-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Heading</label>
-              <input
-                type="text"
-              value={faq.heading}
-              onChange={(e) => setFaq({ ...faq, heading: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Before You Pack, Read This FAQs."
-              />
-            </div>
-          
-          <div className="mt-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-md font-semibold text-gray-800">FAQ Items</h3>
-            </div>
-            
-            <div className="space-y-4">
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select FAQ Item to Edit</label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select USP Item to Edit
+                </label>
                 <select
-                  value={selectedFaqItem}
-                  onChange={(e) => setSelectedFaqItem(e.target.value)}
+                  value={selectedUspItem}
+                  onChange={(e) => setSelectedUspItem(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
                 >
-                  {faq.items.map((item, index) => (
+                  {usp.items.map((item, index) => (
                     <option key={item.id} value={item.id}>
-                      Item {item.id} - {item.question.substring(0, 50)}...
+                      Item {item.id} - {item.title}
                     </option>
                   ))}
                 </select>
-                
+
                 {/* Debug info */}
                 <div className="text-xs text-gray-500 mb-2">
-                  Debug: Found {faq.items.length} items. Items: {faq.items.map(item => `${item.id}(${item.question.substring(0, 20)}...)`).join(', ')}
+                  Debug: Found {usp.items.length} items. Items: {usp.items.map(item => `${item.id}(${item.title})`).join(', ')}
                 </div>
-                
+
                 {(() => {
-                  const selectedItem = faq.items.find(item => item.id === selectedFaqItem);
+                  const selectedItem = usp.items.find(item => item.id === selectedUspItem);
                   if (!selectedItem) {
                     return (
                       <div className="border border-red-200 rounded-lg p-4 bg-red-50">
-                        <p className="text-red-600">Item not found: {selectedFaqItem}</p>
-                        <p className="text-sm text-red-500">Available items: {faq.items.map(item => item.id).join(', ')}</p>
+                        <p className="text-red-600">Item not found: {selectedUspItem}</p>
+                        <p className="text-sm text-red-500">Available items: {usp.items.map(item => item.id).join(', ')}</p>
                       </div>
                     );
                   }
-                  
+
                   return (
                     <div className="border border-gray-200 rounded-lg p-4">
                       <h4 className="text-md font-medium text-gray-800 mb-3">
-                        Editing: Item {selectedFaqItem} - {selectedItem.question.substring(0, 50)}...
+                        Editing: Item {selectedUspItem} - {selectedItem.title}
                       </h4>
                       <div className="space-y-3">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Question
+                            Title
                           </label>
                           <input
                             type="text"
-                            value={selectedItem.question}
-                            onChange={(e) => setFaq(prev => ({
+                            value={selectedItem.title}
+                            onChange={(e) => setUsp(prev => ({
                               ...prev,
-                              items: prev.items.map(i => 
-                                i.id === selectedFaqItem ? { ...i, question: e.target.value } : i
+                              items: prev.items.map(i =>
+                                i.id === selectedUspItem ? { ...i, title: e.target.value } : i
                               )
                             }))}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="FAQ question"
+                            placeholder="Item title"
                           />
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Answer
+                            Description
                           </label>
-              <textarea
-                            value={selectedItem.answer}
-                            onChange={(e) => setFaq(prev => ({
+                          <textarea
+                            value={selectedItem.description}
+                            onChange={(e) => setUsp(prev => ({
                               ...prev,
-                              items: prev.items.map(i => 
-                                i.id === selectedFaqItem ? { ...i, answer: e.target.value } : i
+                              items: prev.items.map(i =>
+                                i.id === selectedUspItem ? { ...i, description: e.target.value } : i
                               )
                             }))}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            rows={4}
-                            placeholder="FAQ answer"
+                            rows={3}
+                            placeholder="Item description"
                           />
                         </div>
                       </div>
@@ -3096,8 +2696,408 @@ const WebsiteEdit: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Brands Section */}
+      {isSectionVisible('brands') && (
+        <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          {/* Section Header */}
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">6. Brands Section</h2>
+                  <p className="text-xs text-gray-500">Partner & client logos</p>
+                </div>
+              </div>
+              <button
+                onClick={() => saveSection('Brands', { brands })}
+                disabled={saving}
+                className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 shadow-sm transition-colors"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+
+          {/* Section Content */}
+          <div className="p-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Heading</label>
+                <input
+                  type="text"
+                  value={brands.heading}
+                  onChange={(e) => setBrands({ ...brands, heading: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Brands Who've Worked with Us"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subheading</label>
+                <textarea
+                  value={brands.subheading}
+                  onChange={(e) => setBrands({ ...brands, subheading: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                  rows={2}
+                  placeholder="Corporate clients who trust Travloger for their offsites & escapes"
+                />
+              </div>
+
+              <div className="mt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-md font-semibold text-gray-800">Brand Logos ({brands.brands.length})</h3>
+                  <button
+                    onClick={() => {
+                      const newId = Date.now().toString()
+                      setBrands({
+                        ...brands,
+                        brands: [...brands.brands, {
+                          id: newId,
+                          name: '',
+                          logoUrl: '',
+                          width: 120,
+                          height: 60
+                        }]
+                      })
+                      setBrandImageFiles(prev => ({ ...prev, [newId]: null }))
+                      setSelectedBrand(newId)
+                    }}
+                    className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
+                  >
+                    Add Brand
+                  </button>
+                </div>
+
+                {/* Brand Selector Dropdown */}
+                <div className="mb-4">
+                  <select
+                    value={selectedBrand}
+                    onChange={(e) => setSelectedBrand(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select a brand to edit</option>
+                    {brands.brands.map((brand, index) => (
+                      <option key={brand.id} value={brand.id}>
+                        Brand {index + 1} - {brand.name || 'Unnamed Brand'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Selected Brand Edit Form */}
+                {selectedBrand && brands.brands.find(b => b.id === selectedBrand) && (
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    {(() => {
+                      const brand = brands.brands.find(b => b.id === selectedBrand)!
+                      const index = brands.brands.findIndex(b => b.id === selectedBrand)
+
+                      return (
+                        <>
+                          <div className="flex justify-between items-center mb-3">
+                            <h4 className="text-sm font-medium text-gray-800">Brand {index + 1}</h4>
+                            <button
+                              onClick={() => {
+                                setBrands({
+                                  ...brands,
+                                  brands: brands.brands.filter(b => b.id !== selectedBrand)
+                                })
+                                setBrandImageFiles(prev => {
+                                  const newFiles = { ...prev }
+                                  delete newFiles[selectedBrand]
+                                  return newFiles
+                                })
+                                setSelectedBrand('')
+                              }}
+                              className="text-red-600 hover:text-red-800 text-xs"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">Brand Name</label>
+                              <input
+                                type="text"
+                                value={brand.name}
+                                onChange={(e) => setBrands({
+                                  ...brands,
+                                  brands: brands.brands.map(b =>
+                                    b.id === brand.id ? { ...b, name: e.target.value } : b
+                                  )
+                                })}
+                                className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                placeholder="Microsoft"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">Logo Image</label>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0]
+                                  if (file) {
+                                    // Check file size (4MB limit)
+                                    const maxSize = 4 * 1024 * 1024 // 4MB
+                                    if (file.size > maxSize) {
+                                      alert(`File too large. Maximum size is 4MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB. Please compress the image and try again.`)
+                                      return
+                                    }
+
+                                    try {
+                                      const formData = new FormData()
+                                      formData.append('file', file)
+                                      formData.append('path', `brands/${brand.id}`)
+
+                                      const uploadData = await fetchApi<{ url: string; error?: string }>('/api/upload', {
+                                        method: 'POST',
+                                        body: formData
+                                      })
+
+                                      if (uploadData.url) {
+                                        const { url } = uploadData
+                                        setBrandImageFiles(prev => ({ ...prev, [brand.id]: file }))
+                                        setBrands({
+                                          ...brands,
+                                          brands: brands.brands.map(b =>
+                                            b.id === brand.id ? { ...b, logoUrl: url } : b
+                                          )
+                                        })
+                                      } else {
+                                        const errorData = uploadData
+                                        console.error('Upload failed:', errorData)
+                                        alert(`Upload failed: ${errorData.error || 'Unknown error'}`)
+                                      }
+                                    } catch (error) {
+                                      console.error('Upload error:', error)
+                                      alert('Upload failed. Please try again.')
+                                    }
+                                  }
+                                }}
+                                className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                              />
+                              {brand.logoUrl && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Current: {brand.logoUrl.startsWith('data:') ? 'Uploaded image' : 'URL image'}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Width (px)</label>
+                                <input
+                                  type="number"
+                                  value={brand.width || 120}
+                                  onChange={(e) => setBrands({
+                                    ...brands,
+                                    brands: brands.brands.map(b =>
+                                      b.id === brand.id ? { ...b, width: parseInt(e.target.value) || 120 } : b
+                                    )
+                                  })}
+                                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                  min="50"
+                                  max="500"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Height (px)</label>
+                                <input
+                                  type="number"
+                                  value={brand.height || 60}
+                                  onChange={(e) => setBrands({
+                                    ...brands,
+                                    brands: brands.brands.map(b =>
+                                      b.id === brand.id ? { ...b, height: parseInt(e.target.value) || 60 } : b
+                                    )
+                                  })}
+                                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                  min="30"
+                                  max="200"
+                                />
+                              </div>
+                            </div>
+
+                            {brand.logoUrl && (
+                              <div className="mt-2">
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Preview</label>
+                                <div className="w-24 h-12 border border-gray-200 rounded-md flex items-center justify-center bg-gray-50">
+                                  <div className="relative w-full h-full">
+                                    <Image
+                                      src={brand.logoUrl}
+                                      alt={brand.name || 'Brand logo'}
+                                      fill
+                                      className="object-contain"
+                                      unoptimized
+                                    />
+                                  </div>
+                                </div>
+                                <div className="mt-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setBrands({
+                                        ...brands,
+                                        brands: brands.brands.map(b =>
+                                          b.id === brand.id ? { ...b, logoUrl: '' } : b
+                                        )
+                                      })
+                                      setBrandImageFiles(prev => ({ ...prev, [brand.id]: null }))
+                                    }}
+                                    className="text-xs text-red-600 hover:text-red-800"
+                                  >
+                                    Remove Image
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      )
+                    })()}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* FAQ Section */}
+      {isSectionVisible('faq') && (
+        <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          {/* Section Header */}
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">7. FAQ Section</h2>
+                  <p className="text-xs text-gray-500">Frequently asked questions</p>
+                </div>
+              </div>
+              <button
+                onClick={() => saveSection('FAQ', { faq })}
+                disabled={saving}
+                className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 shadow-sm transition-colors"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+
+          {/* Section Content */}
+          <div className="p-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Heading</label>
+                <input
+                  type="text"
+                  value={faq.heading}
+                  onChange={(e) => setFaq({ ...faq, heading: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Before You Pack, Read This FAQs."
+                />
+              </div>
+
+              <div className="mt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-md font-semibold text-gray-800">FAQ Items</h3>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Select FAQ Item to Edit</label>
+                    <select
+                      value={selectedFaqItem}
+                      onChange={(e) => setSelectedFaqItem(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+                    >
+                      {faq.items.map((item, index) => (
+                        <option key={item.id} value={item.id}>
+                          Item {item.id} - {item.question.substring(0, 50)}...
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Debug info */}
+                    <div className="text-xs text-gray-500 mb-2">
+                      Debug: Found {faq.items.length} items. Items: {faq.items.map(item => `${item.id}(${item.question.substring(0, 20)}...)`).join(', ')}
+                    </div>
+
+                    {(() => {
+                      const selectedItem = faq.items.find(item => item.id === selectedFaqItem);
+                      if (!selectedItem) {
+                        return (
+                          <div className="border border-red-200 rounded-lg p-4 bg-red-50">
+                            <p className="text-red-600">Item not found: {selectedFaqItem}</p>
+                            <p className="text-sm text-red-500">Available items: {faq.items.map(item => item.id).join(', ')}</p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="border border-gray-200 rounded-lg p-4">
+                          <h4 className="text-md font-medium text-gray-800 mb-3">
+                            Editing: Item {selectedFaqItem} - {selectedItem.question.substring(0, 50)}...
+                          </h4>
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Question
+                              </label>
+                              <input
+                                type="text"
+                                value={selectedItem.question}
+                                onChange={(e) => setFaq(prev => ({
+                                  ...prev,
+                                  items: prev.items.map(i =>
+                                    i.id === selectedFaqItem ? { ...i, question: e.target.value } : i
+                                  )
+                                }))}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="FAQ question"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Answer
+                              </label>
+                              <textarea
+                                value={selectedItem.answer}
+                                onChange={(e) => setFaq(prev => ({
+                                  ...prev,
+                                  items: prev.items.map(i =>
+                                    i.id === selectedFaqItem ? { ...i, answer: e.target.value } : i
+                                  )
+                                }))}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                rows={4}
+                                placeholder="FAQ answer"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

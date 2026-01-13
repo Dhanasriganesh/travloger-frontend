@@ -23,7 +23,7 @@ const Reports: React.FC = () => {
 
       // Add filters
       queryParams.append('section', selectedSection)
-      
+
       if (selectedLocation !== 'all') {
         queryParams.append('destination', selectedLocation)
       }
@@ -32,7 +32,7 @@ const Reports: React.FC = () => {
       if (selectedMonth !== 'all' || selectedYear !== 'all') {
         const year = selectedYear !== 'all' ? parseInt(selectedYear) : new Date().getFullYear()
         const month = selectedMonth !== 'all' ? parseInt(selectedMonth) : 1
-        
+
         if (selectedMonth !== 'all') {
           const startDate = new Date(year, month - 1, 1).toISOString().split('T')[0]
           const endDate = new Date(year, month, 0).toISOString().split('T')[0]
@@ -47,11 +47,11 @@ const Reports: React.FC = () => {
       }
 
       const data = await fetchApi(`/api/reports?${queryParams.toString()}`)
-      
+
       if (data) {
         const rawData = data[selectedSection] || []
         setReportData(rawData)
-        
+
         // Fetch analytics
         const analyticsData = await fetchApi(`/api/reports/analytics?${queryParams.toString()}`)
         setAnalytics(analyticsData?.analytics || null)
@@ -72,7 +72,7 @@ const Reports: React.FC = () => {
   const downloadExcelReport = async () => {
     setGeneratingReport(true)
     try {
-      const payload = {
+      const payload: any = {
         section: selectedSection,
         destination: selectedLocation !== 'all' ? selectedLocation : undefined,
         format: 'csv'
@@ -82,7 +82,7 @@ const Reports: React.FC = () => {
       if (selectedMonth !== 'all' || selectedYear !== 'all') {
         const year = selectedYear !== 'all' ? parseInt(selectedYear) : new Date().getFullYear()
         const month = selectedMonth !== 'all' ? parseInt(selectedMonth) : 1
-        
+
         if (selectedMonth !== 'all') {
           payload.start_date = new Date(year, month - 1, 1).toISOString().split('T')[0]
           payload.end_date = new Date(year, month, 0).toISOString().split('T')[0]
@@ -105,13 +105,13 @@ const Reports: React.FC = () => {
         const url = window.URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = url
-        
+
         // Generate filename based on selections
         const locationStr = selectedLocation === 'all' ? 'All-Locations' : selectedLocation
         const monthStr = selectedMonth === 'all' ? 'All-Months' : selectedMonth
         const yearStr = selectedYear === 'all' ? 'All-Years' : selectedYear
         const filename = `${selectedSection.toUpperCase()}-Report-${locationStr}-${monthStr}-${yearStr}-${new Date().toISOString().split('T')[0]}.csv`
-        
+
         link.setAttribute('download', filename)
         document.body.appendChild(link)
         link.click()
@@ -148,7 +148,7 @@ const Reports: React.FC = () => {
             <p className="text-gray-600">Generate detailed reports based on location, section, and time period</p>
           </div>
           <div className="flex items-center space-x-2">
-            <button 
+            <button
               onClick={downloadExcelReport}
               disabled={generatingReport || reportData.length === 0}
               className="bg-gray-600 text-white px-3 py-1.5 rounded-md hover:bg-gray-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
@@ -332,7 +332,7 @@ const Reports: React.FC = () => {
           <div className="mt-4 p-3 bg-gray-50 rounded-md">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">
-                <span className="font-medium">Report Summary:</span> {selectedSection.toUpperCase()} data for {selectedLocation === 'all' ? 'All Locations' : selectedLocation} 
+                <span className="font-medium">Report Summary:</span> {selectedSection.toUpperCase()} data for {selectedLocation === 'all' ? 'All Locations' : selectedLocation}
                 {selectedMonth !== 'all' && ` in ${new Date(0, parseInt(selectedMonth) - 1).toLocaleString('default', { month: 'long' })}`}
                 {selectedYear !== 'all' && ` ${selectedYear}`}
               </div>

@@ -9,9 +9,7 @@ import { EyeIcon, EyeSlashIcon } from '../ui/Icons'
 import { useAuth } from '../../contexts/AuthContext'
 import ChangePasswordModal from './ChangePasswordModal'
 
-interface LoginFormProps {}
-
-const LoginForm: React.FC<LoginFormProps> = () => {
+const LoginForm: React.FC = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -29,7 +27,7 @@ const LoginForm: React.FC<LoginFormProps> = () => {
       const userRole = user.role
       console.log('useEffect - User role for redirect:', userRole)
       console.log('useEffect - Full user object:', user)
-      
+
       if (userRole === 'employee') {
         console.log('useEffect - Redirecting to employee dashboard')
         window.location.href = '/employee'
@@ -57,13 +55,13 @@ const LoginForm: React.FC<LoginFormProps> = () => {
 
     try {
       console.log('Sending login data:', formData)
-      
+
       // Use AuthContext login method
       await login(formData.email, formData.password)
-      
+
       // Check if this is the user's first login
       const isFirstLogin = await checkFirstLogin(formData.email)
-      
+
       if (isFirstLogin) {
         setShowChangePasswordModal(true)
       } else {
@@ -91,47 +89,47 @@ const LoginForm: React.FC<LoginFormProps> = () => {
           {/* Branding */}
           <div className="text-center mb-8">
             <div className="mb-4">
-              <Image 
-                src={logo} 
-                alt="Travloger" 
-                width={200} 
-                height={40} 
+              <Image
+                src={logo}
+                alt="Travloger"
+                width={200}
+                height={40}
                 className="mx-auto"
               />
             </div>
             <p className="text-lg opacity-90 flex items-center justify-center">
-            
+
               <svg className="w-5 h-5 ml-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
               </svg>
             </p>
           </div>
-          
+
           {/* Travel Illustration */}
           <div className="w-full max-w-md">
-            <Image 
-              src={travelIllustration} 
-              alt="Travel illustration" 
-              width={400} 
-              height={300} 
+            <Image
+              src={travelIllustration}
+              alt="Travel illustration"
+              width={400}
+              height={300}
               className="w-full h-auto"
             />
           </div>
         </div>
       </div>
-      
+
       {/* Right Panel - Login Form */}
       <div className="w-full lg:w-1/2 bg-black flex items-center justify-center px-8 py-12">
         <div className="w-full max-w-md">
           <h2 className="text-3xl font-bold text-white mb-8">Log In</h2>
-        
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-900/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-md text-sm">
                 {error}
               </div>
             )}
-            
+
             <div className="space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
@@ -149,7 +147,7 @@ const LoginForm: React.FC<LoginFormProps> = () => {
                   placeholder="Enter your email"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-white mb-2">
                   Password

@@ -77,7 +77,7 @@ const NotificationTemplateMaster: React.FC = () => {
 
   useEffect(() => {
     fetchTemplates()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [filterChannel, filterStatus])
 
   const fetchTemplates = async () => {
@@ -134,7 +134,7 @@ const NotificationTemplateMaster: React.FC = () => {
     try {
       const method = editingTemplate ? 'PUT' : 'POST'
       const body = editingTemplate ? { ...payload, id: editingTemplate.id } : payload
-      
+
       const data = await fetchApi('/api/notification-templates', {
         method,
         body: JSON.stringify(body)

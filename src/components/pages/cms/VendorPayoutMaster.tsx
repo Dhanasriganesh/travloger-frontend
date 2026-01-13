@@ -61,7 +61,7 @@ const VendorPayoutMaster: React.FC = () => {
   const [saving, setSaving] = useState(false)
   const [editingPayout, setEditingPayout] = useState<VendorPayout | null>(null)
   const [filterStatus, setFilterStatus] = useState<string>('all')
-  
+
   const [formData, setFormData] = useState({
     vendorName: '',
     supplierId: '',
@@ -82,14 +82,14 @@ const VendorPayoutMaster: React.FC = () => {
   useEffect(() => {
     fetchPayouts()
     fetchSuppliers()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [filterStatus])
 
   const fetchPayouts = async () => {
     try {
       setLoading(true)
-      const url = filterStatus === 'all' 
-        ? '/api/vendor-payouts' 
+      const url = filterStatus === 'all'
+        ? '/api/vendor-payouts'
         : `/api/vendor-payouts?status=${filterStatus}`
       const data = await fetchApi(url)
       setPayouts(data.payouts || [])
@@ -284,7 +284,7 @@ const VendorPayoutMaster: React.FC = () => {
                     type="text"
                     required
                     value={formData.vendorName}
-                    onChange={(e) => setFormData({...formData, vendorName: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, vendorName: e.target.value })}
                     placeholder="Enter vendor name"
                   />
                 </div>
@@ -296,7 +296,7 @@ const VendorPayoutMaster: React.FC = () => {
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.supplierId}
-                    onChange={(e) => setFormData({...formData, supplierId: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, supplierId: e.target.value })}
                   >
                     <option value="">Select supplier</option>
                     {suppliers.map(supplier => (
@@ -314,7 +314,7 @@ const VendorPayoutMaster: React.FC = () => {
                   <Input
                     type="text"
                     value={formData.bookingReference}
-                    onChange={(e) => setFormData({...formData, bookingReference: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, bookingReference: e.target.value })}
                     placeholder="e.g., BK-2025-001"
                   />
                 </div>
@@ -326,7 +326,7 @@ const VendorPayoutMaster: React.FC = () => {
                   <Input
                     type="text"
                     value={formData.tripId}
-                    onChange={(e) => setFormData({...formData, tripId: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, tripId: e.target.value })}
                     placeholder="e.g., TRIP-KSH-2025-001"
                   />
                 </div>
@@ -338,7 +338,7 @@ const VendorPayoutMaster: React.FC = () => {
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.serviceType}
-                    onChange={(e) => setFormData({...formData, serviceType: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, serviceType: e.target.value })}
                   >
                     <option value="Hotel">Hotel</option>
                     <option value="Transfer">Transfer</option>
@@ -364,7 +364,7 @@ const VendorPayoutMaster: React.FC = () => {
                     min="0"
                     step="0.01"
                     value={formData.payableAmount}
-                    onChange={(e) => setFormData({...formData, payableAmount: parseFloat(e.target.value) || 0})}
+                    onChange={(e) => setFormData({ ...formData, payableAmount: parseFloat(e.target.value) || 0 })}
                     placeholder="Enter amount"
                   />
                 </div>
@@ -377,7 +377,7 @@ const VendorPayoutMaster: React.FC = () => {
                     type="date"
                     required
                     value={formData.paymentDueDate}
-                    onChange={(e) => setFormData({...formData, paymentDueDate: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, paymentDueDate: e.target.value })}
                   />
                 </div>
 
@@ -388,7 +388,7 @@ const VendorPayoutMaster: React.FC = () => {
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.paymentStatus}
-                    onChange={(e) => setFormData({...formData, paymentStatus: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, paymentStatus: e.target.value })}
                   >
                     <option value="Pending">Pending</option>
                     <option value="Paid">Paid</option>
@@ -403,7 +403,7 @@ const VendorPayoutMaster: React.FC = () => {
                   <Input
                     type="date"
                     value={formData.paymentDate}
-                    onChange={(e) => setFormData({...formData, paymentDate: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, paymentDate: e.target.value })}
                   />
                 </div>
 
@@ -414,7 +414,7 @@ const VendorPayoutMaster: React.FC = () => {
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.paymentMode}
-                    onChange={(e) => setFormData({...formData, paymentMode: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, paymentMode: e.target.value })}
                   >
                     <option value="Bank Transfer">Bank Transfer</option>
                     <option value="UPI">UPI</option>
@@ -431,7 +431,7 @@ const VendorPayoutMaster: React.FC = () => {
                   <Input
                     type="text"
                     value={formData.transactionReference}
-                    onChange={(e) => setFormData({...formData, transactionReference: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, transactionReference: e.target.value })}
                     placeholder="UTR / Transaction ID"
                   />
                 </div>
@@ -444,7 +444,7 @@ const VendorPayoutMaster: React.FC = () => {
                     <Input
                       type="text"
                       value={formData.bankName}
-                      onChange={(e) => setFormData({...formData, bankName: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
                       placeholder="Enter bank name"
                     />
                   </div>
@@ -458,7 +458,7 @@ const VendorPayoutMaster: React.FC = () => {
                     <Input
                       type="text"
                       value={formData.upiId}
-                      onChange={(e) => setFormData({...formData, upiId: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, upiId: e.target.value })}
                       placeholder="example@upi"
                     />
                   </div>
@@ -475,7 +475,7 @@ const VendorPayoutMaster: React.FC = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={3}
                 value={formData.notes}
-                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 placeholder="Additional notes or remarks"
               />
             </div>
@@ -611,7 +611,7 @@ const VendorPayoutMaster: React.FC = () => {
                         <h3 className="text-lg font-semibold text-gray-900">
                           {payout.vendor_name}
                         </h3>
-                        <Badge 
+                        <Badge
                           variant="default"
                           className={`flex items-center gap-1 ${getStatusColor(payout.payment_status)}`}
                         >
