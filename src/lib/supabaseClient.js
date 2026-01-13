@@ -1,19 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Supabase configuration
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder.jwt.token'
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  const missing = [
-    !supabaseUrl ? 'NEXT_PUBLIC_SUPABASE_URL' : null,
-    !supabaseAnonKey ? 'NEXT_PUBLIC_SUPABASE_ANON_KEY' : null,
-  ].filter(Boolean)
-  throw new Error(
-    `[Supabase] Missing required environment variable(s): ${missing.join(
-      ', '
-    )}. Update your .env(.local) file and restart the dev server.`
-  )
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL && typeof window !== 'undefined') {
+  console.warn('[Supabase] Missing NEXT_PUBLIC_SUPABASE_URL, using placeholder. Authentication will fail.')
 }
 
 // Safe diagnostics: verifies env presence without leaking secrets
@@ -45,20 +37,20 @@ const customFetch = async (url, options = {}) => {
     // Create abort controller for timeout (compatible with older browsers)
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
-    
+
     try {
       const response = await fetch(url, {
         ...options,
         signal: controller.signal,
       })
-      
+
       clearTimeout(timeoutId)
-      
+
       // Check if response indicates a network error
       if (!response.ok && response.status === 0) {
         throw new Error('Network error: Unable to reach server')
       }
-      
+
       return response
     } catch (fetchError) {
       clearTimeout(timeoutId)
@@ -73,9 +65,9 @@ const customFetch = async (url, options = {}) => {
       timeoutError.name = 'TimeoutError'
       throw timeoutError
     }
-    if (error.message === 'Failed to fetch' || 
-        error.name === 'TypeError' ||
-        error.message?.includes('Network error')) {
+    if (error.message === 'Failed to fetch' ||
+      error.name === 'TypeError' ||
+      error.message?.includes('Network error')) {
       console.error('[Supabase] Network error:', error)
       // Re-throw with a more descriptive message
       const networkError = new Error('Network error. Please check your internet connection and try again.')
@@ -111,7 +103,7 @@ if (typeof window !== 'undefined') {
         localStorage.removeItem(`sb-${projectId}-auth-token`)
       }
     }
-    
+
     // Handle token refresh errors
     if (event === 'TOKEN_REFRESHED' && !session) {
       console.warn('[Supabase] Token refresh failed, clearing session')
@@ -122,12 +114,12 @@ if (typeof window !== 'undefined') {
       }
     }
   })
-  
+
   // Handle unhandled promise rejections from Supabase
   window.addEventListener('unhandledrejection', (event) => {
-    if (event.reason?.message?.includes('Failed to fetch') || 
-        event.reason?.message?.includes('fetch') ||
-        event.reason?.message?.includes('Network error')) {
+    if (event.reason?.message?.includes('Failed to fetch') ||
+      event.reason?.message?.includes('fetch') ||
+      event.reason?.message?.includes('Network error')) {
       console.warn('[Supabase] Unhandled network error (this may be temporary):', event.reason?.message || event.reason)
       // Log the error but don't prevent it - let Supabase handle it
     }
