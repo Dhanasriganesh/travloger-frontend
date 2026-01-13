@@ -6,7 +6,7 @@ import { Badge } from '../../ui/badge'
 import { Plus, Search, Edit, Trash2, ArrowLeft, Hotel, Star, MapPin, Phone, Mail, Globe, Clock, Filter } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-interface Hotel {
+interface HotelData {
   id: number
   name: string
   status: string
@@ -29,16 +29,36 @@ interface Hotel {
   date: string
 }
 
+interface HotelFormData {
+  name: string
+  status: string
+  state: string
+  destination: string
+  address: string
+  city: string
+  country: string
+  star_rating: number
+  hotel_type: string
+  contact_person: string
+  email: string
+  phone: string
+  website: string
+  check_in_time: string
+  check_out_time: string
+  amenities: string[]
+  description: string
+}
+
 const Hotels: React.FC = () => {
   const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
-  const [hotels, setHotels] = useState<Hotel[]>([])
+  const [hotels, setHotels] = useState<HotelData[]>([])
   const [destinations, setDestinations] = useState<any[]>([])
   const [states, setStates] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [editingHotel, setEditingHotel] = useState<Hotel | null>(null)
+  const [editingHotel, setEditingHotel] = useState<HotelData | null>(null)
 
   // Filters
   const [filters, setFilters] = useState({
@@ -48,7 +68,7 @@ const Hotels: React.FC = () => {
     status: ''
   })
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<HotelFormData>({
     name: '',
     status: 'Active',
     state: '',
@@ -222,7 +242,7 @@ const Hotels: React.FC = () => {
     }
   }
 
-  const handleEditClick = async (hotel: Hotel) => {
+  const handleEditClick = async (hotel: HotelData) => {
     setEditingHotel(hotel)
     const stateValue = hotel.state || ''
     setFormData({
