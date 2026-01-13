@@ -39,7 +39,7 @@ const Hotels: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editingHotel, setEditingHotel] = useState<Hotel | null>(null)
-  
+
   // Filters
   const [filters, setFilters] = useState({
     destination: '',
@@ -64,7 +64,7 @@ const Hotels: React.FC = () => {
     website: '',
     check_in_time: '14:00',
     check_out_time: '12:00',
-    amenities: '',
+    amenities: [] as string[],
     description: ''
   })
 
@@ -106,15 +106,15 @@ const Hotels: React.FC = () => {
     try {
       setLoading(true)
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      
+
       const queryParams = new URLSearchParams()
       Object.entries(filters).forEach(([key, value]) => {
         if (value) queryParams.append(key, value)
       })
-      
+
       const response = await fetch(`${API_URL}/api/hotels?${queryParams}`)
       const data = await response.json()
-      
+
       if (response.ok) {
         setHotels(data.hotels || [])
       } else {
@@ -134,7 +134,7 @@ const Hotels: React.FC = () => {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
       const response = await fetch(`${API_URL}/api/states`)
       const data = await response.json()
-      
+
       if (response.ok) {
         setStates(data.states || [])
       }
@@ -149,7 +149,7 @@ const Hotels: React.FC = () => {
       const url = state ? `${API_URL}/api/destinations?state=${encodeURIComponent(state)}` : `${API_URL}/api/destinations`
       const response = await fetch(url)
       const data = await response.json()
-      
+
       if (response.ok) {
         setDestinations(data.destinations || [])
       }
@@ -169,7 +169,7 @@ const Hotels: React.FC = () => {
       setSaving(true)
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
       const method = editingHotel ? 'PUT' : 'POST'
-      const body = editingHotel 
+      const body = editingHotel
         ? { id: editingHotel.id, ...formData }
         : formData
 
@@ -285,9 +285,8 @@ const Hotels: React.FC = () => {
         {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
-            className={`h-3 w-3 ${
-              star <= rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-            }`}
+            className={`h-3 w-3 ${star <= rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+              }`}
           />
         ))}
         <span className="ml-1 text-xs text-gray-600">({rating})</span>
@@ -298,14 +297,14 @@ const Hotels: React.FC = () => {
   const toggleAmenity = (amenity: string) => {
     const currentAmenities = Array.isArray(formData.amenities) ? [...formData.amenities] : []
     const amenityIndex = currentAmenities.indexOf(amenity)
-    
+
     if (amenityIndex > -1) {
       currentAmenities.splice(amenityIndex, 1)
     } else {
       currentAmenities.push(amenity)
     }
-    
-    setFormData({...formData, amenities: currentAmenities})
+
+    setFormData({ ...formData, amenities: currentAmenities })
   }
 
   const filteredHotels = hotels.filter(hotel =>
@@ -371,10 +370,10 @@ const Hotels: React.FC = () => {
               <Filter className="h-4 w-4 text-gray-500" />
               <span className="text-sm font-medium text-gray-700">Filters:</span>
             </div>
-            
+
             <select
               value={filters.destination}
-              onChange={(e) => setFilters({...filters, destination: e.target.value})}
+              onChange={(e) => setFilters({ ...filters, destination: e.target.value })}
               className="text-xs border border-gray-300 rounded px-2 py-1"
             >
               <option value="">All Destinations</option>
@@ -385,7 +384,7 @@ const Hotels: React.FC = () => {
 
             <select
               value={filters.star_rating}
-              onChange={(e) => setFilters({...filters, star_rating: e.target.value})}
+              onChange={(e) => setFilters({ ...filters, star_rating: e.target.value })}
               className="text-xs border border-gray-300 rounded px-2 py-1"
             >
               <option value="">All Ratings</option>
@@ -398,7 +397,7 @@ const Hotels: React.FC = () => {
 
             <select
               value={filters.hotel_type}
-              onChange={(e) => setFilters({...filters, hotel_type: e.target.value})}
+              onChange={(e) => setFilters({ ...filters, hotel_type: e.target.value })}
               className="text-xs border border-gray-300 rounded px-2 py-1"
             >
               <option value="">All Types</option>
@@ -409,7 +408,7 @@ const Hotels: React.FC = () => {
 
             <select
               value={filters.status}
-              onChange={(e) => setFilters({...filters, status: e.target.value})}
+              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
               className="text-xs border border-gray-300 rounded px-2 py-1"
             >
               <option value="">All Status</option>
@@ -418,7 +417,7 @@ const Hotels: React.FC = () => {
             </select>
 
             <button
-              onClick={() => setFilters({destination: '', star_rating: '', hotel_type: '', status: ''})}
+              onClick={() => setFilters({ destination: '', star_rating: '', hotel_type: '', status: '' })}
               className="text-xs text-blue-600 hover:text-blue-800"
             >
               Clear Filters
@@ -501,7 +500,7 @@ const Hotels: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-3 py-4 text-sm text-gray-900">
-                        <Badge 
+                        <Badge
                           variant={hotel.status === 'Active' ? 'success' : 'secondary'}
                           className={hotel.status === 'Active' ? 'bg-green-600 text-white' : 'bg-gray-500 text-white'}
                         >
@@ -519,7 +518,7 @@ const Hotels: React.FC = () => {
                         {hotel.date}
                       </td>
                       <td className="px-3 py-4 text-sm text-gray-500">
-                        <button 
+                        <button
                           onClick={() => handleEditClick(hotel)}
                           className="hover:text-gray-700"
                           title="Edit hotel"
@@ -528,7 +527,7 @@ const Hotels: React.FC = () => {
                         </button>
                       </td>
                       <td className="px-3 py-4 text-sm text-gray-500">
-                        <button 
+                        <button
                           onClick={() => handleDeleteHotel(hotel.id, hotel.name)}
                           className="hover:text-red-600"
                           title="Delete hotel"
@@ -552,11 +551,11 @@ const Hotels: React.FC = () => {
       {/* Add/Edit Hotel Form Panel */}
       {showAddForm && (
         <div className="fixed inset-0 z-50 overflow-hidden">
-          <div 
+          <div
             className="absolute inset-0 backdrop-blur-sm"
             onClick={handleCloseForm}
           />
-          
+
           <div className="absolute right-0 top-0 h-full w-[700px] bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
             <div className="flex flex-col h-full">
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -583,20 +582,20 @@ const Hotels: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Hotel Name <span className="text-red-500">*</span>
                         </label>
-                        <Input 
-                          type="text" 
+                        <Input
+                          type="text"
                           placeholder="Enter hotel name"
                           value={formData.name}
-                          onChange={(e) => setFormData({...formData, name: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                        <select 
+                        <select
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={formData.status}
-                          onChange={(e) => setFormData({...formData, status: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                         >
                           <option value="Active">Active</option>
                           <option value="Inactive">Inactive</option>
@@ -607,10 +606,10 @@ const Hotels: React.FC = () => {
                     <div className="grid grid-cols-3 gap-4 mt-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Hotel Type</label>
-                        <select 
+                        <select
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={formData.hotel_type}
-                          onChange={(e) => setFormData({...formData, hotel_type: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, hotel_type: e.target.value })}
                         >
                           <option value="">Select type</option>
                           {hotelTypes.map(type => (
@@ -621,10 +620,10 @@ const Hotels: React.FC = () => {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Star Rating</label>
-                        <select 
+                        <select
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={formData.star_rating}
-                          onChange={(e) => setFormData({...formData, star_rating: parseInt(e.target.value)})}
+                          onChange={(e) => setFormData({ ...formData, star_rating: parseInt(e.target.value) })}
                         >
                           <option value={0}>No Rating</option>
                           <option value={1}>1 Star</option>
@@ -637,11 +636,11 @@ const Hotels: React.FC = () => {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">State <span className="text-red-500">*</span></label>
-                        <select 
+                        <select
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={formData.state}
                           onChange={(e) => {
-                            setFormData({...formData, state: e.target.value, destination: ''})
+                            setFormData({ ...formData, state: e.target.value, destination: '' })
                           }}
                         >
                           <option value="">Select state</option>
@@ -653,10 +652,10 @@ const Hotels: React.FC = () => {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Destination</label>
-                        <select 
+                        <select
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={formData.destination}
-                          onChange={(e) => setFormData({...formData, destination: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
                           disabled={!formData.state}
                         >
                           <option value="">{formData.state ? 'Select destination' : 'Select state first'}</option>
@@ -673,43 +672,43 @@ const Hotels: React.FC = () => {
                     <h3 className="text-md font-medium text-gray-900 mb-3">Location Information</h3>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                      <textarea 
+                      <textarea
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                         rows={2}
                         placeholder="Enter hotel address"
                         value={formData.address}
-                        onChange={(e) => setFormData({...formData, address: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                       />
                     </div>
 
                     <div className="grid grid-cols-3 gap-4 mt-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-                        <Input 
-                          type="text" 
+                        <Input
+                          type="text"
                           placeholder="Enter city"
                           value={formData.city}
-                          onChange={(e) => setFormData({...formData, city: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-                        <Input 
-                          type="text" 
+                        <Input
+                          type="text"
                           placeholder="Enter state"
                           value={formData.state}
-                          onChange={(e) => setFormData({...formData, state: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                        <Input 
-                          type="text" 
+                        <Input
+                          type="text"
                           placeholder="Enter country"
                           value={formData.country}
-                          onChange={(e) => setFormData({...formData, country: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                         />
                       </div>
                     </div>
@@ -721,21 +720,21 @@ const Hotels: React.FC = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Contact Person</label>
-                        <Input 
-                          type="text" 
+                        <Input
+                          type="text"
                           placeholder="Enter contact person name"
                           value={formData.contact_person}
-                          onChange={(e) => setFormData({...formData, contact_person: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                        <Input 
-                          type="tel" 
+                        <Input
+                          type="tel"
                           placeholder="Enter phone number"
                           value={formData.phone}
-                          onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         />
                       </div>
                     </div>
@@ -743,21 +742,21 @@ const Hotels: React.FC = () => {
                     <div className="grid grid-cols-2 gap-4 mt-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <Input 
-                          type="email" 
+                        <Input
+                          type="email"
                           placeholder="Enter email address"
                           value={formData.email}
-                          onChange={(e) => setFormData({...formData, email: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
-                        <Input 
-                          type="url" 
+                        <Input
+                          type="url"
                           placeholder="https://..."
                           value={formData.website}
-                          onChange={(e) => setFormData({...formData, website: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                         />
                       </div>
                     </div>
@@ -769,19 +768,19 @@ const Hotels: React.FC = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Check-in Time</label>
-                        <Input 
-                          type="time" 
+                        <Input
+                          type="time"
                           value={formData.check_in_time}
-                          onChange={(e) => setFormData({...formData, check_in_time: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, check_in_time: e.target.value })}
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Check-out Time</label>
-                        <Input 
-                          type="time" 
+                        <Input
+                          type="time"
                           value={formData.check_out_time}
-                          onChange={(e) => setFormData({...formData, check_out_time: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, check_out_time: e.target.value })}
                         />
                       </div>
                     </div>
@@ -809,8 +808,8 @@ const Hotels: React.FC = () => {
                     <div className="mt-3">
                       <label className="block text-sm font-medium text-gray-700 mb-1">Selected Amenities</label>
                       <div className="text-sm text-gray-600 min-h-[2rem] p-2 border border-gray-200 rounded">
-                        {Array.isArray(formData.amenities) && formData.amenities.length > 0 
-                          ? formData.amenities.join(', ') 
+                        {Array.isArray(formData.amenities) && formData.amenities.length > 0
+                          ? formData.amenities.join(', ')
                           : 'No amenities selected'
                         }
                       </div>
@@ -820,12 +819,12 @@ const Hotels: React.FC = () => {
                   {/* Description */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                    <textarea 
+                    <textarea
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                       rows={3}
                       placeholder="Enter hotel description"
                       value={formData.description}
-                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     />
                   </div>
                 </form>
