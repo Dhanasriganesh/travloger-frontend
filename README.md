@@ -19,6 +19,8 @@ cp .env.local.example .env.local
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anon key (for client-side auth)
 - `NEXT_PUBLIC_API_URL`: Backend API URL (default: http://localhost:3001)
 
+> **Important**: The Supabase keys are required at build time. The build will fail if these variables are missing from your environment.
+
 ## Development
 
 Run in development mode:
