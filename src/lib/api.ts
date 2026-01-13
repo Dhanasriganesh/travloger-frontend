@@ -57,10 +57,10 @@ export async function fetchApi<T = any>(url: string, options: FetchOptions = {})
   }
 }
 
-export function handleApiError(error: any): string {
+export function handleApiError(error: any, fallbackMessage?: string): string {
   if (error.name === 'ApiError') {
-    return error.data?.error || error.message || 'API request failed';
+    return error.data?.error || error.message || fallbackMessage || 'API request failed';
   }
-  return error.message || 'An unexpected error occurred';
+  return error.message || fallbackMessage || 'An unexpected error occurred';
 }
 
