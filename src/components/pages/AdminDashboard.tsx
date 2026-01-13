@@ -430,7 +430,7 @@ const AdminDashboard: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm">
           <div className="flex items-center p-6 border-b border-gray-100">
             <div className="w-1 h-6 bg-teal-500 rounded-full mr-3"></div>
-            <h3 className="text-lg font-semibold text-gray-900">RECENT LEADS</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Recent Leads</h3>
           </div>
           <div className="p-6">
             {loadingLeads ? (
