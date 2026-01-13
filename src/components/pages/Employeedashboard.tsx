@@ -108,7 +108,7 @@ const Employeedashboard: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loadingEmployees, setLoadingEmployees] = useState<boolean>(false)
   const [queryFilter, setQueryFilter] = useState<'all' | 'pending' | 'assigned' | 'resolved'>('all')
-  
+
   // Leads state
   const [leads, setLeads] = useState<Array<{
     id: number;
@@ -124,7 +124,7 @@ const Employeedashboard: React.FC = () => {
   // Fetch leads assigned to the employee
   const fetchLeads = React.useCallback(async () => {
     if (!employeeId) return;
-    
+
     setLoading(true);
     try {
       const response = await fetch(`/api/leads?assignedTo=${employeeId}`);
@@ -154,14 +154,14 @@ const Employeedashboard: React.FC = () => {
   const [fixedDaysOptions, setFixedDaysOptions] = useState<Array<{ id: string; days: number; label: string }>>([])
   const [fixedLocations, setFixedLocations] = useState<Array<{ id: string; name: string; city: string }>>([])
   const [fixedPlansByLocation, setFixedPlansByLocation] = useState<Record<string, Array<{ id: string; name: string }>>>({})
-  
+
   // Lead itineraries state
   const [leadItineraries, setLeadItineraries] = useState<any[]>([])
   const [leadItinerariesLoading, setLeadItinerariesLoading] = useState<boolean>(false)
   const [leadItinerariesError, setLeadItinerariesError] = useState<string | null>(null)
   const [selectedLead, setSelectedLead] = useState<any>(null)
   const [leadBookingStatus, setLeadBookingStatus] = useState<Record<string, any>>({})
-  
+
   // Helper to normalize city name to slug (e.g., "Ladakh" -> "ladakh")
   const toSlug = (value: string): string => {
     return (value || '')
@@ -171,13 +171,13 @@ const Employeedashboard: React.FC = () => {
       .replace(/\s+/g, '-')
       .replace(/[^a-z0-9-]/g, '')
   }
-  
+
   // Fetch employee destination and packages
   useEffect(() => {
     const fetchEmployeeData = async (): Promise<void> => {
       try {
         setLoading(true)
-        
+
         // Fetch employee destination
         if (user?.email) {
           const employeeRes = await fetch(`/api/employees/by-email/${user.email}`)
@@ -185,12 +185,12 @@ const Employeedashboard: React.FC = () => {
             const employeeData = await employeeRes.json()
             // Handle destination as either string or object
             const destinationValue = employeeData.destination || ''
-            const destination = typeof destinationValue === 'string' 
-              ? destinationValue 
+            const destination = typeof destinationValue === 'string'
+              ? destinationValue
               : (destinationValue?.name || destinationValue?.destination || '')
             setEmployeeDestination(destination)
             setEmployeeId(employeeData.id)
-            
+
             // Fetch packages based on destination
             const url = destination && destination !== 'all' ? `/api/packages/city/${destination}` : '/api/packages'
             const res = await fetch(url)
@@ -231,16 +231,16 @@ const Employeedashboard: React.FC = () => {
     if (employeeId) {
       // Initial session update
       updateActiveSession()
-      
+
       // Set up periodic session updates every 2 minutes
       const interval = setInterval(updateActiveSession, 120000)
-      
+
       // Update session on user activity
       const handleActivity = () => updateActiveSession()
       window.addEventListener('mousedown', handleActivity)
       window.addEventListener('keydown', handleActivity)
       window.addEventListener('scroll', handleActivity)
-      
+
       // Clean up session on page unload (logout, close tab, navigate away)
       const handleBeforeUnload = async () => {
         try {
@@ -254,16 +254,16 @@ const Employeedashboard: React.FC = () => {
           console.error('Error clearing session on unload:', error)
         }
       }
-      
+
       window.addEventListener('beforeunload', handleBeforeUnload)
-      
+
       return () => {
         clearInterval(interval)
         window.removeEventListener('mousedown', handleActivity)
         window.removeEventListener('keydown', handleActivity)
         window.removeEventListener('scroll', handleActivity)
         window.removeEventListener('beforeunload', handleBeforeUnload)
-        
+
         // Also clear session when component unmounts
         if (employeeId) {
           fetch('/api/employees/active-sessions', {
@@ -291,7 +291,7 @@ const Employeedashboard: React.FC = () => {
         if (vehLocRes.ok) {
           const j = await vehLocRes.json(); setVehicleLocations(j.locations || [])
         }
-      } catch (_) {}
+      } catch (_) { }
 
       try {
         const [hotRes, vehRes] = await Promise.all([
@@ -304,7 +304,7 @@ const Employeedashboard: React.FC = () => {
         if (vehRes.ok) {
           const j = await vehRes.json(); setVehicles(j.vehicles || [])
         }
-      } catch (_) {}
+      } catch (_) { }
     }
     loadAssets()
   }, [])
@@ -367,10 +367,10 @@ const Employeedashboard: React.FC = () => {
   useEffect(() => {
     const loadBookingStatuses = async () => {
       if (assignedLeads.length === 0) return
-      
+
       try {
         const statusMap: Record<string, any> = {}
-        
+
         await Promise.all(assignedLeads.map(async (lead) => {
           try {
             const res = await fetch(`/api/bookings?leadId=${lead.id}`)
@@ -391,13 +391,13 @@ const Employeedashboard: React.FC = () => {
             // Ignore errors for individual leads
           }
         }))
-        
+
         setLeadBookingStatus(statusMap)
       } catch (error) {
         console.error('Error loading booking statuses:', error)
       }
     }
-    
+
     loadBookingStatuses()
   }, [assignedLeads])
 
@@ -408,10 +408,10 @@ const Employeedashboard: React.FC = () => {
       alert('No booking found for this lead')
       return
     }
-    
+
     try {
       console.log('Checking payment status for booking:', bookingStatus.bookingId)
-      
+
       // Check payment status with Razorpay
       const checkRes = await fetch('/api/bookings/check-payment', {
         method: 'POST',
@@ -420,10 +420,10 @@ const Employeedashboard: React.FC = () => {
           bookingId: bookingStatus.bookingId
         })
       })
-      
+
       const checkData = await checkRes.json()
       console.log('Payment check response:', checkData)
-      
+
       // Check the status returned from Razorpay
       if (checkData.status === 'paid') {
         // Payment is confirmed - update the local status
@@ -463,16 +463,16 @@ const Employeedashboard: React.FC = () => {
     try {
       setLeadItinerariesLoading(true)
       setLeadItinerariesError(null)
-      
+
       // Find the selected lead
       const lead = assignedLeads.find(l => l.id.toString() === leadId)
       setSelectedLead(lead)
-      
+
       // Load lead details
       const leadRes = await fetch(`/api/leads/${leadId}`)
       const leadData = await leadRes.json().catch(() => ({ lead: null }))
       if (leadRes.ok) setSelectedLead(leadData.lead || lead)
-      
+
       // Load itineraries
       const res = await fetch('/api/packages')
       const data = await res.json()
@@ -491,12 +491,12 @@ const Employeedashboard: React.FC = () => {
   // Assign itinerary function
   const assignItinerary = (itinerary: any) => {
     if (!selectedLeadId) return
-    
+
     try {
       const map = JSON.parse(localStorage.getItem('leadItineraryAssignments') || '{}')
       map[selectedLeadId] = itinerary.id
       localStorage.setItem('leadItineraryAssignments', JSON.stringify(map))
-      
+
       // Set the selected itinerary and show payment page
       setSelectedItinerary(itinerary)
       setShowPaymentPage(true)
@@ -515,10 +515,10 @@ const Employeedashboard: React.FC = () => {
     try {
       // Calculate amount (map_rate + eb from hotel if available)
       let amount = 0
-      const hotel = selectedItinerary.selected_hotel_id 
+      const hotel = selectedItinerary.selected_hotel_id
         ? hotels.find(h => h.id === selectedItinerary.selected_hotel_id)
         : null
-      
+
       if (hotel) {
         amount = (hotel.map_rate || 0) + (hotel.eb || 0)
       } else if (selectedItinerary.fixed_price_per_person && selectedItinerary.fixed_adults) {
@@ -548,7 +548,7 @@ const Employeedashboard: React.FC = () => {
       })
 
       const paymentLinkData = await paymentLinkRes.json()
-      
+
       if (!paymentLinkRes.ok) {
         throw new Error(paymentLinkData.error || 'Failed to create payment link')
       }
@@ -559,7 +559,7 @@ const Employeedashboard: React.FC = () => {
       console.log('Creating booking...')
       console.log('Lead ID:', selectedLead.id, 'Type:', typeof selectedLead.id)
       console.log('Package ID:', selectedItinerary.id, 'Type:', typeof selectedItinerary.id)
-      
+
       const bookingRes = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -580,11 +580,11 @@ const Employeedashboard: React.FC = () => {
           razorpay_payment_link: paymentLinkData.payment_link
         })
       })
-      
+
       console.log('Booking payload - razorpay_order_id:', paymentLinkData.payment_link_id || paymentLinkData.order_id)
 
       const bookingData = await bookingRes.json()
-      
+
       if (!bookingRes.ok) {
         throw new Error(bookingData.error || 'Failed to create booking')
       }
@@ -641,7 +641,7 @@ const Employeedashboard: React.FC = () => {
       })
 
       const emailData = await emailRes.json()
-      
+
       if (!emailRes.ok) {
         console.error('Email sending failed:', emailData.error)
         alert(`Booking created but email failed to send. Please contact the customer directly.\n\nPayment link: ${paymentLinkData.payment_link}`)
@@ -653,7 +653,7 @@ const Employeedashboard: React.FC = () => {
       setShowPaymentPage(false)
       setSelectedLeadId(null)
       setSelectedItinerary(null)
-      
+
     } catch (error: any) {
       console.error('Error generating payment link:', error)
       alert('Failed to generate payment link: ' + error.message)
@@ -663,27 +663,25 @@ const Employeedashboard: React.FC = () => {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-40 w-56 bg-slate-800 shadow-xl transform transition-transform duration-300 ease-in-out md:translate-x-0 ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-      }`}>
+      <div className={`fixed inset-y-0 left-0 z-40 w-56 bg-slate-800 shadow-xl transform transition-transform duration-300 ease-in-out md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}>
         <div className="h-14 border-b border-gray-600 flex items-center px-4">
-          <img src={logo} alt="Travloger.in" style={{ width: 120, height: 24 }} />
+          <img src={logo.src} alt="Travloger.in" style={{ width: 120, height: 24 }} />
         </div>
-        
+
         {/* Navigation */}
         <nav className="flex-1 px-4 py-4 space-y-2">
           <div className="space-y-1">
-            
-            
-            
+
+
+
 
             <button
               onClick={() => setActiveSection('queries')}
-              className={`w-full flex items-center space-x-3 px-3 py-2.5 text-sm font-semibold rounded-lg transition-colors ${
-                activeSection === 'queries'
+              className={`w-full flex items-center space-x-3 px-3 py-2.5 text-sm font-semibold rounded-lg transition-colors ${activeSection === 'queries'
                   ? 'bg-gray-300 text-gray-800'
                   : 'text-gray-300 hover:bg-gray-700 hover:text-gray-100'
-              }`}
+                }`}
             >
               <svg className={`h-6 w-6 ${activeSection === 'queries' ? 'text-gray-800' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -692,7 +690,7 @@ const Employeedashboard: React.FC = () => {
             </button>
           </div>
         </nav>
-        
+
         <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-600">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -720,8 +718,8 @@ const Employeedashboard: React.FC = () => {
         <header className="bg-white border-b border-gray-200 shadow-sm">
           <div className="h-16 px-6 flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <button 
-                className="md:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors" 
+              <button
+                className="md:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
                 onClick={() => setSidebarOpen(s => !s)}
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -800,7 +798,7 @@ const Employeedashboard: React.FC = () => {
                         </div>
                         <h3 className="text-lg font-semibold text-gray-900">Member Details</h3>
                       </div>
-                      
+
                       <div className="space-y-4">
                         <div className="flex items-center space-x-3">
                           <div className="h-10 w-10 bg-primary/20 rounded-full flex items-center justify-center">
@@ -813,7 +811,7 @@ const Employeedashboard: React.FC = () => {
                             <p className="text-sm text-gray-500">Lead ID: #{selectedLead.id}</p>
                           </div>
                         </div>
-                        
+
                         <div className="space-y-3">
                           <div>
                             <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Contact Information</label>
@@ -836,7 +834,7 @@ const Employeedashboard: React.FC = () => {
                               )}
                             </div>
                           </div>
-                          
+
                           {selectedLead.destination && (
                             <div>
                               <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Travel Destination</label>
@@ -849,7 +847,7 @@ const Employeedashboard: React.FC = () => {
                               </div>
                             </div>
                           )}
-                          
+
                           {selectedLead.number_of_travelers && (
                             <div>
                               <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Travel Details</label>
@@ -861,7 +859,7 @@ const Employeedashboard: React.FC = () => {
                               </div>
                             </div>
                           )}
-                          
+
                           {selectedLead.travel_dates && (
                             <div>
                               <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Travel Dates</label>
@@ -870,7 +868,7 @@ const Employeedashboard: React.FC = () => {
                               </div>
                             </div>
                           )}
-                          
+
                           {selectedLead.custom_notes && (
                             <div>
                               <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Notes</label>
@@ -879,7 +877,7 @@ const Employeedashboard: React.FC = () => {
                               </div>
                             </div>
                           )}
-                          
+
                           <div>
                             <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Lead Status</label>
                             <div className="mt-1">
@@ -902,7 +900,7 @@ const Employeedashboard: React.FC = () => {
                         </div>
                         <h3 className="text-lg font-semibold text-gray-900">Itinerary Details</h3>
                       </div>
-                      
+
                       <div className="space-y-4">
                         <div>
                           <h4 className="font-medium text-gray-900 text-lg mb-2">{selectedItinerary.name}</h4>
@@ -914,7 +912,7 @@ const Employeedashboard: React.FC = () => {
                             <span>{getDestinationName(selectedItinerary.destination)}</span>
                           </div>
                         </div>
-                        
+
                         <div className="space-y-3">
                           <div>
                             <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Package Information</label>
@@ -931,7 +929,7 @@ const Employeedashboard: React.FC = () => {
                               )}
                             </div>
                           </div>
-                          
+
                           {/* Hotel Details */}
                           {selectedItinerary.selected_hotel_id && (() => {
                             const hotel = hotels.find(h => h.id === selectedItinerary.selected_hotel_id)
@@ -959,7 +957,7 @@ const Employeedashboard: React.FC = () => {
                               </div>
                             ) : null
                           })()}
-                          
+
                           {/* Vehicle Details */}
                           {selectedItinerary.selected_vehicle_id && (() => {
                             const vehicle = vehicles.find(v => v.id === selectedItinerary.selected_vehicle_id)
@@ -983,7 +981,7 @@ const Employeedashboard: React.FC = () => {
                               </div>
                             ) : null
                           })()}
-                          
+
                           {/* Fixed Plan Details */}
                           {selectedItinerary.fixed_days_id && (
                             <div>
@@ -1008,7 +1006,7 @@ const Employeedashboard: React.FC = () => {
                               </div>
                             </div>
                           )}
-                          
+
                           <div>
                             <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Package Status</label>
                             <div className="mt-1">
@@ -1021,7 +1019,7 @@ const Employeedashboard: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Generate Payment Link Button */}
                   <div className="mt-8 flex justify-center">
                     <button
@@ -1040,322 +1038,146 @@ const Employeedashboard: React.FC = () => {
               <>
                 {/* Lead Itineraries Section */}
                 {selectedLeadId ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <button
-                        onClick={() => setSelectedLeadId(null)}
-                        className="h-8 w-8 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
-                      >
-                        <svg className="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                      </button>
-                      <div className="h-8 w-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                        <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h2 className="text-lg font-semibold text-gray-900">
-                          Assign itinerary to {selectedLead?.name ? selectedLead.name : `Lead #${selectedLeadId}`}
-                        </h2>
-                        <p className="text-sm text-gray-600">
-                          {selectedLead?.phone ? `Phone: ${selectedLead.phone}` : selectedLead?.email ? `Email: ${selectedLead.email}` : ''}
-                        </p>
-                      </div>
-                    </div>
-                    {leadItinerariesLoading && (
-                      <div className="flex items-center space-x-2 text-sm text-gray-500">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                        <span>Loading itineraries...</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="p-6">
-                  {leadItinerariesError ? (
-                    <div className="bg-red-50 border border-red-200 text-sm text-red-700 px-3 py-2 rounded">
-                      {leadItinerariesError}
-                    </div>
-                  ) : leadItinerariesLoading ? (
-                    <div className="text-sm text-gray-600">Loading itineraries...</div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {leadItineraries.map((pkg: any) => {
-                        const isAssigned = (() => {
-                          try {
-                            const map = JSON.parse(localStorage.getItem('leadItineraryAssignments') || '{}')
-                            return map[selectedLeadId] === pkg.id
-                          } catch (_) {
-                            return false
-                          }
-                        })()
-                        
-                        return (
-                          <div key={pkg.id} className="group bg-white border border-gray-200 rounded-lg hover:shadow-md hover:border-primary transition-all duration-200 overflow-hidden">
-                            <div className="p-3">
-                              <div className="mb-2">
-                                <h3 className="text-sm font-semibold text-gray-900 mb-1 group-hover:text-primary transition-colors line-clamp-2">
-                                  {pkg.name}
-                                </h3>
-                                <div className="flex items-center text-xs text-gray-600 mb-1">
-                                  <svg className="h-3 w-3 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  </svg>
-                                  <span className="font-medium">{getDestinationName(pkg.destination)}</span>
-                                </div>
-                                {'route' in pkg && pkg.route && (
-                                  <div className="flex items-center text-xs text-gray-500">
-                                    <svg className="h-3 w-3 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span>{pkg.route}</span>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Details similar to dashboard (compact) */}
-                              <div className="space-y-1.5 mb-2">
-                                <div className="flex items-center justify-between text-xs">
-                                  <span className="text-gray-500">Plan</span>
-                                  <span className="font-medium text-gray-900">{pkg.plan_type || 'Custom'}</span>
-                                </div>
-                                {pkg.service_type && (
-                                  <div className="flex items-center justify-between text-xs">
-                                    <span className="text-gray-500">Service</span>
-                                    <span className="font-medium text-gray-900">{pkg.service_type}</span>
-                                  </div>
-                                )}
-                                {/* Custom-plan fields */}
-                                {pkg.hotel_location_id && (
-                                  <div className="flex items-center justify-between text-xs">
-                                    <span className="text-gray-500">Hotel Location</span>
-                                    <span className="font-medium text-gray-900">{hotelLocations.find(l => l.id === pkg.hotel_location_id)?.name || pkg.hotel_location_id}</span>
-                                  </div>
-                                )}
-                                {pkg.selected_hotel_id && (() => {
-                                  const hotel = hotels.find(h => h.id === pkg.selected_hotel_id)
-                                  return hotel ? (
-                                    <>
-                                      <div className="flex items-center justify-between text-xs"><span className="text-gray-500">Hotel</span><span className="font-medium text-gray-900">{hotel.name}</span></div>
-                                      <div className="flex items-center justify-between text-xs"><span className="text-gray-500">Map Rate</span><span className="font-medium text-gray-900">₹{hotel.map_rate || 0}</span></div>
-                                      <div className="flex items-center justify-between text-xs"><span className="text-gray-500">EB</span><span className="font-medium text-gray-900">₹{hotel.eb || 0}</span></div>
-                                      <div className="flex items-center justify-between text-xs"><span className="text-gray-500">Category</span><span className="font-medium text-gray-900">{hotel.category || 'N/A'}</span></div>
-                                    </>
-                                  ) : null
-                                })()}
-                                {pkg.vehicle_location_id && (
-                                  <div className="flex items-center justify-between text-xs">
-                                    <span className="text-gray-500">Vehicle Location</span>
-                                    <span className="font-medium text-gray-900">{vehicleLocations.find(l => l.id === pkg.vehicle_location_id)?.name || pkg.vehicle_location_id}</span>
-                                  </div>
-                                )}
-                                {pkg.selected_vehicle_id && (() => {
-                                  const vehicle = vehicles.find(v => v.id === pkg.selected_vehicle_id)
-                                  return vehicle ? (
-                                    <>
-                                      <div className="flex items-center justify-between text-xs"><span className="text-gray-500">Vehicle</span><span className="font-medium text-gray-900">{vehicle.vehicle_type}</span></div>
-                                      <div className="flex items-center justify-between text-xs"><span className="text-gray-500">Rate</span><span className="font-medium text-gray-900">₹{(vehicle as any).rate ?? 0}</span></div>
-                                      <div className="flex items-center justify-between text-xs"><span className="text-gray-500">AC Extra</span><span className="font-medium text-gray-900">₹{(vehicle as any).ac_extra ?? 0}</span></div>
-                                    </>
-                                  ) : null
-                                })()}
-                                {pkg.fixed_days_id && (
-                                  <div className="flex items-center justify-between text-xs">
-                                    <span className="text-gray-500">Fixed Days</span>
-                                    <span className="font-medium text-gray-900">{fixedDaysOptions.find(d => d.id === pkg.fixed_days_id)?.days || '-'}</span>
-                                  </div>
-                                )}
-                                {pkg.fixed_location_id && (
-                                  <div className="flex items-center justify-between text-xs">
-                                    <span className="text-gray-500">Fixed Location</span>
-                                    <span className="font-medium text-gray-900">{fixedLocations.find(l => l.id === pkg.fixed_location_id)?.name || pkg.fixed_location_id}</span>
-                                  </div>
-                                )}
-                                {pkg.fixed_plan_id && (
-                                  <div className="flex items-center justify-between text-xs">
-                                    <span className="text-gray-500">Fixed Plan</span>
-                                    <span className="font-medium text-gray-900">{fixedPlansByLocation[pkg.fixed_location_id || '']?.find(p => p.id === pkg.fixed_plan_id)?.name || pkg.fixed_plan_id}</span>
-                                  </div>
-                                )}
-                                {!!(pkg.fixed_adults ?? 0) && (
-                                  <div className="flex items-center justify-between text-xs">
-                                    <span className="text-gray-500">Adults</span>
-                                    <span className="font-medium text-gray-900">{pkg.fixed_adults}</span>
-                                  </div>
-                                )}
-                                {!!(pkg.fixed_price_per_person ?? 0) && (
-                                  <div className="flex items-center justify-between text-xs">
-                                    <span className="text-gray-500">Price/Person</span>
-                                    <span className="font-medium text-gray-900">₹{pkg.fixed_price_per_person}</span>
-                                  </div>
-                                )}
-                                {pkg.fixed_rooms_vehicle && (
-                                  <div className="flex items-center justify-between text-xs">
-                                    <span className="text-gray-500">Rooms & Vehicle</span>
-                                    <span className="font-medium text-gray-900">{pkg.fixed_rooms_vehicle}</span>
-                                  </div>
-                                )}
-                              </div>
-
-                              <button
-                                onClick={() => assignItinerary(pkg)}
-                                className={`w-full mt-2 py-1.5 text-xs rounded-md ${isAssigned ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-primary/10 text-primary hover:bg-primary/20'} transition-colors`}
-                              >
-                                {isAssigned ? 'Assigned' : 'Assign this itinerary'}
-                              </button>
-                            </div>
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <button
+                            onClick={() => setSelectedLeadId(null)}
+                            className="h-8 w-8 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
+                          >
+                            <svg className="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+                          <div className="h-8 w-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                            <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
                           </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <>
-                {/* Itineraries Section */}
-                {activeSection === 'itineraries' && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="px-6 py-5 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="h-12 w-12 bg-slate-800 rounded-xl flex items-center justify-center shadow-sm">
-                        <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-bold text-gray-900">Travel Itineraries</h2>
-                        <p className="text-sm text-gray-600">Manage and view all available packages</p>
-                      </div>
-                    </div>
-                    {loading && (
-                      <div className="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg shadow-sm">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-slate-800"></div>
-                        <span className="text-sm font-medium text-gray-700">Loading...</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {error ? (
-                  <div className="p-6">
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3">
-                      <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
-                        <svg className="h-4 w-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-red-800">Error Loading Itineraries</p>
-                        <p className="text-sm text-red-600">{error}</p>
-                      </div>
-                    </div>
-              </div>
-              ) : (
-                  <div className="p-6">
-                  {packages.length === 0 ? (
-                      <div className="text-center py-12">
-                        <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
+                          <div>
+                            <h2 className="text-lg font-semibold text-gray-900">
+                              Assign itinerary to {selectedLead?.name ? selectedLead.name : `Lead #${selectedLeadId}`}
+                            </h2>
+                            <p className="text-sm text-gray-600">
+                              {selectedLead?.phone ? `Phone: ${selectedLead.phone}` : selectedLead?.email ? `Email: ${selectedLead.email}` : ''}
+                            </p>
+                          </div>
                         </div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No Itineraries Found</h3>
-                        <p className="text-gray-500">No travel packages are available at the moment.</p>
+                        {leadItinerariesLoading && (
+                          <div className="flex items-center space-x-2 text-sm text-gray-500">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                            <span>Loading itineraries...</span>
+                          </div>
+                        )}
                       </div>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {packages.map((pkg: any) => {
-                          const isExpanded = expandedCards.has(pkg.id)
-                          return (
-                            <div key={pkg.id} className="group bg-white border border-gray-200 rounded-lg hover:shadow-md hover:border-primary transition-all duration-200 overflow-hidden">
-                              {/* Card Header */}
-                              <div className="relative">
-                                {pkg.image && (
-                                  <div className="h-24 bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center relative overflow-hidden">
-                                    <img src={pkg.image} alt={pkg.name} className="w-full h-full object-cover" />
-                                  </div>
-                                )}
-                                <div className="absolute top-2 right-2">
-                                  <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
-                                    pkg.status === 'Active' 
-                                      ? 'bg-primary/10 text-primary border border-primary/20' 
-                                      : pkg.status === 'Draft' 
-                                        ? 'bg-primary/10 text-primary border border-primary/20' 
-                                        : 'bg-primary/10 text-primary border border-primary/20'
-                                  }`}>
-                                    {pkg.status}
-                                  </span>
-                                </div>
-                              </div>
-                              
-                              {/* Card Content */}
-                              <div className="p-3">
-                                <div className="mb-2">
-                                  <h3 className="text-sm font-semibold text-gray-900 mb-1 group-hover:text-primary transition-colors line-clamp-2">
-                                    {pkg.name}
-                                  </h3>
-                                  {isExpanded && (
-                                    <>
-                                      <div className="flex items-center text-sm text-gray-600 mb-2">
-                                        <svg className="h-4 w-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </div>
+
+                    <div className="p-6">
+                      {leadItinerariesError ? (
+                        <div className="bg-red-50 border border-red-200 text-sm text-red-700 px-3 py-2 rounded">
+                          {leadItinerariesError}
+                        </div>
+                      ) : leadItinerariesLoading ? (
+                        <div className="text-sm text-gray-600">Loading itineraries...</div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                          {leadItineraries.map((pkg: any) => {
+                            const isAssigned = (() => {
+                              try {
+                                const map = JSON.parse(localStorage.getItem('leadItineraryAssignments') || '{}')
+                                return map[selectedLeadId] === pkg.id
+                              } catch (_) {
+                                return false
+                              }
+                            })()
+
+                            return (
+                              <div key={pkg.id} className="group bg-white border border-gray-200 rounded-lg hover:shadow-md hover:border-primary transition-all duration-200 overflow-hidden">
+                                <div className="p-3">
+                                  <div className="mb-2">
+                                    <h3 className="text-sm font-semibold text-gray-900 mb-1 group-hover:text-primary transition-colors line-clamp-2">
+                                      {pkg.name}
+                                    </h3>
+                                    <div className="flex items-center text-xs text-gray-600 mb-1">
+                                      <svg className="h-3 w-3 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                      </svg>
+                                      <span className="font-medium">{getDestinationName(pkg.destination)}</span>
+                                    </div>
+                                    {'route' in pkg && pkg.route && (
+                                      <div className="flex items-center text-xs text-gray-500">
+                                        <svg className="h-3 w-3 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        <span className="font-medium">{getDestinationName(pkg.destination)}</span>
+                                        <span>{pkg.route}</span>
                                       </div>
-                                      {'route' in pkg && pkg.route && (
-                                        <div className="flex items-center text-sm text-gray-500 mb-2">
-                                          <svg className="h-4 w-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                          </svg>
-                                          <span>{pkg.route}</span>
-                            </div>
-                                      )}
-                                    </>
-                                  )}
-                                </div>
-                                
-                                {/* Package Details - Only show when expanded */}
-                                {isExpanded && (
-                                  <div className="space-y-1.5 mb-3">
+                                    )}
+                                  </div>
+
+                                  {/* Details similar to dashboard (compact) */}
+                                  <div className="space-y-1.5 mb-2">
                                     <div className="flex items-center justify-between text-xs">
-                                      <span className="text-gray-500">Plan Type</span>
+                                      <span className="text-gray-500">Plan</span>
                                       <span className="font-medium text-gray-900">{pkg.plan_type || 'Custom'}</span>
                                     </div>
-                                    <div className="flex items-center justify-between text-xs">
-                                      <span className="text-gray-500">Service</span>
-                                      <span className="font-medium text-gray-900">{pkg.service_type || '-'}</span>
-                                    </div>
-                                    {/* Fixed plan fields */}
+                                    {pkg.service_type && (
+                                      <div className="flex items-center justify-between text-xs">
+                                        <span className="text-gray-500">Service</span>
+                                        <span className="font-medium text-gray-900">{pkg.service_type}</span>
+                                      </div>
+                                    )}
+                                    {/* Custom-plan fields */}
+                                    {pkg.hotel_location_id && (
+                                      <div className="flex items-center justify-between text-xs">
+                                        <span className="text-gray-500">Hotel Location</span>
+                                        <span className="font-medium text-gray-900">{hotelLocations.find(l => l.id === pkg.hotel_location_id)?.name || pkg.hotel_location_id}</span>
+                                      </div>
+                                    )}
+                                    {pkg.selected_hotel_id && (() => {
+                                      const hotel = hotels.find(h => h.id === pkg.selected_hotel_id)
+                                      return hotel ? (
+                                        <>
+                                          <div className="flex items-center justify-between text-xs"><span className="text-gray-500">Hotel</span><span className="font-medium text-gray-900">{hotel.name}</span></div>
+                                          <div className="flex items-center justify-between text-xs"><span className="text-gray-500">Map Rate</span><span className="font-medium text-gray-900">₹{hotel.map_rate || 0}</span></div>
+                                          <div className="flex items-center justify-between text-xs"><span className="text-gray-500">EB</span><span className="font-medium text-gray-900">₹{hotel.eb || 0}</span></div>
+                                          <div className="flex items-center justify-between text-xs"><span className="text-gray-500">Category</span><span className="font-medium text-gray-900">{hotel.category || 'N/A'}</span></div>
+                                        </>
+                                      ) : null
+                                    })()}
+                                    {pkg.vehicle_location_id && (
+                                      <div className="flex items-center justify-between text-xs">
+                                        <span className="text-gray-500">Vehicle Location</span>
+                                        <span className="font-medium text-gray-900">{vehicleLocations.find(l => l.id === pkg.vehicle_location_id)?.name || pkg.vehicle_location_id}</span>
+                                      </div>
+                                    )}
+                                    {pkg.selected_vehicle_id && (() => {
+                                      const vehicle = vehicles.find(v => v.id === pkg.selected_vehicle_id)
+                                      return vehicle ? (
+                                        <>
+                                          <div className="flex items-center justify-between text-xs"><span className="text-gray-500">Vehicle</span><span className="font-medium text-gray-900">{vehicle.vehicle_type}</span></div>
+                                          <div className="flex items-center justify-between text-xs"><span className="text-gray-500">Rate</span><span className="font-medium text-gray-900">₹{(vehicle as any).rate ?? 0}</span></div>
+                                          <div className="flex items-center justify-between text-xs"><span className="text-gray-500">AC Extra</span><span className="font-medium text-gray-900">₹{(vehicle as any).ac_extra ?? 0}</span></div>
+                                        </>
+                                      ) : null
+                                    })()}
                                     {pkg.fixed_days_id && (
                                       <div className="flex items-center justify-between text-xs">
                                         <span className="text-gray-500">Fixed Days</span>
-                                        <span className="font-medium text-gray-900">
-                                          {fixedDaysOptions.find(d => d.id === pkg.fixed_days_id)?.days || '-'}
-                                        </span>
+                                        <span className="font-medium text-gray-900">{fixedDaysOptions.find(d => d.id === pkg.fixed_days_id)?.days || '-'}</span>
                                       </div>
                                     )}
                                     {pkg.fixed_location_id && (
                                       <div className="flex items-center justify-between text-xs">
                                         <span className="text-gray-500">Fixed Location</span>
-                                        <span className="font-medium text-gray-900">
-                                          {fixedLocations.find(l => l.id === pkg.fixed_location_id)?.name || pkg.fixed_location_id}
-                                        </span>
+                                        <span className="font-medium text-gray-900">{fixedLocations.find(l => l.id === pkg.fixed_location_id)?.name || pkg.fixed_location_id}</span>
                                       </div>
                                     )}
                                     {pkg.fixed_plan_id && (
                                       <div className="flex items-center justify-between text-xs">
                                         <span className="text-gray-500">Fixed Plan</span>
-                                        <span className="font-medium text-gray-900">
-                                          {fixedPlansByLocation[(pkg as any).fixed_location_id || '']?.find(p => p.id === pkg.fixed_plan_id)?.name || pkg.fixed_plan_id}
-                                        </span>
+                                        <span className="font-medium text-gray-900">{fixedPlansByLocation[pkg.fixed_location_id || '']?.find(p => p.id === pkg.fixed_plan_id)?.name || pkg.fixed_plan_id}</span>
                                       </div>
                                     )}
                                     {!!(pkg.fixed_adults ?? 0) && (
@@ -1376,515 +1198,686 @@ const Employeedashboard: React.FC = () => {
                                         <span className="font-medium text-gray-900">{pkg.fixed_rooms_vehicle}</span>
                                       </div>
                                     )}
-                                    {pkg.hotel_location_id && (
-                                      <div className="flex items-center justify-between text-xs">
-                                        <span className="text-gray-500">Hotel Location</span>
-                                        <span className="font-medium text-gray-900">
-                                          {hotelLocations.find(l => l.id === pkg.hotel_location_id)?.name || pkg.hotel_location_id}
-                                        </span>
-                                      </div>
-                                    )}
-                                    {pkg.selected_hotel_id && (() => {
-                                      const hotel = hotels.find(h => h.id === pkg.selected_hotel_id)
-                                      return hotel ? (
-                                        <>
-                                          <div className="flex items-center justify-between text-xs">
-                                            <span className="text-gray-500">Hotel</span>
-                                            <span className="font-medium text-gray-900">{hotel.name}</span>
-                                          </div>
-                                          <div className="flex items-center justify-between text-xs">
-                                            <span className="text-gray-500">Map Rate</span>
-                                            <span className="font-medium text-gray-900">₹{hotel.map_rate || 0}</span>
-                                          </div>
-                                          <div className="flex items-center justify-between text-xs">
-                                            <span className="text-gray-500">EB</span>
-                                            <span className="font-medium text-gray-900">₹{hotel.eb || 0}</span>
-                                          </div>
-                                          <div className="flex items-center justify-between text-xs">
-                                            <span className="text-gray-500">Category</span>
-                                            <span className="font-medium text-gray-900">{hotel.category || 'N/A'}</span>
-                                          </div>
-                                        </>
-                                      ) : (
-                                        <div className="flex items-center justify-between text-xs">
-                                          <span className="text-gray-500">Hotel</span>
-                                          <span className="font-medium text-gray-900">{pkg.selected_hotel_id}</span>
-                                        </div>
-                                      )
-                                    })()}
-                                    {pkg.vehicle_location_id && (
-                                      <div className="flex items-center justify-between text-xs">
-                                        <span className="text-gray-500">Vehicle Location</span>
-                                        <span className="font-medium text-gray-900">
-                                          {vehicleLocations.find(l => l.id === pkg.vehicle_location_id)?.name || pkg.vehicle_location_id}
-                                        </span>
-                                      </div>
-                                    )}
-                                    {pkg.selected_vehicle_id && (
-                                      <div className="flex items-center justify-between text-xs">
-                                        <span className="text-gray-500">Vehicle</span>
-                                        <span className="font-medium text-gray-900">
-                                          {vehicles.find(v => v.id === pkg.selected_vehicle_id)?.vehicle_type || pkg.selected_vehicle_id}
-                                        </span>
-                                      </div>
-                                    )}
                                   </div>
-                                )}
-                                
-                                {/* Card Footer */}
-                                <div className="pt-2 border-t border-gray-100">
+
                                   <button
-                                    onClick={() => {
-                                      if (isExpanded) {
-                                        setExpandedCards(prev => {
-                                          const newSet = new Set(prev)
-                                          newSet.delete(pkg.id)
-                                          return newSet
-                                        })
-                                      } else {
-                                        setExpandedCards(prev => new Set(prev).add(pkg.id))
-                                      }
-                                    }}
-                                    className="w-full bg-primary/10 hover:bg-primary/20 text-primary font-medium py-1.5 px-3 rounded-md transition-colors duration-200 flex items-center justify-center space-x-1 text-xs"
+                                    onClick={() => assignItinerary(pkg)}
+                                    className={`w-full mt-2 py-1.5 text-xs rounded-md ${isAssigned ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-primary/10 text-primary hover:bg-primary/20'} transition-colors`}
                                   >
-                                    <span>{isExpanded ? 'Hide Details' : 'View Details'}</span>
-                                    <svg className={`h-3 w-3 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
+                                    {isAssigned ? 'Assigned' : 'Assign this itinerary'}
                                   </button>
                                 </div>
                               </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Query Details Section */}
-            {activeSection === 'details' && selectedQueryId && (
-              <QueryDetail queryId={selectedQueryId} onBack={() => {
-                setActiveSection('queries')
-                setSelectedQueryId(null)
-              }} />
-            )}
-
-            {/* Queries Section */}
-            {activeSection === 'queries' && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="px-6 py-5 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="h-12 w-12 bg-slate-800 rounded-xl flex items-center justify-center shadow-sm">
-                        <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-bold text-gray-900">Customer Queries</h2>
-                        <p className="text-sm text-gray-600">View and manage customer inquiries</p>
-                      </div>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </div>
-                
-                <div className="p-6">
-                {loading ? (
-                  <div className="flex items-center justify-center py-20">
-                    <div className="relative">
-                      <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-8 h-8 bg-blue-600 rounded-full animate-pulse"></div>
-                      </div>
-                    </div>
-                    <span className="ml-4 text-gray-600 font-medium">Loading queries...</span>
-                  </div>
-                ) : leads.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Queries Found</h3>
-                    <p className="text-gray-500">There are no customer queries assigned to you at the moment.</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {leads.map(lead => (
-                      <div key={lead.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900">{lead.name}</h3>
-                            <p className="text-sm text-gray-600">{lead.email} • {lead.phone}</p>
+                  <>
+                    {/* Itineraries Section */}
+                    {activeSection === 'itineraries' && (
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div className="px-6 py-5 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-gray-200">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className="h-12 w-12 bg-slate-800 rounded-xl flex items-center justify-center shadow-sm">
+                                <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                              </div>
+                              <div>
+                                <h2 className="text-xl font-bold text-gray-900">Travel Itineraries</h2>
+                                <p className="text-sm text-gray-600">Manage and view all available packages</p>
+                              </div>
+                            </div>
+                            {loading && (
+                              <div className="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg shadow-sm">
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-slate-800"></div>
+                                <span className="text-sm font-medium text-gray-700">Loading...</span>
+                              </div>
+                            )}
                           </div>
-                          <Badge className="bg-blue-100 text-blue-800 text-xs">
-                            {lead.status || 'New'}
-                          </Badge>
                         </div>
-                        <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
-                          <div>
-                            <p className="text-gray-500">Destination</p>
-                            <p className="font-medium">{getDestinationName(lead.destination)}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500">Travel Dates</p>
-                            <p className="font-medium">{lead.travel_dates || 'Not specified'}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500">Travelers</p>
-                            <p className="font-medium">{lead.number_of_travelers || '0'} Pax</p>
-                          </div>
-                        </div>
-                        <div className="mt-4 flex justify-end space-x-2">
-                          <Button 
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedQueryId(lead.id.toString())
-                              setActiveSection('details')
-                            }}
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                          </Button>
-                          <Button 
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
-                            size="sm"
-                            onClick={() => navigate(`/queries/${lead.id}/proposals?view=employee`)}
-                          >
-                            <FileText className="h-4 w-4 mr-2" />
-                            View Proposals
-                          </Button>
-                          <Button 
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate(`/queries/${lead.id}/billing?view=employee`)}
-                          >
-                            <CreditCard className="h-4 w-4 mr-2" />
-                            Billing
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                </div>
-              </div>
-            )}
 
-            {/* Leads Section */}
-            {activeSection === 'leads' && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="px-6 py-5 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="h-12 w-12 bg-slate-800 rounded-xl flex items-center justify-center shadow-sm">
-                        <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-bold text-gray-900">Assigned Leads</h2>
-                        <p className="text-sm text-gray-600">Manage your customer inquiries and bookings</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="bg-slate-800 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-sm">
-                        {assignedLeads.length} Lead{assignedLeads.length !== 1 ? 's' : ''}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="p-6">
-                  {assignedLeads.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                      </div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Leads Assigned</h3>
-                      <p className="text-gray-500">You don&apos;t have any leads assigned to you yet.</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {assignedLeads.map((lead) => {
-                        const isExpanded = expandedLeads.has(lead.id)
-                        const bookingStatus = leadBookingStatus[lead.id]
-                        const hasPayment = bookingStatus?.hasBooking
-                        const isPaymentConfirmed = bookingStatus?.status === 'Confirmed' && bookingStatus?.paymentStatus === 'Paid'
-                        const isPending = bookingStatus?.status === 'Pending'
-                        
-                        return (
-                          <div
-                            key={lead.id}
-                            className={`group bg-white border-2 rounded-lg hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer ${
-                              isPaymentConfirmed 
-                                ? 'border-green-300 bg-green-50/30' 
-                                : isPending 
-                                  ? 'border-yellow-300 bg-yellow-50/30'
-                                  : 'border-gray-200 hover:border-primary'
-                            }`}
-                            onClick={() => {
-                              setSelectedLeadId(lead.id.toString())
-                              loadLeadItineraries(lead.id.toString())
-                            }}
-                          >
-                            {/* Payment Status Banner */}
-                            {hasPayment && (
-                              <div className={`px-3 py-1.5 text-xs font-medium flex items-center justify-between ${
-                                isPaymentConfirmed 
-                                  ? 'bg-green-100 text-green-800 border-b border-green-200' 
-                                  : 'bg-yellow-100 text-yellow-800 border-b border-yellow-200'
-                              }`}>
-                                <div className="flex items-center space-x-1.5">
-                                  {isPaymentConfirmed ? (
-                                    <>
-                                      <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                      </svg>
-                                      <span>Payment Confirmed</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <svg className="h-3.5 w-3.5 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                                      </svg>
-                                      <span>Payment Pending</span>
-                                    </>
-                                  )}
-                                </div>
-                                <span className="font-semibold">₹{bookingStatus.amount}</span>
+                        {error ? (
+                          <div className="p-6">
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3">
+                              <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
+                                <svg className="h-4 w-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
                               </div>
-                            )}
-                            
-                            {/* Card Header */}
-                            <div className="p-3 pb-2">
-                              <div className="flex items-start justify-between mb-2">
-                                <div className="flex items-center space-x-2">
-                                  <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                                    isPaymentConfirmed 
-                                      ? 'bg-green-200' 
-                                      : isPending 
-                                        ? 'bg-yellow-200'
-                                        : 'bg-primary/20'
-                                  }`}>
-                                    <span className={`font-semibold text-xs ${
-                                      isPaymentConfirmed 
-                                        ? 'text-green-700' 
-                                        : isPending 
-                                          ? 'text-yellow-700'
-                                          : 'text-primary'
-                                    }`}>
-                                      {(lead.name || 'Lead').charAt(0).toUpperCase()}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors text-sm">
-                                      {lead.name || 'Unnamed Lead'}
-                                    </h3>
-                                    {isExpanded && (
-                                      <p className="text-sm text-gray-500">
-                                        {new Date(lead.created_at).toLocaleDateString('en-US', {
-                                          month: 'short',
-                                          day: 'numeric',
-                                          year: 'numeric'
-                                        })}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                                {!hasPayment && (
-                                  <div className="flex items-center space-x-1">
-                                    <div className="h-2 w-2 bg-primary rounded-full"></div>
-                                    <span className="text-xs text-gray-500">New</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            
-                            {/* Card Content - Only show when expanded */}
-                            {isExpanded && (
-                              <div className="px-3 pb-2">
-                                <div className="space-y-2">
-                                  {/* Destination */}
-                                  <div className="flex items-center space-x-2">
-                                    <div className="h-6 w-6 bg-primary/10 rounded-md flex items-center justify-center">
-                                      <svg className="h-3 w-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                      </svg>
-                                    </div>
-                                    <div>
-                                      <p className="text-xs text-gray-500">Destination</p>
-                                      <p className="text-xs font-medium text-gray-900">{getDestinationName(lead.destination) || 'Not specified'}</p>
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Contact Info */}
-                                  <div className="flex items-center space-x-2">
-                                    <div className="h-6 w-6 bg-primary/10 rounded-md flex items-center justify-center">
-                                      <svg className="h-3 w-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                      </svg>
-                                    </div>
-                                    <div>
-                                      <p className="text-xs text-gray-500">Contact</p>
-                                      <p className="text-xs font-medium text-gray-900">{lead.email || 'No email'}</p>
-                                      {lead.phone && (
-                                        <p className="text-xs text-gray-600">{lead.phone}</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Travel Details */}
-                                  <div className="flex items-center space-x-2">
-                                    <div className="h-6 w-6 bg-primary/10 rounded-md flex items-center justify-center">
-                                      <svg className="h-3 w-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                      </svg>
-                                    </div>
-                                    <div>
-                                      <p className="text-xs text-gray-500">Travel Details</p>
-                                      <p className="text-xs font-medium text-gray-900">
-                                        {lead.number_of_travelers || 'N/A'} travelers
-                                      </p>
-                                      {lead.travel_dates && (
-                                        <p className="text-xs text-gray-600">{lead.travel_dates}</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Notes */}
-                                  {lead.custom_notes && (
-                                    <div className="flex items-start space-x-2">
-                                      <div className="h-6 w-6 bg-primary/10 rounded-md flex items-center justify-center mt-0.5">
-                                        <svg className="h-3 w-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                      </div>
-                                      <div>
-                                        <p className="text-xs text-gray-500">Notes</p>
-                                        <p className="text-xs text-gray-700 line-clamp-2">{lead.custom_notes}</p>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Card Footer */}
-                            <div className="px-3 py-2 bg-gray-50 border-t border-gray-100">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-2">
-                                  {isPending ? (
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        refreshPaymentStatus(lead.id)
-                                      }}
-                                      className="flex items-center space-x-1 px-2 py-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded text-xs font-medium transition-colors"
-                                    >
-                                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                      </svg>
-                                      <span>Check Payment</span>
-                                    </button>
-                                  ) : (
-                                    <div className="flex items-center space-x-1">
-                                      <div className="h-2 w-2 bg-primary rounded-full"></div>
-                                      <span className="text-xs text-gray-600">Active Lead</span>
-                                    </div>
-                                  )}
-                                </div>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation() // Prevent card click navigation
-                                if (isExpanded) {
-                                  setExpandedLeads(prev => {
-                                    const newSet = new Set(prev)
-                                    newSet.delete(lead.id)
-                                    return newSet
-                                  })
-                                } else {
-                                  setExpandedLeads(prev => new Set(prev).add(lead.id))
-                                }
-                              }}
-                              className="text-primary hover:text-primary/80 text-xs font-medium flex items-center space-x-1 transition-colors"
-                            >
-                                  <span>{isExpanded ? 'Hide Details' : 'View Details'}</span>
-                                  <svg className={`h-3 w-3 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                  </svg>
-                                </button>
+                              <div>
+                                <p className="text-sm font-medium text-red-800">Error Loading Itineraries</p>
+                                <p className="text-sm text-red-600">{error}</p>
                               </div>
                             </div>
                           </div>
-                        )
-                      })}
+                        ) : (
+                          <div className="p-6">
+                            {packages.length === 0 ? (
+                              <div className="text-center py-12">
+                                <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                  <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                  </svg>
+                                </div>
+                                <h3 className="text-lg font-medium text-gray-900 mb-2">No Itineraries Found</h3>
+                                <p className="text-gray-500">No travel packages are available at the moment.</p>
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                {packages.map((pkg: any) => {
+                                  const isExpanded = expandedCards.has(pkg.id)
+                                  return (
+                                    <div key={pkg.id} className="group bg-white border border-gray-200 rounded-lg hover:shadow-md hover:border-primary transition-all duration-200 overflow-hidden">
+                                      {/* Card Header */}
+                                      <div className="relative">
+                                        {pkg.image && (
+                                          <div className="h-24 bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center relative overflow-hidden">
+                                            <img src={pkg.image} alt={pkg.name} className="w-full h-full object-cover" />
+                                          </div>
+                                        )}
+                                        <div className="absolute top-2 right-2">
+                                          <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${pkg.status === 'Active'
+                                              ? 'bg-primary/10 text-primary border border-primary/20'
+                                              : pkg.status === 'Draft'
+                                                ? 'bg-primary/10 text-primary border border-primary/20'
+                                                : 'bg-primary/10 text-primary border border-primary/20'
+                                            }`}>
+                                            {pkg.status}
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      {/* Card Content */}
+                                      <div className="p-3">
+                                        <div className="mb-2">
+                                          <h3 className="text-sm font-semibold text-gray-900 mb-1 group-hover:text-primary transition-colors line-clamp-2">
+                                            {pkg.name}
+                                          </h3>
+                                          {isExpanded && (
+                                            <>
+                                              <div className="flex items-center text-sm text-gray-600 mb-2">
+                                                <svg className="h-4 w-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                                <span className="font-medium">{getDestinationName(pkg.destination)}</span>
+                                              </div>
+                                              {'route' in pkg && pkg.route && (
+                                                <div className="flex items-center text-sm text-gray-500 mb-2">
+                                                  <svg className="h-4 w-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                  </svg>
+                                                  <span>{pkg.route}</span>
+                                                </div>
+                                              )}
+                                            </>
+                                          )}
+                                        </div>
+
+                                        {/* Package Details - Only show when expanded */}
+                                        {isExpanded && (
+                                          <div className="space-y-1.5 mb-3">
+                                            <div className="flex items-center justify-between text-xs">
+                                              <span className="text-gray-500">Plan Type</span>
+                                              <span className="font-medium text-gray-900">{pkg.plan_type || 'Custom'}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-xs">
+                                              <span className="text-gray-500">Service</span>
+                                              <span className="font-medium text-gray-900">{pkg.service_type || '-'}</span>
+                                            </div>
+                                            {/* Fixed plan fields */}
+                                            {pkg.fixed_days_id && (
+                                              <div className="flex items-center justify-between text-xs">
+                                                <span className="text-gray-500">Fixed Days</span>
+                                                <span className="font-medium text-gray-900">
+                                                  {fixedDaysOptions.find(d => d.id === pkg.fixed_days_id)?.days || '-'}
+                                                </span>
+                                              </div>
+                                            )}
+                                            {pkg.fixed_location_id && (
+                                              <div className="flex items-center justify-between text-xs">
+                                                <span className="text-gray-500">Fixed Location</span>
+                                                <span className="font-medium text-gray-900">
+                                                  {fixedLocations.find(l => l.id === pkg.fixed_location_id)?.name || pkg.fixed_location_id}
+                                                </span>
+                                              </div>
+                                            )}
+                                            {pkg.fixed_plan_id && (
+                                              <div className="flex items-center justify-between text-xs">
+                                                <span className="text-gray-500">Fixed Plan</span>
+                                                <span className="font-medium text-gray-900">
+                                                  {fixedPlansByLocation[(pkg as any).fixed_location_id || '']?.find(p => p.id === pkg.fixed_plan_id)?.name || pkg.fixed_plan_id}
+                                                </span>
+                                              </div>
+                                            )}
+                                            {!!(pkg.fixed_adults ?? 0) && (
+                                              <div className="flex items-center justify-between text-xs">
+                                                <span className="text-gray-500">Adults</span>
+                                                <span className="font-medium text-gray-900">{pkg.fixed_adults}</span>
+                                              </div>
+                                            )}
+                                            {!!(pkg.fixed_price_per_person ?? 0) && (
+                                              <div className="flex items-center justify-between text-xs">
+                                                <span className="text-gray-500">Price/Person</span>
+                                                <span className="font-medium text-gray-900">₹{pkg.fixed_price_per_person}</span>
+                                              </div>
+                                            )}
+                                            {pkg.fixed_rooms_vehicle && (
+                                              <div className="flex items-center justify-between text-xs">
+                                                <span className="text-gray-500">Rooms & Vehicle</span>
+                                                <span className="font-medium text-gray-900">{pkg.fixed_rooms_vehicle}</span>
+                                              </div>
+                                            )}
+                                            {pkg.hotel_location_id && (
+                                              <div className="flex items-center justify-between text-xs">
+                                                <span className="text-gray-500">Hotel Location</span>
+                                                <span className="font-medium text-gray-900">
+                                                  {hotelLocations.find(l => l.id === pkg.hotel_location_id)?.name || pkg.hotel_location_id}
+                                                </span>
+                                              </div>
+                                            )}
+                                            {pkg.selected_hotel_id && (() => {
+                                              const hotel = hotels.find(h => h.id === pkg.selected_hotel_id)
+                                              return hotel ? (
+                                                <>
+                                                  <div className="flex items-center justify-between text-xs">
+                                                    <span className="text-gray-500">Hotel</span>
+                                                    <span className="font-medium text-gray-900">{hotel.name}</span>
+                                                  </div>
+                                                  <div className="flex items-center justify-between text-xs">
+                                                    <span className="text-gray-500">Map Rate</span>
+                                                    <span className="font-medium text-gray-900">₹{hotel.map_rate || 0}</span>
+                                                  </div>
+                                                  <div className="flex items-center justify-between text-xs">
+                                                    <span className="text-gray-500">EB</span>
+                                                    <span className="font-medium text-gray-900">₹{hotel.eb || 0}</span>
+                                                  </div>
+                                                  <div className="flex items-center justify-between text-xs">
+                                                    <span className="text-gray-500">Category</span>
+                                                    <span className="font-medium text-gray-900">{hotel.category || 'N/A'}</span>
+                                                  </div>
+                                                </>
+                                              ) : (
+                                                <div className="flex items-center justify-between text-xs">
+                                                  <span className="text-gray-500">Hotel</span>
+                                                  <span className="font-medium text-gray-900">{pkg.selected_hotel_id}</span>
+                                                </div>
+                                              )
+                                            })()}
+                                            {pkg.vehicle_location_id && (
+                                              <div className="flex items-center justify-between text-xs">
+                                                <span className="text-gray-500">Vehicle Location</span>
+                                                <span className="font-medium text-gray-900">
+                                                  {vehicleLocations.find(l => l.id === pkg.vehicle_location_id)?.name || pkg.vehicle_location_id}
+                                                </span>
+                                              </div>
+                                            )}
+                                            {pkg.selected_vehicle_id && (
+                                              <div className="flex items-center justify-between text-xs">
+                                                <span className="text-gray-500">Vehicle</span>
+                                                <span className="font-medium text-gray-900">
+                                                  {vehicles.find(v => v.id === pkg.selected_vehicle_id)?.vehicle_type || pkg.selected_vehicle_id}
+                                                </span>
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
+
+                                        {/* Card Footer */}
+                                        <div className="pt-2 border-t border-gray-100">
+                                          <button
+                                            onClick={() => {
+                                              if (isExpanded) {
+                                                setExpandedCards(prev => {
+                                                  const newSet = new Set(prev)
+                                                  newSet.delete(pkg.id)
+                                                  return newSet
+                                                })
+                                              } else {
+                                                setExpandedCards(prev => new Set(prev).add(pkg.id))
+                                              }
+                                            }}
+                                            className="w-full bg-primary/10 hover:bg-primary/20 text-primary font-medium py-1.5 px-3 rounded-md transition-colors duration-200 flex items-center justify-center space-x-1 text-xs"
+                                          >
+                                            <span>{isExpanded ? 'Hide Details' : 'View Details'}</span>
+                                            <svg className={`h-3 w-3 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Query Details Section */}
+                    {activeSection === 'details' && selectedQueryId && (
+                      <QueryDetail queryId={selectedQueryId} onBack={() => {
+                        setActiveSection('queries')
+                        setSelectedQueryId(null)
+                      }} />
+                    )}
+
+                    {/* Queries Section */}
+                    {activeSection === 'queries' && (
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div className="px-6 py-5 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-gray-200">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className="h-12 w-12 bg-slate-800 rounded-xl flex items-center justify-center shadow-sm">
+                                <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              </div>
+                              <div>
+                                <h2 className="text-xl font-bold text-gray-900">Customer Queries</h2>
+                                <p className="text-sm text-gray-600">View and manage customer inquiries</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-6">
+                          {loading ? (
+                            <div className="flex items-center justify-center py-20">
+                              <div className="relative">
+                                <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="w-8 h-8 bg-blue-600 rounded-full animate-pulse"></div>
+                                </div>
+                              </div>
+                              <span className="ml-4 text-gray-600 font-medium">Loading queries...</span>
+                            </div>
+                          ) : leads.length === 0 ? (
+                            <div className="text-center py-12">
+                              <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              </div>
+                              <h3 className="text-lg font-medium text-gray-900 mb-2">No Queries Found</h3>
+                              <p className="text-gray-500">There are no customer queries assigned to you at the moment.</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              {leads.map(lead => (
+                                <div key={lead.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <h3 className="text-lg font-semibold text-gray-900">{lead.name}</h3>
+                                      <p className="text-sm text-gray-600">{lead.email} • {lead.phone}</p>
+                                    </div>
+                                    <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                      {lead.status || 'New'}
+                                    </Badge>
+                                  </div>
+                                  <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
+                                    <div>
+                                      <p className="text-gray-500">Destination</p>
+                                      <p className="font-medium">{getDestinationName(lead.destination)}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500">Travel Dates</p>
+                                      <p className="font-medium">{lead.travel_dates || 'Not specified'}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500">Travelers</p>
+                                      <p className="font-medium">{lead.number_of_travelers || '0'} Pax</p>
+                                    </div>
+                                  </div>
+                                  <div className="mt-4 flex justify-end space-x-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setSelectedQueryId(lead.id.toString())
+                                        setActiveSection('details')
+                                      }}
+                                    >
+                                      <Eye className="h-4 w-4 mr-2" />
+                                      View Details
+                                    </Button>
+                                    <Button
+                                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                                      size="sm"
+                                      onClick={() => navigate(`/queries/${lead.id}/proposals?view=employee`)}
+                                    >
+                                      <FileText className="h-4 w-4 mr-2" />
+                                      View Proposals
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => navigate(`/queries/${lead.id}/billing?view=employee`)}
+                                    >
+                                      <CreditCard className="h-4 w-4 mr-2" />
+                                      Billing
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Leads Section */}
+                    {activeSection === 'leads' && (
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div className="px-6 py-5 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-gray-200">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className="h-12 w-12 bg-slate-800 rounded-xl flex items-center justify-center shadow-sm">
+                                <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                              </div>
+                              <div>
+                                <h2 className="text-xl font-bold text-gray-900">Assigned Leads</h2>
+                                <p className="text-sm text-gray-600">Manage your customer inquiries and bookings</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="bg-slate-800 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-sm">
+                                {assignedLeads.length} Lead{assignedLeads.length !== 1 ? 's' : ''}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-6">
+                          {assignedLeads.length === 0 ? (
+                            <div className="text-center py-12">
+                              <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                              </div>
+                              <h3 className="text-lg font-medium text-gray-900 mb-2">No Leads Assigned</h3>
+                              <p className="text-gray-500">You don&apos;t have any leads assigned to you yet.</p>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                              {assignedLeads.map((lead) => {
+                                const isExpanded = expandedLeads.has(lead.id)
+                                const bookingStatus = leadBookingStatus[lead.id]
+                                const hasPayment = bookingStatus?.hasBooking
+                                const isPaymentConfirmed = bookingStatus?.status === 'Confirmed' && bookingStatus?.paymentStatus === 'Paid'
+                                const isPending = bookingStatus?.status === 'Pending'
+
+                                return (
+                                  <div
+                                    key={lead.id}
+                                    className={`group bg-white border-2 rounded-lg hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer ${isPaymentConfirmed
+                                        ? 'border-green-300 bg-green-50/30'
+                                        : isPending
+                                          ? 'border-yellow-300 bg-yellow-50/30'
+                                          : 'border-gray-200 hover:border-primary'
+                                      }`}
+                                    onClick={() => {
+                                      setSelectedLeadId(lead.id.toString())
+                                      loadLeadItineraries(lead.id.toString())
+                                    }}
+                                  >
+                                    {/* Payment Status Banner */}
+                                    {hasPayment && (
+                                      <div className={`px-3 py-1.5 text-xs font-medium flex items-center justify-between ${isPaymentConfirmed
+                                          ? 'bg-green-100 text-green-800 border-b border-green-200'
+                                          : 'bg-yellow-100 text-yellow-800 border-b border-yellow-200'
+                                        }`}>
+                                        <div className="flex items-center space-x-1.5">
+                                          {isPaymentConfirmed ? (
+                                            <>
+                                              <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                              </svg>
+                                              <span>Payment Confirmed</span>
+                                            </>
+                                          ) : (
+                                            <>
+                                              <svg className="h-3.5 w-3.5 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                                              </svg>
+                                              <span>Payment Pending</span>
+                                            </>
+                                          )}
+                                        </div>
+                                        <span className="font-semibold">₹{bookingStatus.amount}</span>
+                                      </div>
+                                    )}
+
+                                    {/* Card Header */}
+                                    <div className="p-3 pb-2">
+                                      <div className="flex items-start justify-between mb-2">
+                                        <div className="flex items-center space-x-2">
+                                          <div className={`h-8 w-8 rounded-full flex items-center justify-center ${isPaymentConfirmed
+                                              ? 'bg-green-200'
+                                              : isPending
+                                                ? 'bg-yellow-200'
+                                                : 'bg-primary/20'
+                                            }`}>
+                                            <span className={`font-semibold text-xs ${isPaymentConfirmed
+                                                ? 'text-green-700'
+                                                : isPending
+                                                  ? 'text-yellow-700'
+                                                  : 'text-primary'
+                                              }`}>
+                                              {(lead.name || 'Lead').charAt(0).toUpperCase()}
+                                            </span>
+                                          </div>
+                                          <div>
+                                            <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors text-sm">
+                                              {lead.name || 'Unnamed Lead'}
+                                            </h3>
+                                            {isExpanded && (
+                                              <p className="text-sm text-gray-500">
+                                                {new Date(lead.created_at).toLocaleDateString('en-US', {
+                                                  month: 'short',
+                                                  day: 'numeric',
+                                                  year: 'numeric'
+                                                })}
+                                              </p>
+                                            )}
+                                          </div>
+                                        </div>
+                                        {!hasPayment && (
+                                          <div className="flex items-center space-x-1">
+                                            <div className="h-2 w-2 bg-primary rounded-full"></div>
+                                            <span className="text-xs text-gray-500">New</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Card Content - Only show when expanded */}
+                                    {isExpanded && (
+                                      <div className="px-3 pb-2">
+                                        <div className="space-y-2">
+                                          {/* Destination */}
+                                          <div className="flex items-center space-x-2">
+                                            <div className="h-6 w-6 bg-primary/10 rounded-md flex items-center justify-center">
+                                              <svg className="h-3 w-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                              </svg>
+                                            </div>
+                                            <div>
+                                              <p className="text-xs text-gray-500">Destination</p>
+                                              <p className="text-xs font-medium text-gray-900">{getDestinationName(lead.destination) || 'Not specified'}</p>
+                                            </div>
+                                          </div>
+
+                                          {/* Contact Info */}
+                                          <div className="flex items-center space-x-2">
+                                            <div className="h-6 w-6 bg-primary/10 rounded-md flex items-center justify-center">
+                                              <svg className="h-3 w-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                              </svg>
+                                            </div>
+                                            <div>
+                                              <p className="text-xs text-gray-500">Contact</p>
+                                              <p className="text-xs font-medium text-gray-900">{lead.email || 'No email'}</p>
+                                              {lead.phone && (
+                                                <p className="text-xs text-gray-600">{lead.phone}</p>
+                                              )}
+                                            </div>
+                                          </div>
+
+                                          {/* Travel Details */}
+                                          <div className="flex items-center space-x-2">
+                                            <div className="h-6 w-6 bg-primary/10 rounded-md flex items-center justify-center">
+                                              <svg className="h-3 w-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                              </svg>
+                                            </div>
+                                            <div>
+                                              <p className="text-xs text-gray-500">Travel Details</p>
+                                              <p className="text-xs font-medium text-gray-900">
+                                                {lead.number_of_travelers || 'N/A'} travelers
+                                              </p>
+                                              {lead.travel_dates && (
+                                                <p className="text-xs text-gray-600">{lead.travel_dates}</p>
+                                              )}
+                                            </div>
+                                          </div>
+
+                                          {/* Notes */}
+                                          {lead.custom_notes && (
+                                            <div className="flex items-start space-x-2">
+                                              <div className="h-6 w-6 bg-primary/10 rounded-md flex items-center justify-center mt-0.5">
+                                                <svg className="h-3 w-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                              </div>
+                                              <div>
+                                                <p className="text-xs text-gray-500">Notes</p>
+                                                <p className="text-xs text-gray-700 line-clamp-2">{lead.custom_notes}</p>
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Card Footer */}
+                                    <div className="px-3 py-2 bg-gray-50 border-t border-gray-100">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-2">
+                                          {isPending ? (
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation()
+                                                refreshPaymentStatus(lead.id)
+                                              }}
+                                              className="flex items-center space-x-1 px-2 py-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded text-xs font-medium transition-colors"
+                                            >
+                                              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                              </svg>
+                                              <span>Check Payment</span>
+                                            </button>
+                                          ) : (
+                                            <div className="flex items-center space-x-1">
+                                              <div className="h-2 w-2 bg-primary rounded-full"></div>
+                                              <span className="text-xs text-gray-600">Active Lead</span>
+                                            </div>
+                                          )}
+                                        </div>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation() // Prevent card click navigation
+                                            if (isExpanded) {
+                                              setExpandedLeads(prev => {
+                                                const newSet = new Set(prev)
+                                                newSet.delete(lead.id)
+                                                return newSet
+                                              })
+                                            } else {
+                                              setExpandedLeads(prev => new Set(prev).add(lead.id))
+                                            }
+                                          }}
+                                          className="text-primary hover:text-primary/80 text-xs font-medium flex items-center space-x-1 transition-colors"
+                                        >
+                                          <span>{isExpanded ? 'Hide Details' : 'View Details'}</span>
+                                          <svg className={`h-3 w-3 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                          </svg>
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {showDetails && selected && (
+                  <div className="fixed inset-0 bg-black/20 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+                    <div className="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white">
+                      <div className="mt-1">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-lg font-medium text-gray-900">{selected.name}</h3>
+                          <button
+                            onClick={() => setShowDetails(false)}
+                            className="text-gray-400 hover:text-gray-600"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        <div className="h-40 bg-gray-100 mb-3 flex items-center justify-center">
+                          {selected.image && !selectedImageError ? (
+                            <div className="relative w-full h-full">
+                              <img
+                                src={selected.image}
+                                alt={selected.name}
+                                className="w-full h-full object-cover"
+                                onError={() => setSelectedImageError(true)}
+                              />
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-sm">No Image</span>
+                          )}
+                        </div>
+                        <div className="space-y-1 text-sm text-gray-700">
+                          <div><span className="font-medium">Destination:</span> {getDestinationName(selected.destination)}</div>
+                          <div><span className="font-medium">Duration:</span> {selected.duration}</div>
+                          <div><span className="font-medium">Category:</span> {selected.category}</div>
+                          <div><span className="font-medium">Price:</span> ${selected.price.toLocaleString()}</div>
+                          {selected.original_price > selected.price && (
+                            <div className="text-gray-500 text-xs">Original: ${selected.original_price.toLocaleString()}</div>
+                          )}
+                        </div>
+                        <div className="mt-4 flex justify-end">
+                          <button
+                            onClick={() => setShowDetails(false)}
+                            className="px-4 py-2 bg-primary text-white rounded-md hover:opacity-90"
+                          >
+                            Close
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </div>
                   </div>
                 )}
               </>
             )}
-
-            {showDetails && selected && (
-              <div className="fixed inset-0 bg-black/20 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
-                <div className="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white">
-                  <div className="mt-1">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-lg font-medium text-gray-900">{selected.name}</h3>
-                      <button
-                        onClick={() => setShowDetails(false)}
-                        className="text-gray-400 hover:text-gray-600"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    <div className="h-40 bg-gray-100 mb-3 flex items-center justify-center">
-                      {selected.image && !selectedImageError ? (
-                        <div className="relative w-full h-full">
-                          <img
-                            src={selected.image}
-                            alt={selected.name}
-                            className="w-full h-full object-cover"
-                            onError={() => setSelectedImageError(true)}
-                          />
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 text-sm">No Image</span>
-                      )}
-                    </div>
-                    <div className="space-y-1 text-sm text-gray-700">
-                      <div><span className="font-medium">Destination:</span> {getDestinationName(selected.destination)}</div>
-                      <div><span className="font-medium">Duration:</span> {selected.duration}</div>
-                      <div><span className="font-medium">Category:</span> {selected.category}</div>
-                      <div><span className="font-medium">Price:</span> ${selected.price.toLocaleString()}</div>
-                      {selected.original_price > selected.price && (
-                        <div className="text-gray-500 text-xs">Original: ${selected.original_price.toLocaleString()}</div>
-                      )}
-                    </div>
-                    <div className="mt-4 flex justify-end">
-                      <button
-                        onClick={() => setShowDetails(false)}
-                        className="px-4 py-2 bg-primary text-white rounded-md hover:opacity-90"
-                      >
-                        Close
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-                </>
-              )}
 
             {/* Removed static "Assigned To You" list */}
           </div>
