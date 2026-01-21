@@ -1,5 +1,5 @@
 // API configuration
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').replace(/\/$/, '')
 
 interface FetchOptions extends RequestInit {
   handleError?: boolean;
@@ -13,21 +13,21 @@ export async function fetchApi<T = any>(url: string, options: FetchOptions = {})
   } = options;
 
   // If URL starts with /api, replace with backend URL
-  const fullUrl = url.startsWith('/api') 
+  const fullUrl = url.startsWith('/api')
     ? `${API_URL}${url}`
     : url.startsWith('http')
-    ? url
-    : `${API_URL}/api${url.startsWith('/') ? url : `/${url}`}`;
+      ? url
+      : `${API_URL}/api${url.startsWith('/') ? url : `/${url}`}`;
 
   // Check if body is FormData - if so, don't set Content-Type header
   const isFormData = rest.body instanceof FormData;
   const requestHeaders: HeadersInit = isFormData
     ? { ...headers } // FormData sets its own Content-Type with boundary
     : {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        ...headers,
-      };
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      ...headers,
+    };
 
   try {
     const response = await fetch(fullUrl, {

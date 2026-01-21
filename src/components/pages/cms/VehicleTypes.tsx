@@ -11,6 +11,7 @@ import ErrorBoundary from '../../ErrorBoundary'
 interface VehicleType {
   id: number
   vehicle_type: string
+  state?: string
   capacity?: number
   description?: string
   notes?: string
@@ -24,12 +25,14 @@ const VehicleTypes: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
   const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([])
+  const [states, setStates] = useState<Array<{ id: number; name: string }>>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState<VehicleType | null>(null)
 
   const [formData, setFormData] = useState({
     vehicleType: '',
+    state: '',
     capacity: 4,
     description: '',
     notes: '',
@@ -38,7 +41,21 @@ const VehicleTypes: React.FC = () => {
 
   useEffect(() => {
     fetchVehicleTypes()
+    fetchStates()
   }, [])
+
+  const fetchStates = async () => {
+    try {
+      const data = await fetchApi('/api/states')
+      // Filter only active states
+      const activeStates = (data.states || [])
+        .filter((s: any) => s.status === 'Active')
+        .map((s: any) => ({ id: s.id, name: s.name }))
+      setStates(activeStates)
+    } catch (error) {
+      console.error('Error fetching states:', error)
+    }
+  }
 
   const fetchVehicleTypes = async () => {
     try {
@@ -65,11 +82,11 @@ const VehicleTypes: React.FC = () => {
         method,
         body: JSON.stringify(body)
       })
-      
+
       await fetchVehicleTypes()
       setShowAddForm(false)
       setEditing(null)
-      setFormData({ vehicleType: '', capacity: 4, description: '', notes: '', status: 'Active' })
+      setFormData({ vehicleType: '', state: '', capacity: 4, description: '', notes: '', status: 'Active' })
       alert(data.message || 'Saved successfully')
     } catch (error) {
       console.error('Error saving vehicle type:', error)
@@ -95,6 +112,7 @@ const VehicleTypes: React.FC = () => {
     setEditing(row)
     setFormData({
       vehicleType: row.vehicle_type,
+      state: row.state || '',
       capacity: row.capacity || 4,
       description: row.description || '',
       notes: row.notes || '',
@@ -106,7 +124,7 @@ const VehicleTypes: React.FC = () => {
   const handleCloseForm = () => {
     setShowAddForm(false)
     setEditing(null)
-    setFormData({ vehicleType: '', capacity: 4, description: '', notes: '', status: 'Active' })
+    setFormData({ vehicleType: '', state: '', capacity: 4, description: '', notes: '', status: 'Active' })
   }
 
   const filtered = vehicleTypes.filter(vt =>
@@ -171,6 +189,7 @@ const VehicleTypes: React.FC = () => {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="w-40 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th className="w-32 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
                       <th className="w-16 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
                       <th className="w-full px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
                       <th className="w-40 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
@@ -185,6 +204,7 @@ const VehicleTypes: React.FC = () => {
                     {filtered.map((row) => (
                       <tr key={row.id} className="hover:bg-gray-50">
                         <td className="px-3 py-4 text-sm font-medium text-gray-900">{row.vehicle_type}</td>
+                        <td className="px-3 py-4 text-sm text-gray-900">{row.state || '-'}</td>
                         <td className="px-3 py-4 text-sm text-gray-900">{row.capacity ?? '-'}</td>
                         <td className="px-3 py-4 text-sm text-gray-900 truncate">{row.description || '-'}</td>
                         <td className="px-3 py-4 text-sm text-gray-900 truncate">{row.notes || '-'}</td>
@@ -231,14 +251,29 @@ const VehicleTypes: React.FC = () => {
                 </button>
               </div>
 
-              <form className="space-y-4" onSubmit={(e)=>{e.preventDefault();handleSave();}}>
+              <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                  <select
+                    value={formData.state}
+                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select state</option>
+                    {states.map((state) => (
+                      <option key={state.id} value={state.name}>
+                        {state.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Type</label>
                   <Input
                     type="text"
                     placeholder="e.g., Sedan, SUV, Tempo Traveller"
                     value={formData.vehicleType}
-                    onChange={(e)=>setFormData({...formData, vehicleType: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, vehicleType: e.target.value })}
                     className="border-l-2 border-red-500"
                   />
                 </div>
@@ -248,7 +283,7 @@ const VehicleTypes: React.FC = () => {
                     type="number"
                     placeholder="e.g., 4"
                     value={formData.capacity}
-                    onChange={(e)=>setFormData({...formData, capacity: parseInt(e.target.value)||0})}
+                    onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 0 })}
                   />
                 </div>
                 <div>
@@ -257,7 +292,7 @@ const VehicleTypes: React.FC = () => {
                     type="text"
                     placeholder="AC / Non-AC, Luxury / Standard"
                     value={formData.description}
-                    onChange={(e)=>setFormData({...formData, description: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   />
                 </div>
                 <div>
@@ -266,7 +301,7 @@ const VehicleTypes: React.FC = () => {
                     type="text"
                     placeholder="Any notes"
                     value={formData.notes}
-                    onChange={(e)=>setFormData({...formData, notes: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   />
                 </div>
                 <div>
@@ -274,7 +309,7 @@ const VehicleTypes: React.FC = () => {
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.status}
-                    onChange={(e)=>setFormData({...formData, status: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>

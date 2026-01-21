@@ -88,6 +88,9 @@ interface PackageVehicleOption {
   acType: 'AC' | 'Non-AC'
 }
 
+const PACKAGE_TYPES = ['Private', 'Group']
+const PACKAGE_CATEGORIES = ['Budget', 'Deluxe', 'Premium']
+
 const Itineraries: React.FC = () => {
   const [rows, setRows] = useState<Itinerary[]>([])
   const [loading, setLoading] = useState(true)
@@ -105,7 +108,7 @@ const Itineraries: React.FC = () => {
   const [states, setStates] = useState<Array<{ id: number; name: string; code?: string; status: string }>>([])
   const [packageThemes, setPackageThemes] = useState<Array<{ id: number; name: string; status: string }>>([])
   const [dayItineraries, setDayItineraries] = useState<Array<{ id: number; name: string; numDays: number; destinations?: string[] }>>([])
-  const [vehicleTypes, setVehicleTypes] = useState<Array<{ id: number; vehicle_type: string; capacity?: number }>>([])
+  const [vehicleTypes, setVehicleTypes] = useState<Array<{ id: number; vehicle_type: string; capacity?: number; state?: string }>>([])
   const [allInclusions, setAllInclusions] = useState<string[]>([])
   const [allExclusions, setAllExclusions] = useState<string[]>([])
   const navigate = useNavigate()
@@ -115,24 +118,24 @@ const Itineraries: React.FC = () => {
     try {
       const response = await fetch(`${API_URL}/api/itineraries/${itineraryId}/events`)
       if (!response.ok) return 0
-      
+
       const data = await response.json()
       const events = data.events || []
-      
+
       let total = 0
       events.forEach((event: any) => {
         const eventData = event.event_data
         if (eventData && eventData.price) {
           // Parse price as number
-          const price = typeof eventData.price === 'string' 
-            ? parseFloat(eventData.price) 
+          const price = typeof eventData.price === 'string'
+            ? parseFloat(eventData.price)
             : eventData.price
           if (!isNaN(price)) {
             total += price
           }
         }
       })
-      
+
       return total
     } catch (error) {
       console.error('Error calculating total price:', error)
@@ -179,15 +182,15 @@ const Itineraries: React.FC = () => {
     try {
       setLoading(true)
       console.log('🔵 [FETCH] Calling /api/itineraries endpoint...')
-      
+
       const res = await fetch(`${API_URL}/api/itineraries`)
       console.log('🔵 [FETCH] Response status:', res.status, res.ok ? '✅ OK' : '❌ ERROR')
-      
+
       const data = await res.json().catch(() => ({}))
       console.log('🔵 [FETCH] Raw response data:', data)
       console.log('🔵 [FETCH] data.itineraries exists?', !!data.itineraries)
       console.log('🔵 [FETCH] data.itineraries length:', data.itineraries?.length || 0)
-      
+
       if (res.ok) {
         // Helper function to parse JSONB fields
         const parseJsonb = (value: any) => {
@@ -220,10 +223,10 @@ const Itineraries: React.FC = () => {
           packageIncludes: parseJsonb(itinerary.package_includes) || itinerary.packageIncludes || [],
           packageExcludes: parseJsonb(itinerary.package_excludes) || itinerary.packageExcludes || []
         }))
-        
+
         console.log('🔵 [FETCH] Normalized itineraries count:', itineraries.length)
         console.log('🔵 [FETCH] First itinerary sample:', itineraries[0])
-        
+
         // Calculate total price for each itinerary
         console.log('🔵 [FETCH] Calculating total prices...')
         const itinerariesWithTotalPrice = await Promise.all(
@@ -232,13 +235,13 @@ const Itineraries: React.FC = () => {
             return { ...itinerary, totalPrice }
           })
         )
-        
+
         console.log('🔵 [FETCH] Final itineraries with prices:', itinerariesWithTotalPrice.length)
         console.log('🔵 [FETCH] Setting rows state with:', itinerariesWithTotalPrice)
-        
+
         setRows(itinerariesWithTotalPrice)
         setError(null)
-        
+
         console.log('✅ [FETCH] Successfully loaded', itinerariesWithTotalPrice.length, 'itineraries')
       } else {
         console.error('❌ [FETCH] API returned error:', data.error || 'Failed to load itineraries')
@@ -255,7 +258,7 @@ const Itineraries: React.FC = () => {
 
   const fetchDestinations = useCallback(async (state?: string) => {
     try {
-      const url = state 
+      const url = state
         ? `/api/destinations?state=${encodeURIComponent(state)}`
         : '/api/destinations'
       const data = await fetchApi(url)
@@ -274,11 +277,11 @@ const Itineraries: React.FC = () => {
     const newState = e.target.value
     console.log('🟢 [STATE CHANGE] Dropdown onChange triggered!')
     console.log('🟢 [STATE CHANGE] New state selected:', newState)
-    
+
     setForm(prev => {
       console.log('🟢 [STATE CHANGE] Previous state:', prev.state)
-      const updated = { 
-        ...prev, 
+      const updated = {
+        ...prev,
         state: newState,
         primaryDestination: '', // Clear dependent fields when state changes
         otherDestinations: []
@@ -302,7 +305,7 @@ const Itineraries: React.FC = () => {
         console.log('🔵 [STATES] Active states:', activeStates)
         setStates(activeStates.map((s: any) => ({ id: s.id, name: s.name, code: s.code, status: s.status })))
         console.log('🔵 [STATES] States loaded successfully!')
-    } catch (error) {
+      } catch (error) {
         console.error('❌ [STATES] Failed to fetch states:', handleApiError(error))
         setStates([])
       }
@@ -321,9 +324,9 @@ const Itineraries: React.FC = () => {
       try {
         const dayItData = await fetchApi('/api/day-itineraries')
         const activeDayIts = (dayItData.dayItineraries || []).filter((d: any) => d.status === 'Active')
-        setDayItineraries(activeDayIts.map((d: any) => ({ 
-          id: d.id, 
-          name: d.name || d.title || '', 
+        setDayItineraries(activeDayIts.map((d: any) => ({
+          id: d.id,
+          name: d.name || d.title || '',
           numDays: d.numDays || d.num_days || 1,
           destinations: d.destinations || []
         })))
@@ -336,7 +339,12 @@ const Itineraries: React.FC = () => {
       try {
         const vehicleTypesData = await fetchApi('/api/vehicle-types')
         const activeVehicleTypes = (vehicleTypesData.vehicleTypes || []).filter((v: any) => v.status === 'Active')
-        setVehicleTypes(activeVehicleTypes.map((v: any) => ({ id: v.id, vehicle_type: v.vehicle_type, capacity: v.capacity })))
+        setVehicleTypes(activeVehicleTypes.map((v: any) => ({
+          id: v.id,
+          vehicle_type: v.vehicle_type,
+          capacity: v.capacity,
+          state: v.state
+        })))
       } catch (error) {
         console.error('Failed to fetch vehicle types:', handleApiError(error))
         setVehicleTypes([])
@@ -367,7 +375,7 @@ const Itineraries: React.FC = () => {
           'Complimentary breakfast',
           'Travel insurance'
         ])
-        
+
         setAllExclusions([
           'GST extra',
           'GST @ 5% extra',
@@ -414,15 +422,15 @@ const Itineraries: React.FC = () => {
   useEffect(() => {
     if (form.state && destinations.length > 0) {
       const destinationNames = destinations.map(d => d.name)
-      
+
       // Clear primary destination if it doesn't exist in filtered list
       if (form.primaryDestination && !destinationNames.includes(form.primaryDestination)) {
         setForm(prev => ({ ...prev, primaryDestination: '' }))
       }
-      
+
       // Filter other destinations to only include those in the filtered list
       if (form.otherDestinations.length > 0) {
-        const validOtherDestinations = form.otherDestinations.filter(dest => 
+        const validOtherDestinations = form.otherDestinations.filter(dest =>
           destinationNames.includes(dest) && dest !== form.primaryDestination
         )
         if (validOtherDestinations.length !== form.otherDestinations.length) {
@@ -458,7 +466,7 @@ const Itineraries: React.FC = () => {
     )
   }
 
-  useEffect(() => { 
+  useEffect(() => {
     fetchRows()
     fetchMasters()
     // Don't fetch destinations here - will be fetched when state is selected
@@ -468,41 +476,49 @@ const Itineraries: React.FC = () => {
     console.log('🟢 [FILTER] Starting filter process...')
     console.log('🟢 [FILTER] Total rows:', rows.length)
     console.log('🟢 [FILTER] Search query:', search)
-    
+
     const q = search.trim().toLowerCase()
     const validRows = rows.filter(r => r && r.name) // Filter out undefined/null rows
-    
+
     console.log('🟢 [FILTER] Valid rows (after null filter):', validRows.length)
-    
+
     if (!q) {
       console.log('🟢 [FILTER] No search query, returning all', validRows.length, 'valid rows')
       return validRows
     }
-    
+
     const filtered = validRows.filter(r => (r.name || '').toLowerCase().includes(q))
     console.log('🟢 [FILTER] Filtered rows (after search):', filtered.length)
-    
+
     return filtered
   }, [rows, search])
 
   const filteredDestinations = useMemo(() => {
     if (!destinationInput.trim()) return destinations
     const query = destinationInput.toLowerCase()
-    return destinations.filter(dest => 
+    return destinations.filter(dest =>
       dest.name.toLowerCase().includes(query) && !form.destinations.includes(dest.name)
     ).slice(0, 5) // Limit to 5 suggestions
   }, [destinations, destinationInput, form.destinations])
 
   const filteredOtherDestinations = useMemo(() => {
-    if (!otherDestinationsInput.trim() || !form.state) return []
-    const query = otherDestinationsInput.toLowerCase()
+    if (!form.state) return []
+    // If input is empty, show all (filtered by exclusion), otherwise filter by query
+    const query = otherDestinationsInput.trim().toLowerCase()
+
     return destinations
-      .filter(dest => 
-        dest.name.toLowerCase().startsWith(query) && 
-        dest.name !== form.primaryDestination &&
-        !form.otherDestinations.includes(dest.name)
-      )
-      .slice(0, 5) // Limit to 5 suggestions
+      .filter(dest => {
+        // Exclude primary destination and already selected other destinations
+        if (dest.name === form.primaryDestination) return false
+        if (form.otherDestinations.includes(dest.name)) return false
+
+        // If query exists, match start; otherwise show all
+        if (query) {
+          return dest.name.toLowerCase().includes(query)
+        }
+        return true
+      })
+      .slice(0, 50) // Increased limit to show more options in dropdown
   }, [destinations, otherDestinationsInput, form.state, form.primaryDestination, form.otherDestinations])
 
   const durationDays = (r: Itinerary): number | null => {
@@ -566,7 +582,7 @@ const Itineraries: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 py-2">
           <div className="flex items-center justify-between gap-4">
             <h1 className="text-lg font-bold text-gray-900">Itineraries</h1>
-            
+
             <div className="flex-1 max-w-xs">
               <div className="relative">
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3" />
@@ -578,7 +594,7 @@ const Itineraries: React.FC = () => {
                 />
               </div>
             </div>
-            
+
             <Button
               onClick={() => {
                 setEditingId(null)
@@ -642,7 +658,7 @@ const Itineraries: React.FC = () => {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No itineraries found</h3>
               <p className="text-gray-600 mb-6">Get started by creating your first package</p>
-              <Button 
+              <Button
                 onClick={() => {
                   setEditingId(null)
                   setForm({
@@ -701,7 +717,7 @@ const Itineraries: React.FC = () => {
                     <tr key={r.id} className="hover:bg-gray-50">
                       <td className="px-4 py-4">
                         <div>
-                          <button 
+                          <button
                             onClick={() => navigate(`/packages/${r.id}`)}
                             className="text-sm font-semibold text-gray-900 hover:text-blue-600 transition-colors"
                           >
@@ -733,8 +749,8 @@ const Itineraries: React.FC = () => {
                               })
                               const data = await res.json().catch(() => ({}))
                               if (res.ok) {
-                                setRows(prev => prev.map(item => 
-                                  item.id === r.id 
+                                setRows(prev => prev.map(item =>
+                                  item.id === r.id
                                     ? { ...item, marketplace_shared: !item.marketplace_shared }
                                     : item
                                 ))
@@ -746,9 +762,8 @@ const Itineraries: React.FC = () => {
                               alert('Error updating marketplace status')
                             }
                           }}
-                          className={`inline-flex items-center px-2 py-1 rounded text-sm font-medium text-white cursor-pointer hover:opacity-80 transition-opacity ${
-                            r.marketplace_shared ? 'bg-green-500' : 'bg-red-500'
-                          }`}
+                          className={`inline-flex items-center px-2 py-1 rounded text-sm font-medium text-white cursor-pointer hover:opacity-80 transition-opacity ${r.marketplace_shared ? 'bg-green-500' : 'bg-red-500'
+                            }`}
                         >
                           {r.marketplace_shared ? 'Shared' : 'Not Share'}
                         </button>
@@ -829,7 +844,7 @@ const Itineraries: React.FC = () => {
                         </DropdownMenu>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <button 
+                        <button
                           onClick={async () => {
                             if (!window.confirm('Are you sure you want to delete this package?')) return
                             const res = await fetch(`${API_URL}/api/itineraries/${r.id}`, { method: 'DELETE' })
@@ -852,10 +867,10 @@ const Itineraries: React.FC = () => {
         {/* Create/Edit Modal - Full Screen in Main Content Area */}
         {showModal && (
           <div className="fixed top-[50px] right-0 bottom-0 lg:left-48 left-0 bg-white shadow-xl z-50 flex flex-col">
-              {/* Tabs */}
-              <div className="border-b border-gray-200 bg-white shrink-0">
-                <div className="flex items-center justify-between px-4 pt-3 pb-2">
-                  <nav className="flex text-xs font-medium text-gray-600 flex-1">
+            {/* Tabs */}
+            <div className="border-b border-gray-200 bg-white shrink-0">
+              <div className="flex items-center justify-between px-4 pt-3 pb-2">
+                <nav className="flex text-xs font-medium text-gray-600 flex-1">
                   {[
                     { id: 'general', label: 'General' },
                     { id: 'itineraries', label: 'Package Itineraries' },
@@ -866,385 +881,406 @@ const Itineraries: React.FC = () => {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id as PackageBuilderTab)}
-                      className={`flex-1 px-3 py-2 border-b-2 ${
-                        activeTab === tab.id
-                          ? 'border-blue-600 text-blue-600 bg-blue-50'
-                          : 'border-transparent hover:bg-gray-50'
-                      }`}
+                      className={`flex-1 px-3 py-2 border-b-2 ${activeTab === tab.id
+                        ? 'border-blue-600 text-blue-600 bg-blue-50'
+                        : 'border-transparent hover:bg-gray-50'
+                        }`}
                     >
                       {tab.label}
                     </button>
                   ))}
                 </nav>
-                  <button
-                    onClick={() => setShowModal(false)}
-                    className="text-gray-400 hover:text-gray-600 p-1 ml-2"
-                    title="Close"
-                  >
-                    ✕
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="text-gray-400 hover:text-gray-600 p-1 ml-2"
+                  title="Close"
+                >
+                  ✕
+                </button>
               </div>
+            </div>
 
-              {/* Form Content - Scrollable */}
-              <div className="flex-1 overflow-y-auto p-4">
-                {activeTab === 'general' && (
-                  <div className="space-y-4">
+            {/* Form Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {activeTab === 'general' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Package Name<span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., 3D/2N Gokarna – Hubli Pickup & Drop"
+                      value={form.name}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setForm({ ...form, name: e.target.value })
+                      }
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Package Name<span className="text-red-500">*</span>
+                        State
                       </label>
-                      <input
-                        type="text"
-                        placeholder="e.g., 3D/2N Gokarna – Hubli Pickup & Drop"
-                        value={form.name}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          setForm({ ...form, name: e.target.value })
-                        }
+                      <select
+                        value={form.state}
+                        onChange={(e) => {
+                          console.log('🔴 [INLINE] onChange triggered!!!', e.target.value)
+                          handleStateChange(e)
+                        }}
                         className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          State
-                        </label>
-                        <select
-                          value={form.state}
-                          onChange={(e) => {
-                            console.log('🔴 [INLINE] onChange triggered!!!', e.target.value)
-                            handleStateChange(e)
-                          }}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="">Select state</option>
-                          {states.map((state) => (
-                            <option key={state.id} value={state.name}>
-                              {state.name} {state.code ? `(${state.code})` : ''}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Primary Destination
-                        </label>
-                        <select
-                          value={form.primaryDestination}
-                          onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                            setForm({ ...form, primaryDestination: e.target.value })
-                          }
-                          disabled={!form.state}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                        >
-                          <option value="">
-                            {form.state ? 'Select destination' : 'Select state first'}
+                      >
+                        <option value="">Select state</option>
+                        {states.map((state) => (
+                          <option key={state.id} value={state.name}>
+                            {state.name} {state.code ? `(${state.code})` : ''}
                           </option>
-                          {destinations.map((dest) => (
-                            <option key={dest.id} value={dest.name}>
-                              {dest.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="relative">
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Primary Destination
+                      </label>
+                      <select
+                        value={form.primaryDestination}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                          setForm({ ...form, primaryDestination: e.target.value })
+                        }
+                        disabled={!form.state}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      >
+                        <option value="">
+                          {form.state ? 'Select destination' : 'Select state first'}
+                        </option>
+                        {destinations.map((dest) => (
+                          <option key={dest.id} value={dest.name}>
+                            {dest.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Other Destinations
                       </label>
                       <input
                         type="text"
-                          placeholder={form.state ? "Type to search destinations..." : "Select state first"}
-                          value={otherDestinationsInput}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                            setOtherDestinationsInput(e.target.value)
+                        placeholder={form.state ? "Type to search destinations..." : "Select state first"}
+                        value={otherDestinationsInput}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          setOtherDestinationsInput(e.target.value)
+                          setShowOtherDestinationsDropdown(true)
+                        }}
+                        onFocus={() => {
+                          if (form.state) {
                             setShowOtherDestinationsDropdown(true)
-                          }}
-                          onFocus={() => {
-                            if (form.state && otherDestinationsInput.trim()) {
-                              setShowOtherDestinationsDropdown(true)
-                            }
-                          }}
-                          onBlur={() => {
-                            // Delay to allow click on dropdown item
-                            setTimeout(() => setShowOtherDestinationsDropdown(false), 200)
-                          }}
-                          onKeyDown={handleOtherDestinationKeyPress}
-                          disabled={!form.state}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                        />
-                        {showOtherDestinationsDropdown && filteredOtherDestinations.length > 0 && (
-                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                            {filteredOtherDestinations.map((dest) => (
-                              <div
-                                key={dest.id}
-                                onMouseDown={(e) => {
-                                  e.preventDefault() // Prevent input blur
-                                  addOtherDestination(dest.name)
-                                }}
-                                className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm"
-                              >
-                                {dest.name}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {form.otherDestinations.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {form.otherDestinations.map((dest) => (
-                          <span
-                            key={dest}
-                            className="inline-flex items-center px-2 py-1 rounded-md bg-blue-100 text-blue-800 text-sm"
-                          >
-                            {dest}
-                            <button
-                              type="button"
-                              onClick={() => {
-                          setForm({
-                            ...form,
-                                  otherDestinations: form.otherDestinations.filter(d => d !== dest)
-                                })
+                          }
+                        }}
+                        onBlur={() => {
+                          // Delay to allow click on dropdown item
+                          setTimeout(() => setShowOtherDestinationsDropdown(false), 200)
+                        }}
+                        onKeyDown={handleOtherDestinationKeyPress}
+                        disabled={!form.state}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      />
+                      {showOtherDestinationsDropdown && filteredOtherDestinations.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                          {filteredOtherDestinations.map((dest) => (
+                            <div
+                              key={dest.id}
+                              onMouseDown={(e) => {
+                                e.preventDefault() // Prevent input blur
+                                addOtherDestination(dest.name)
                               }}
-                              className="ml-1 text-blue-600 hover:text-blue-800"
+                              className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm"
                             >
-                              ×
-                            </button>
-                          </span>
-                        ))}
-                    </div>
-                    )}
-                    {!form.state && (
-                      <p className="text-xs text-gray-500">Please select a state first to see destinations</p>
-                    )}
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Number of Days
-                        </label>
-                        <input
-                          type="number"
-                          min={1}
-                          value={form.numDays}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            setForm({ ...form, numDays: Number(e.target.value) || 1 })
-                          }
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Number of Nights
-                        </label>
-                        <input
-                          type="number"
-                          min={0}
-                          value={form.numNights}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            setForm({ ...form, numNights: Number(e.target.value) || 0 })
-                          }
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Package Type
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g., Private / Group"
-                          value={form.packageType}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            setForm({ ...form, packageType: e.target.value })
-                          }
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Package Category
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g., Budget / Deluxe"
-                          value={form.packageCategory}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            setForm({ ...form, packageCategory: e.target.value })
-                          }
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Package Theme
-                        </label>
-                        <select
-                          value={form.packageTheme}
-                          onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                            setForm({ ...form, packageTheme: e.target.value })
-                          }
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="">Select package theme</option>
-                          {packageThemes.map((theme) => (
-                            <option key={theme.id} value={theme.name}>
-                              {theme.name}
-                            </option>
+                              {dest.name}
+                            </div>
                           ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Status
-                        </label>
-                        <select
-                          value={form.status}
-                          onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                            setForm({ ...form, status: e.target.value })
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {form.otherDestinations.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {form.otherDestinations.map((dest) => (
+                        <span
+                          key={dest}
+                          className="inline-flex items-center px-2 py-1 rounded-md bg-blue-100 text-blue-800 text-sm"
                         >
-                          <option value="Active">Active</option>
-                          <option value="Inactive">Inactive</option>
-                          <option value="Draft">Draft</option>
-                        </select>
-                      </div>
+                          {dest}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setForm({
+                                ...form,
+                                otherDestinations: form.otherDestinations.filter(d => d !== dest)
+                              })
+                            }}
+                            className="ml-1 text-blue-600 hover:text-blue-800"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
                     </div>
+                  )}
+                  {!form.state && (
+                    <p className="text-xs text-gray-500">Please select a state first to see destinations</p>
+                  )}
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Pickup Point
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g., Hubli Airport"
-                          value={form.pickupPoint}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            setForm({ ...form, pickupPoint: e.target.value })
-                          }
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Drop Point
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g., Hubli Railway Station"
-                          value={form.dropPoint}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            setForm({ ...form, dropPoint: e.target.value })
-                          }
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                    </div>
-
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Short Description
+                        Number of Days
                       </label>
-                      <textarea
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                        rows={3}
-                        placeholder="Quick marketing summary for this package"
-                        value={form.shortDescription}
-                        onChange={e => setForm({ ...form, shortDescription: e.target.value })}
+                      <input
+                        type="number"
+                        min={1}
+                        value={form.numDays}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setForm({ ...form, numDays: Number(e.target.value) || 1 })
+                        }
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Number of Nights
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={form.numNights}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setForm({ ...form, numNights: Number(e.target.value) || 0 })
+                        }
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
                   </div>
-                )}
 
-                {/* PACKAGE ITINERARIES Tab */}
-                {activeTab === 'itineraries' && (
-                  <div className="space-y-4">
-                    {!form.primaryDestination && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-sm text-yellow-800">
-                        Please select a Primary Destination in the General tab first to see relevant itineraries.
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-gray-900">Day-wise Itinerary</h3>
-                      <button
-                        onClick={() => {
-                          const newDay: PackageItineraryDay = {
-                            id: `day-${Date.now()}`,
-                            dayNumber: form.packageItineraries.length + 1,
-                            dayItineraryId: null
-                          }
-                          setForm({ ...form, packageItineraries: [...form.packageItineraries, newDay] })
-                        }}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Package Type
+                      </label>
+                      <select
+                        value={form.packageType}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                          setForm({ ...form, packageType: e.target.value })
+                        }
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       >
-                        <Plus className="w-3 h-3" />
-                        Add Day
-                      </button>
+                        <option value="">Select type</option>
+                        {PACKAGE_TYPES.map(type => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Package Category
+                      </label>
+                      <select
+                        value={form.packageCategory}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                          setForm({ ...form, packageCategory: e.target.value })
+                        }
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Select category</option>
+                        {PACKAGE_CATEGORIES.map(category => (
+                          <option key={category} value={category}>{category}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
 
-                    {form.packageItineraries.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500 text-sm">
-                        No days added yet. Click "Add Day" to start building your itinerary.
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {form.packageItineraries.map((day, index) => {
-                          // Filter day itineraries based on selected destination
-                          const filteredDayItineraries = dayItineraries.filter(it => {
-                            if (!form.primaryDestination) return true
-                            // Check if the itinerary includes the primary destination or other destinations
-                            const allDestinations = [form.primaryDestination, ...form.otherDestinations]
-                            return it.destinations && it.destinations.some(dest => 
-                              allDestinations.some(selected => 
-                                dest.toLowerCase().includes(selected.toLowerCase()) ||
-                                selected.toLowerCase().includes(dest.toLowerCase())
-                              )
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Package Theme
+                      </label>
+                      <select
+                        value={form.packageTheme}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                          setForm({ ...form, packageTheme: e.target.value })
+                        }
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Select package theme</option>
+                        {packageThemes.map((theme) => (
+                          <option key={theme.id} value={theme.name}>
+                            {theme.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Status
+                      </label>
+                      <select
+                        value={form.status}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                          setForm({ ...form, status: e.target.value })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Draft">Draft</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Pickup Point
+                      </label>
+                      <select
+                        value={form.pickupPoint}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                          setForm({ ...form, pickupPoint: e.target.value })
+                        }
+                        disabled={!form.state}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      >
+                        <option value="">
+                          {form.state ? 'Select pickup point' : 'Select state first'}
+                        </option>
+                        {destinations.map((dest) => (
+                          <option key={dest.id} value={dest.name}>
+                            {dest.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Drop Point
+                      </label>
+                      <select
+                        value={form.dropPoint}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                          setForm({ ...form, dropPoint: e.target.value })
+                        }
+                        disabled={!form.state}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      >
+                        <option value="">
+                          {form.state ? 'Select drop point' : 'Select state first'}
+                        </option>
+                        {destinations.map((dest) => (
+                          <option key={dest.id} value={dest.name}>
+                            {dest.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Short Description
+                    </label>
+                    <textarea
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                      rows={3}
+                      placeholder="Quick marketing summary for this package"
+                      value={form.shortDescription}
+                      onChange={e => setForm({ ...form, shortDescription: e.target.value })}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* PACKAGE ITINERARIES Tab */}
+              {activeTab === 'itineraries' && (
+                <div className="space-y-4">
+                  {!form.primaryDestination && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-sm text-yellow-800">
+                      Please select a Primary Destination in the General tab first to see relevant itineraries.
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-900">Day-wise Itinerary</h3>
+                    <button
+                      onClick={() => {
+                        const newDay: PackageItineraryDay = {
+                          id: `day-${Date.now()}`,
+                          dayNumber: form.packageItineraries.length + 1,
+                          dayItineraryId: null
+                        }
+                        setForm({ ...form, packageItineraries: [...form.packageItineraries, newDay] })
+                      }}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Add Day
+                    </button>
+                  </div>
+
+                  {form.packageItineraries.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 text-sm">
+                      No days added yet. Click "Add Day" to start building your itinerary.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {form.packageItineraries.map((day, index) => {
+                        // Filter day itineraries based on selected destination
+                        const filteredDayItineraries = dayItineraries.filter(it => {
+                          if (!form.primaryDestination) return true
+                          // Check if the itinerary includes the primary destination or other destinations
+                          const allDestinations = [form.primaryDestination, ...form.otherDestinations]
+                          return it.destinations && it.destinations.some(dest =>
+                            allDestinations.some(selected =>
+                              dest.toLowerCase().includes(selected.toLowerCase()) ||
+                              selected.toLowerCase().includes(dest.toLowerCase())
                             )
-                          })
+                          )
+                        })
 
-                          return (
-                            <div key={day.id} className="border border-gray-200 rounded-md p-3 bg-gray-50">
-                              <div className="flex items-center gap-3">
-                                <div className="shrink-0 w-20">
-                                  <label className="block text-xs font-medium text-gray-700 mb-1">Day {day.dayNumber}</label>
-                                </div>
-                                <div className="flex-1">
-                                  <select
-                                    value={day.dayItineraryId || ''}
-                                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                                      const updated = [...form.packageItineraries]
-                                      updated[index] = {
-                                        ...day,
-                                        dayItineraryId: e.target.value ? Number(e.target.value) : null
-                                      }
-                                      setForm({ ...form, packageItineraries: updated })
-                                    }}
-                                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  >
-                                    <option value="">Select itinerary</option>
-                                    {filteredDayItineraries.length === 0 && form.primaryDestination && (
-                                      <option value="" disabled>No itineraries found for selected destinations</option>
-                                    )}
-                                    {filteredDayItineraries.map((it) => (
-                                      <option key={it.id} value={it.id}>
-                                        {it.name} ({it.numDays} day{it.numDays > 1 ? 's' : ''})
-                                        {it.destinations && it.destinations.length > 0 && ` - ${it.destinations.join(', ')}`}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                                <div className="flex items-center gap-1">
+                        return (
+                          <div key={day.id} className="border border-gray-200 rounded-md p-3 bg-gray-50">
+                            <div className="flex items-center gap-3">
+                              <div className="shrink-0 w-20">
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Day {day.dayNumber}</label>
+                              </div>
+                              <div className="flex-1">
+                                <select
+                                  value={day.dayItineraryId || ''}
+                                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                                    const updated = [...form.packageItineraries]
+                                    updated[index] = {
+                                      ...day,
+                                      dayItineraryId: e.target.value ? Number(e.target.value) : null
+                                    }
+                                    setForm({ ...form, packageItineraries: updated })
+                                  }}
+                                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                  <option value="">Select itinerary</option>
+                                  {filteredDayItineraries.length === 0 && form.primaryDestination && (
+                                    <option value="" disabled>No itineraries found for selected destinations</option>
+                                  )}
+                                  {filteredDayItineraries.map((it) => (
+                                    <option key={it.id} value={it.id}>
+                                      {it.name} ({it.numDays} day{it.numDays > 1 ? 's' : ''})
+                                      {it.destinations && it.destinations.length > 0 && ` - ${it.destinations.join(', ')}`}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => {
                                     if (index > 0) {
@@ -1294,428 +1330,433 @@ const Itineraries: React.FC = () => {
                               </div>
                             </div>
                           </div>
-                          )
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* PACKAGE VEHICLES Tab */}
-                {activeTab === 'vehicles' && (
-                  <div className="space-y-4">
-                    {!form.state && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-sm text-yellow-800">
-                        Please select a State in the General tab first. Vehicle pricing may vary by location.
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-gray-900">Vehicle Pricing for this Package</h3>
-                      <button
-                        onClick={() => {
-                          const newVehicle: PackageVehicleOption = {
-                            id: `vehicle-${Date.now()}`,
-                            vehicleType: '',
-                            model: '',
-                            price: 0,
-                            acType: 'AC'
-                          }
-                          setForm({ ...form, packageVehicles: [...form.packageVehicles, newVehicle] })
-                        }}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                      >
-                        <Plus className="w-3 h-3" />
-                        Add Vehicle
-                      </button>
+                        )
+                      })}
                     </div>
-                    
-                    {form.state && (
-                      <div className="text-xs text-gray-600 bg-blue-50 border border-blue-200 rounded p-2">
-                        <strong>Note:</strong> Pricing is for <strong>{form.state}</strong> - {form.primaryDestination}
-                        {form.otherDestinations.length > 0 && ` & ${form.otherDestinations.join(', ')}`}
-                      </div>
-                    )}
+                  )}
+                </div>
+              )}
 
-                    {form.packageVehicles.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500 text-sm">
-                        No vehicles added yet. Click "Add Vehicle" to add pricing.
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full border-collapse">
-                          <thead>
-                            <tr className="bg-gray-50 border-b border-gray-200">
-                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Vehicle Type</th>
-                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Model</th>
-                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Price</th>
-                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">AC / Non-AC</th>
-                              <th className="px-3 py-2 text-center text-xs font-medium text-gray-700 w-20">Delete</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {form.packageVehicles.map((vehicle, index) => (
-                              <tr key={vehicle.id} className="border-b border-gray-200">
-                                <td className="px-3 py-2">
-                                  <select
-                                    value={vehicle.vehicleType}
-                                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                                      const updated = [...form.packageVehicles]
-                                      updated[index] = { ...vehicle, vehicleType: e.target.value }
-                                      setForm({ ...form, packageVehicles: updated })
-                                    }}
-                                    className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  >
-                                    <option value="">Select type</option>
-                                    {vehicleTypes.map((vt) => (
+              {/* PACKAGE VEHICLES Tab */}
+              {activeTab === 'vehicles' && (
+                <div className="space-y-4">
+                  {!form.state && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-sm text-yellow-800">
+                      Please select a State in the General tab first. Vehicle pricing may vary by location.
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-900">Vehicle Pricing for this Package</h3>
+                    <button
+                      onClick={() => {
+                        const newVehicle: PackageVehicleOption = {
+                          id: `vehicle-${Date.now()}`,
+                          vehicleType: '',
+                          model: '',
+                          price: 0,
+                          acType: 'AC'
+                        }
+                        setForm({ ...form, packageVehicles: [...form.packageVehicles, newVehicle] })
+                      }}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Add Vehicle
+                    </button>
+                  </div>
+
+                  {form.state && (
+                    <div className="text-xs text-gray-600 bg-blue-50 border border-blue-200 rounded p-2">
+                      <strong>Note:</strong> Pricing is for <strong>{form.state}</strong> - {form.primaryDestination}
+                      {form.otherDestinations.length > 0 && ` & ${form.otherDestinations.join(', ')}`}
+                    </div>
+                  )}
+
+                  {form.packageVehicles.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 text-sm">
+                      No vehicles added yet. Click "Add Vehicle" to add pricing.
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="bg-gray-50 border-b border-gray-200">
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Vehicle Type</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Model</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Price</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">AC / Non-AC</th>
+                            <th className="px-3 py-2 text-center text-xs font-medium text-gray-700 w-20">Delete</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {form.packageVehicles.map((vehicle, index) => (
+                            <tr key={vehicle.id} className="border-b border-gray-200">
+                              <td className="px-3 py-2">
+                                <select
+                                  value={vehicle.vehicleType}
+                                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                                    const updated = [...form.packageVehicles]
+                                    updated[index] = { ...vehicle, vehicleType: e.target.value }
+                                    setForm({ ...form, packageVehicles: updated })
+                                  }}
+                                  className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                  <option value="">Select type</option>
+                                  {vehicleTypes
+                                    .filter(vt => {
+                                      // Strict filtering as per user feedback
+                                      return vt.state === form.state
+                                    })
+                                    .map((vt) => (
                                       <option key={vt.id} value={vt.vehicle_type}>
                                         {vt.vehicle_type} {vt.capacity ? `(${vt.capacity} seats)` : ''}
                                       </option>
                                     ))}
-                                  </select>
-                                </td>
-                                <td className="px-3 py-2">
-                                  <input
-                                    type="text"
-                                    value={vehicle.model}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                      const updated = [...form.packageVehicles]
-                                      updated[index] = { ...vehicle, model: e.target.value }
-                                      setForm({ ...form, packageVehicles: updated })
-                                    }}
-                                    placeholder="e.g., Innova, Swift"
-                                    className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  />
-                                </td>
-                                <td className="px-3 py-2">
-                                  <input
-                                    type="number"
-                                    value={vehicle.price || ''}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                      const updated = [...form.packageVehicles]
-                                      updated[index] = { ...vehicle, price: Number(e.target.value) || 0 }
-                                      setForm({ ...form, packageVehicles: updated })
-                                    }}
-                                    placeholder="0"
-                                    min={0}
-                                    className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  />
-                                </td>
-                                <td className="px-3 py-2">
-                                  <select
-                                    value={vehicle.acType}
-                                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                                      const updated = [...form.packageVehicles]
-                                      updated[index] = { ...vehicle, acType: e.target.value as 'AC' | 'Non-AC' }
-                                      setForm({ ...form, packageVehicles: updated })
-                                    }}
-                                    className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  >
-                                    <option value="AC">AC</option>
-                                    <option value="Non-AC">Non-AC</option>
-                                  </select>
-                                </td>
-                                <td className="px-3 py-2 text-center">
-                                  <button
-                                    onClick={() => {
-                                      setForm({
-                                        ...form,
-                                        packageVehicles: form.packageVehicles.filter((_, i) => i !== index)
-                                      })
-                                    }}
-                                    className="text-red-600 hover:text-red-800"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* PACKAGE INCLUDES Tab */}
-                {activeTab === 'includes' && (
-                  <div className="space-y-4">
-                    {form.state && form.primaryDestination && (
-                      <div className="text-xs text-gray-600 bg-green-50 border border-green-200 rounded p-2">
-                        <strong>Package Context:</strong> {form.numDays}D/{form.numNights}N - {form.primaryDestination}, {form.state}
-                        {form.otherDestinations.length > 0 && ` (+ ${form.otherDestinations.join(', ')})`}
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-gray-900">Package Inclusions</h3>
-                      <button
-                        onClick={() => {
-                          setForm({ ...form, packageIncludes: [...form.packageIncludes, ''] })
-                        }}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                      >
-                        <Plus className="w-3 h-3" />
-                        Add Custom Inclusion
-                      </button>
-                    </div>
-
-                    {/* Common Inclusions - Quick Add */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-2">Quick Add Common Inclusions:</label>
-                      <div className="flex flex-wrap gap-2">
-                        {allInclusions
-                          .filter(inc => !form.packageIncludes.includes(inc))
-                          .slice(0, 8)
-                          .map((inclusion, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => {
-                                setForm({ ...form, packageIncludes: [...form.packageIncludes, inclusion] })
-                              }}
-                              className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 border border-blue-200"
-                            >
-                              + {inclusion}
-                            </button>
+                                </select>
+                              </td>
+                              <td className="px-3 py-2">
+                                <input
+                                  type="text"
+                                  value={vehicle.model}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const updated = [...form.packageVehicles]
+                                    updated[index] = { ...vehicle, model: e.target.value }
+                                    setForm({ ...form, packageVehicles: updated })
+                                  }}
+                                  placeholder="e.g., Innova, Swift"
+                                  className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                              </td>
+                              <td className="px-3 py-2">
+                                <input
+                                  type="number"
+                                  value={vehicle.price || ''}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const updated = [...form.packageVehicles]
+                                    updated[index] = { ...vehicle, price: Number(e.target.value) || 0 }
+                                    setForm({ ...form, packageVehicles: updated })
+                                  }}
+                                  placeholder="0"
+                                  min={0}
+                                  className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                              </td>
+                              <td className="px-3 py-2">
+                                <select
+                                  value={vehicle.acType}
+                                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                                    const updated = [...form.packageVehicles]
+                                    updated[index] = { ...vehicle, acType: e.target.value as 'AC' | 'Non-AC' }
+                                    setForm({ ...form, packageVehicles: updated })
+                                  }}
+                                  className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                  <option value="AC">AC</option>
+                                  <option value="Non-AC">Non-AC</option>
+                                </select>
+                              </td>
+                              <td className="px-3 py-2 text-center">
+                                <button
+                                  onClick={() => {
+                                    setForm({
+                                      ...form,
+                                      packageVehicles: form.packageVehicles.filter((_, i) => i !== index)
+                                    })
+                                  }}
+                                  className="text-red-600 hover:text-red-800"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
                           ))}
-                      </div>
+                        </tbody>
+                      </table>
                     </div>
+                  )}
+                </div>
+              )}
 
-                    {form.packageIncludes.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500 text-sm">
-                        No inclusions added yet. Use quick add buttons above or add custom inclusion.
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Selected Inclusions:</label>
-                        {form.packageIncludes.map((include, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <input
-                              type="text"
-                              value={include}
-                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                const updated = [...form.packageIncludes]
-                                updated[index] = e.target.value
-                                setForm({ ...form, packageIncludes: updated })
-                              }}
-                              placeholder="e.g., 2 nights stay (triple/couple sharing)"
-                              className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            <button
-                              onClick={() => {
-                                setForm({
-                                  ...form,
-                                  packageIncludes: form.packageIncludes.filter((_, i) => i !== index)
-                                })
-                              }}
-                              className="p-2 text-red-600 hover:text-red-800"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+              {/* PACKAGE INCLUDES Tab */}
+              {activeTab === 'includes' && (
+                <div className="space-y-4">
+                  {form.state && form.primaryDestination && (
+                    <div className="text-xs text-gray-600 bg-green-50 border border-green-200 rounded p-2">
+                      <strong>Package Context:</strong> {form.numDays}D/{form.numNights}N - {form.primaryDestination}, {form.state}
+                      {form.otherDestinations.length > 0 && ` (+ ${form.otherDestinations.join(', ')})`}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-900">Package Inclusions</h3>
+                    <button
+                      onClick={() => {
+                        setForm({ ...form, packageIncludes: [...form.packageIncludes, ''] })
+                      }}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Add Custom Inclusion
+                    </button>
                   </div>
-                )}
 
-                {/* PACKAGE EXCLUDES Tab */}
-                {activeTab === 'excludes' && (
-                  <div className="space-y-4">
-                    {form.state && form.primaryDestination && (
-                      <div className="text-xs text-gray-600 bg-green-50 border border-green-200 rounded p-2">
-                        <strong>Package Context:</strong> {form.numDays}D/{form.numNights}N - {form.primaryDestination}, {form.state}
-                        {form.otherDestinations.length > 0 && ` (+ ${form.otherDestinations.join(', ')})`}
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-gray-900">Package Exclusions</h3>
-                      <button
-                        onClick={() => {
-                          setForm({ ...form, packageExcludes: [...form.packageExcludes, ''] })
-                        }}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                      >
-                        <Plus className="w-3 h-3" />
-                        Add Custom Exclusion
-                      </button>
-                    </div>
-
-                    {/* Common Exclusions - Quick Add */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-2">Quick Add Common Exclusions:</label>
-                      <div className="flex flex-wrap gap-2">
-                        {allExclusions
-                          .filter(exc => !form.packageExcludes.includes(exc))
-                          .slice(0, 8)
-                          .map((exclusion, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => {
-                                setForm({ ...form, packageExcludes: [...form.packageExcludes, exclusion] })
-                              }}
-                              className="px-2 py-1 text-xs bg-red-50 text-red-700 rounded hover:bg-red-100 border border-red-200"
-                            >
-                              + {exclusion}
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-
-                    {form.packageExcludes.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500 text-sm">
-                        No exclusions added yet. Use quick add buttons above or add custom exclusion.
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Selected Exclusions:</label>
-                        {form.packageExcludes.map((exclude, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <input
-                              type="text"
-                              value={exclude}
-                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                const updated = [...form.packageExcludes]
-                                updated[index] = e.target.value
-                                setForm({ ...form, packageExcludes: updated })
-                              }}
-                              placeholder="e.g., GST extra"
-                              className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            <button
-                              onClick={() => {
-                                setForm({
-                                  ...form,
-                                  packageExcludes: form.packageExcludes.filter((_, i) => i !== index)
-                                })
-                              }}
-                              className="p-2 text-red-600 hover:text-red-800"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
+                  {/* Common Inclusions - Quick Add */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">Quick Add Common Inclusions:</label>
+                    <div className="flex flex-wrap gap-2">
+                      {allInclusions
+                        .filter(inc => !form.packageIncludes.includes(inc))
+                        .slice(0, 8)
+                        .map((inclusion, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              setForm({ ...form, packageIncludes: [...form.packageIncludes, inclusion] })
+                            }}
+                            className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 border border-blue-200"
+                          >
+                            + {inclusion}
+                          </button>
                         ))}
-                      </div>
-                    )}
+                    </div>
                   </div>
-                )}
-              </div>
 
-              {/* Footer Buttons - Sticky */}
-              <div className="flex gap-2 p-3 border-t border-gray-200 bg-white shrink-0">
-                {/* Previous Button - Show on all tabs except first */}
-                {activeTab !== 'general' && (
+                  {form.packageIncludes.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 text-sm">
+                      No inclusions added yet. Use quick add buttons above or add custom inclusion.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Selected Inclusions:</label>
+                      {form.packageIncludes.map((include, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={include}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                              const updated = [...form.packageIncludes]
+                              updated[index] = e.target.value
+                              setForm({ ...form, packageIncludes: updated })
+                            }}
+                            placeholder="e.g., 2 nights stay (triple/couple sharing)"
+                            className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <button
+                            onClick={() => {
+                              setForm({
+                                ...form,
+                                packageIncludes: form.packageIncludes.filter((_, i) => i !== index)
+                              })
+                            }}
+                            className="p-2 text-red-600 hover:text-red-800"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* PACKAGE EXCLUDES Tab */}
+              {activeTab === 'excludes' && (
+                <div className="space-y-4">
+                  {form.state && form.primaryDestination && (
+                    <div className="text-xs text-gray-600 bg-green-50 border border-green-200 rounded p-2">
+                      <strong>Package Context:</strong> {form.numDays}D/{form.numNights}N - {form.primaryDestination}, {form.state}
+                      {form.otherDestinations.length > 0 && ` (+ ${form.otherDestinations.join(', ')})`}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-900">Package Exclusions</h3>
+                    <button
+                      onClick={() => {
+                        setForm({ ...form, packageExcludes: [...form.packageExcludes, ''] })
+                      }}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Add Custom Exclusion
+                    </button>
+                  </div>
+
+                  {/* Common Exclusions - Quick Add */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">Quick Add Common Exclusions:</label>
+                    <div className="flex flex-wrap gap-2">
+                      {allExclusions
+                        .filter(exc => !form.packageExcludes.includes(exc))
+                        .slice(0, 8)
+                        .map((exclusion, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              setForm({ ...form, packageExcludes: [...form.packageExcludes, exclusion] })
+                            }}
+                            className="px-2 py-1 text-xs bg-red-50 text-red-700 rounded hover:bg-red-100 border border-red-200"
+                          >
+                            + {exclusion}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+
+                  {form.packageExcludes.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 text-sm">
+                      No exclusions added yet. Use quick add buttons above or add custom exclusion.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Selected Exclusions:</label>
+                      {form.packageExcludes.map((exclude, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={exclude}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                              const updated = [...form.packageExcludes]
+                              updated[index] = e.target.value
+                              setForm({ ...form, packageExcludes: updated })
+                            }}
+                            placeholder="e.g., GST extra"
+                            className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <button
+                            onClick={() => {
+                              setForm({
+                                ...form,
+                                packageExcludes: form.packageExcludes.filter((_, i) => i !== index)
+                              })
+                            }}
+                            className="p-2 text-red-600 hover:text-red-800"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer Buttons - Sticky */}
+            <div className="flex gap-2 p-3 border-t border-gray-200 bg-white shrink-0">
+              {/* Previous Button - Show on all tabs except first */}
+              {activeTab !== 'general' && (
                 <button
-                    onClick={() => {
-                      const currentIndex = TAB_ORDER.indexOf(activeTab)
-                      if (currentIndex > 0) {
-                        setActiveTab(TAB_ORDER[currentIndex - 1])
-                      }
-                    }}
-                    className="px-4 py-1.5 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    Previous
+                  onClick={() => {
+                    const currentIndex = TAB_ORDER.indexOf(activeTab)
+                    if (currentIndex > 0) {
+                      setActiveTab(TAB_ORDER[currentIndex - 1])
+                    }
+                  }}
+                  className="px-4 py-1.5 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Previous
                 </button>
-                )}
+              )}
 
-                {/* Spacer to push Next/Create to the right */}
-                <div className="flex-1" />
+              {/* Spacer to push Next/Create to the right */}
+              <div className="flex-1" />
 
-                {/* Next Button - Show on all tabs except last */}
-                {activeTab !== 'excludes' && (
-                  <button
-                    onClick={() => {
-                      const currentIndex = TAB_ORDER.indexOf(activeTab)
-                      if (currentIndex < TAB_ORDER.length - 1) {
-                        setActiveTab(TAB_ORDER[currentIndex + 1])
-                      }
-                    }}
-                    className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
-                  >
-                    Next
-                  </button>
-                )}
+              {/* Next Button - Show on all tabs except last */}
+              {activeTab !== 'excludes' && (
+                <button
+                  onClick={() => {
+                    const currentIndex = TAB_ORDER.indexOf(activeTab)
+                    if (currentIndex < TAB_ORDER.length - 1) {
+                      setActiveTab(TAB_ORDER[currentIndex + 1])
+                    }
+                  }}
+                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
+                >
+                  Next
+                </button>
+              )}
 
-                {/* Create Package Button - Show only on last tab */}
-                {activeTab === 'excludes' && (
+              {/* Create Package Button - Show only on last tab */}
+              {activeTab === 'excludes' && (
                 <button
                   disabled={saving}
                   onClick={async () => {
-                      // Validation
+                    // Validation
                     if (!form.name.trim()) {
                       alert('Please enter package name')
-                        setActiveTab('general')
-                        return
-                      }
-                      if (!form.state) {
-                        alert('Please select a state')
-                        setActiveTab('general')
-                        return
-                      }
-                      if (!form.primaryDestination) {
-                        alert('Please select a primary destination')
-                        setActiveTab('general')
+                      setActiveTab('general')
                       return
                     }
-                      try {
-                        setSaving(true)
-                        const endpoint = editingId ? `/api/itineraries/${editingId}` : '/api/itineraries'
-                        const method = editingId ? 'PUT' : 'POST'
+                    if (!form.state) {
+                      alert('Please select a state')
+                      setActiveTab('general')
+                      return
+                    }
+                    if (!form.primaryDestination) {
+                      alert('Please select a primary destination')
+                      setActiveTab('general')
+                      return
+                    }
+                    try {
+                      setSaving(true)
+                      const endpoint = editingId ? `/api/itineraries/${editingId}` : '/api/itineraries'
+                      const method = editingId ? 'PUT' : 'POST'
 
-                        console.log('='.repeat(60))
-                        console.log('🟣 [SAVE] Starting save operation...')
-                        console.log('🟣 [SAVE] Endpoint:', endpoint)
-                        console.log('🟣 [SAVE] Method:', method)
-                        console.log('🟣 [SAVE] Editing ID:', editingId)
-                        console.log('🟣 [SAVE] Target Database Table: PACKAGES')
-                        console.log('🟣 [SAVE] Note: API route is /api/itineraries but saves to PACKAGES table in database')
-                        console.log('='.repeat(60))
+                      console.log('='.repeat(60))
+                      console.log('🟣 [SAVE] Starting save operation...')
+                      console.log('🟣 [SAVE] Endpoint:', endpoint)
+                      console.log('🟣 [SAVE] Method:', method)
+                      console.log('🟣 [SAVE] Editing ID:', editingId)
+                      console.log('🟣 [SAVE] Target Database Table: PACKAGES')
+                      console.log('🟣 [SAVE] Note: API route is /api/itineraries but saves to PACKAGES table in database')
+                      console.log('='.repeat(60))
 
-                        // Build destinations string from primaryDestination and otherDestinations
-                        const allDestinations = [form.primaryDestination, ...form.otherDestinations].filter(Boolean)
-                        const destinationsString = allDestinations.join(', ') || form.primaryDestination || ''
+                      // Build destinations string from primaryDestination and otherDestinations
+                      const allDestinations = [form.primaryDestination, ...form.otherDestinations].filter(Boolean)
+                      const destinationsString = allDestinations.join(', ') || form.primaryDestination || ''
 
                       const payload = {
-                          name: form.name,
-                          startDate: form.startDate || null,
-                          endDate: form.endDate || null,
-                          adults: form.adults,
-                          children: form.children,
-                          destinations: destinationsString,
-                          notes: form.notes || null,
-                          // Package Builder Fields
-                          state: form.state,
-                          primaryDestination: form.primaryDestination,
-                          otherDestinations: form.otherDestinations,
-                          numDays: form.numDays,
-                          numNights: form.numNights,
-                          packageType: form.packageType,
-                          packageCategory: form.packageCategory,
-                          packageTheme: form.packageTheme,
-                          pickupPoint: form.pickupPoint,
-                          dropPoint: form.dropPoint,
-                          shortDescription: form.shortDescription,
-                          packageItineraries: form.packageItineraries,
-                          packageVehicles: form.packageVehicles,
-                          packageIncludes: form.packageIncludes,
-                          packageExcludes: form.packageExcludes,
-                          status: form.status
-                        }
+                        name: form.name,
+                        startDate: form.startDate || null,
+                        endDate: form.endDate || null,
+                        adults: form.adults,
+                        children: form.children,
+                        destinations: destinationsString,
+                        notes: form.notes || null,
+                        // Package Builder Fields
+                        state: form.state,
+                        primaryDestination: form.primaryDestination,
+                        otherDestinations: form.otherDestinations,
+                        numDays: form.numDays,
+                        numNights: form.numNights,
+                        packageType: form.packageType,
+                        packageCategory: form.packageCategory,
+                        packageTheme: form.packageTheme,
+                        pickupPoint: form.pickupPoint,
+                        dropPoint: form.dropPoint,
+                        shortDescription: form.shortDescription,
+                        packageItineraries: form.packageItineraries,
+                        packageVehicles: form.packageVehicles,
+                        packageIncludes: form.packageIncludes,
+                        packageExcludes: form.packageExcludes,
+                        status: form.status
+                      }
 
-                        console.log('🟣 [SAVE] Payload:', payload)
+                      console.log('🟣 [SAVE] Payload:', payload)
 
                       const res = await fetch(`${API_URL}${endpoint}`, {
                         method,
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                       })
-                      
+
                       console.log('🟣 [SAVE] Response status:', res.status, res.ok ? '✅ OK' : '❌ ERROR')
-                      
+
                       const responseText = await res.text()
                       console.log('🟣 [SAVE] Raw response text:', responseText)
-                      
+
                       let data: any = {}
                       try {
                         data = JSON.parse(responseText)
@@ -1724,28 +1765,28 @@ const Itineraries: React.FC = () => {
                         console.error('🟣 [SAVE] JSON parse error:', e)
                         console.error('🟣 [SAVE] Response was not valid JSON')
                       }
-                        
-                        console.log('🟣 [SAVE] Response data:', data)
-                        console.log('🟣 [SAVE] data.itinerary exists?', !!data.itinerary)
-                        
-                        if (res.ok) {
-                          console.log('='.repeat(60))
-                          console.log('✅ [SAVE] SUCCESS! Package saved to database')
-                          console.log('✅ [SAVE] Table Used: PACKAGES')
-                          console.log('✅ [SAVE] Package ID:', data.itinerary?.id)
-                          console.log('✅ [SAVE] Package Name:', data.itinerary?.name)
-                          console.log('✅ [SAVE] Database Operation: ' + (editingId ? 'UPDATE' : 'INSERT'))
-                          console.log('✅ [SAVE] Saved Package Data:', data.itinerary)
-                          console.log('='.repeat(60))
-                          if (editingId) {
-                            console.log('🟣 [SAVE] Updating existing itinerary in state')
-                            setRows(prev => prev.map(r => (r.id === editingId ? data.itinerary : r)))
-                          } else {
-                            console.log('🟣 [SAVE] Adding new itinerary to state')
-                            setRows(prev => [data.itinerary, ...prev])
-                          }
-                          console.log('🟣 [SAVE] Refreshing list from server...')
-                          await fetchRows() // Refresh the list
+
+                      console.log('🟣 [SAVE] Response data:', data)
+                      console.log('🟣 [SAVE] data.itinerary exists?', !!data.itinerary)
+
+                      if (res.ok) {
+                        console.log('='.repeat(60))
+                        console.log('✅ [SAVE] SUCCESS! Package saved to database')
+                        console.log('✅ [SAVE] Table Used: PACKAGES')
+                        console.log('✅ [SAVE] Package ID:', data.itinerary?.id)
+                        console.log('✅ [SAVE] Package Name:', data.itinerary?.name)
+                        console.log('✅ [SAVE] Database Operation: ' + (editingId ? 'UPDATE' : 'INSERT'))
+                        console.log('✅ [SAVE] Saved Package Data:', data.itinerary)
+                        console.log('='.repeat(60))
+                        if (editingId) {
+                          console.log('🟣 [SAVE] Updating existing itinerary in state')
+                          setRows(prev => prev.map(r => (r.id === editingId ? data.itinerary : r)))
+                        } else {
+                          console.log('🟣 [SAVE] Adding new itinerary to state')
+                          setRows(prev => [data.itinerary, ...prev])
+                        }
+                        console.log('🟣 [SAVE] Refreshing list from server...')
+                        await fetchRows() // Refresh the list
                         console.log('🟣 [SAVE] Closing modal and resetting form')
                         setShowModal(false)
                         setEditingId(null)
@@ -1775,8 +1816,8 @@ const Itineraries: React.FC = () => {
                           packageExcludes: []
                         })
                         setDestinationInput('')
-                          setOtherDestinationsInput('')
-                          setActiveTab('general')
+                        setOtherDestinationsInput('')
+                        setActiveTab('general')
                       } else {
                         console.log('='.repeat(60))
                         console.error('❌ [SAVE] FAILED! Package was NOT saved to database')
@@ -1795,7 +1836,7 @@ const Itineraries: React.FC = () => {
                       console.log('🟣 [SAVE] Save operation complete')
                     }
                   }}
-                    className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {saving ? (
                     <>
@@ -1809,9 +1850,9 @@ const Itineraries: React.FC = () => {
                     </>
                   )}
                 </button>
-                )}
-              </div>
+              )}
             </div>
+          </div>
         )}
       </div>
     </div>
