@@ -1,7 +1,6 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { supabase } from '../lib/supabaseClient'
 
 interface User {
   id: string
@@ -30,194 +29,183 @@ interface AuthProviderProps {
   children: ReactNode
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [isFirstLogin, setIsFirstLogin] = useState(false)
 
+  // Load session from localStorage on mount
   useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
+    const loadSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession()
-        
-        if (error) {
-          console.error('Session error:', error)
-          // If refresh token is invalid, clear the session
-          if (error.message?.includes('Refresh Token Not Found') || 
-              error.message?.includes('refresh_token_not_found') ||
-              error.message?.includes('Failed to fetch') ||
-              error.message?.includes('Network error')) {
-            console.log('Clearing invalid session due to error...')
-            try {
-              await supabase.auth.signOut()
-            } catch (signOutError) {
-              // Ignore sign out errors if network is down
-              console.warn('Could not sign out (network may be down):', signOutError)
-            }
-            // Clear any stored auth data
-            const projectId = process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.split('.')[0]
-            if (projectId) {
-              localStorage.removeItem(`sb-${projectId}-auth-token`)
-            }
-            sessionStorage.clear()
-          }
-        }
-        
-        if (session?.user) {
-          setUser({
-            id: session.user.id,
-            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
-            email: session.user.email || '',
-            role: session.user.user_metadata?.role || 'employee',
-            user_metadata: session.user.user_metadata
-          })
-          setToken(session.access_token)
-        }
-      } catch (error: any) {
-        console.error('Error getting initial session:', error)
-        // Only clear session if it's not a network error (network errors are temporary)
-        if (error?.message?.includes('Failed to fetch') || 
-            error?.message?.includes('Network error') ||
-            error?.name === 'TypeError') {
-          console.warn('Network error during session check - will retry on next auth state change')
-          // Don't clear session on network errors, just set loading to false
-        } else {
-          // Clear any corrupted auth data for other errors
+        const storedToken = localStorage.getItem('access_token')
+        const storedRefreshToken = localStorage.getItem('refresh_token')
+        const storedUser = localStorage.getItem('user')
+
+        if (storedToken && storedUser) {
+          // Validate token with backend
           try {
-            await supabase.auth.signOut()
-          } catch (signOutError) {
-            console.warn('Could not sign out:', signOutError)
+            const response = await fetch(`${API_URL}/api/auth/session`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ access_token: storedToken }),
+            })
+
+            if (response.ok) {
+              const data = await response.json()
+              setUser(data.user)
+              setToken(storedToken)
+            } else {
+              // Token is invalid, try to refresh
+              if (storedRefreshToken) {
+                await refreshSession(storedRefreshToken)
+              } else {
+                // Clear invalid session
+                clearLocalStorage()
+              }
+            }
+          } catch (error) {
+            console.error('Error validating session:', error)
+            // Try to refresh if we have a refresh token
+            if (storedRefreshToken) {
+              try {
+                await refreshSession(storedRefreshToken)
+              } catch (refreshError) {
+                clearLocalStorage()
+              }
+            } else {
+              clearLocalStorage()
+            }
           }
-          const projectId = process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.split('.')[0]
-          if (projectId) {
-            localStorage.removeItem(`sb-${projectId}-auth-token`)
-          }
-          sessionStorage.clear()
         }
+      } catch (error) {
+        console.error('Error loading session:', error)
+        clearLocalStorage()
       } finally {
         setLoading(false)
       }
     }
 
-    getInitialSession()
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state change:', event, session ? 'session exists' : 'no session')
-      
-      try {
-        if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-          // Handle sign out or token refresh
-          if (session?.user) {
-            setUser({
-              id: session.user.id,
-              name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
-              email: session.user.email || '',
-              role: session.user.user_metadata?.role || 'employee',
-              user_metadata: session.user.user_metadata
-            })
-            setToken(session.access_token)
-          } else {
-            setUser(null)
-            setToken(null)
-          }
-        } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-          if (session?.user) {
-            setUser({
-              id: session.user.id,
-              name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
-              email: session.user.email || '',
-              role: session.user.user_metadata?.role || 'employee',
-              user_metadata: session.user.user_metadata
-            })
-            setToken(session.access_token)
-          }
-        } else if (!session) {
-          setUser(null)
-          setToken(null)
-        }
-      } catch (error: any) {
-        // Handle errors during auth state change
-        if (error?.message?.includes('Failed to fetch') || 
-            error?.message?.includes('Network error')) {
-          console.warn('Network error during auth state change:', error)
-          // Don't clear user on network errors - keep current state
-        } else {
-          console.error('Error during auth state change:', error)
-          setUser(null)
-          setToken(null)
-        }
-      } finally {
-        setLoading(false)
-      }
-    })
-
-    return () => subscription.unsubscribe()
+    loadSession()
   }, [])
+
+  const refreshSession = async (refreshToken: string) => {
+    try {
+      const response = await fetch(`${API_URL}/api/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const newAccessToken = data.session.access_token
+        const newRefreshToken = data.session.refresh_token
+
+        // Store new tokens
+        localStorage.setItem('access_token', newAccessToken)
+        localStorage.setItem('refresh_token', newRefreshToken)
+        setToken(newAccessToken)
+
+        // Get user data with new token
+        const userResponse = await fetch(`${API_URL}/api/auth/session`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ access_token: newAccessToken }),
+        })
+
+        if (userResponse.ok) {
+          const userData = await userResponse.json()
+          setUser(userData.user)
+          localStorage.setItem('user', JSON.stringify(userData.user))
+        }
+      } else {
+        throw new Error('Failed to refresh token')
+      }
+    } catch (error) {
+      console.error('Error refreshing session:', error)
+      throw error
+    }
+  }
+
+  const clearLocalStorage = () => {
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
+    localStorage.removeItem('user')
+    setUser(null)
+    setToken(null)
+  }
 
   const login = async (email: string, password: string) => {
     try {
       console.log('Attempting login with:', { email, password: '***' })
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       })
 
-      console.log('Login response:', { data: data ? 'success' : 'no data', error })
+      console.log('Login response status:', response.status)
 
-      if (error) {
-        console.error('Login error:', error)
-        throw new Error(error.message)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Login failed')
       }
 
-      if (data.user) {
-        console.log('User data:', data.user)
-        setUser({
-          id: data.user.id,
-          name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
-          email: data.user.email || '',
-          role: data.user.user_metadata?.role || 'employee',
-          user_metadata: data.user.user_metadata
-        })
-        setToken(data.session?.access_token || '')
-      }
-    } catch (error) {
-      console.error('Login catch error:', error)
+      const data = await response.json()
+      console.log('Login successful')
+
+      // Store session data
+      localStorage.setItem('access_token', data.session.access_token)
+      localStorage.setItem('refresh_token', data.session.refresh_token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+
+      setUser(data.user)
+      setToken(data.session.access_token)
+    } catch (error: any) {
+      console.error('Login error:', error)
       throw error
     }
   }
 
   const signup = async (name: string, email: string, password: string, role: 'admin' | 'employee' | 'Super Admin' | 'Agent' | 'Employer') => {
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-            role
-          }
-        }
+      const response = await fetch(`${API_URL}/api/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password, role }),
       })
 
-      if (error) {
-        throw new Error(error.message)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Signup failed')
       }
 
-      if (data.user) {
-        setUser({
-          id: data.user.id,
-          name: data.user.user_metadata?.name || name,
-          email: data.user.email || email,
-          role: data.user.user_metadata?.role || role,
-          user_metadata: data.user.user_metadata
-        })
-        setToken(data.session?.access_token || '')
-      }
-    } catch (error) {
+      const data = await response.json()
+
+      // Store session data
+      localStorage.setItem('access_token', data.session.access_token)
+      localStorage.setItem('refresh_token', data.session.refresh_token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+
+      setUser(data.user)
+      setToken(data.session.access_token)
+    } catch (error: any) {
+      console.error('Signup error:', error)
       throw error
     }
   }
@@ -227,7 +215,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Clear active session for employee before logout
       if (user?.role === 'employee' || user?.role === 'Agent') {
         try {
-          const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
           const employeeRes = await fetch(`${API_URL}/api/employees/by-email/${user.email}`)
           if (employeeRes.ok) {
             const employeeData = await employeeRes.json()
@@ -244,17 +231,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           console.error('Error clearing active session:', error)
         }
       }
-      
-      await supabase.auth.signOut()
+
+      // Call backend logout endpoint
+      if (token) {
+        try {
+          await fetch(`${API_URL}/api/auth/logout`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ access_token: token }),
+          })
+        } catch (error) {
+          console.error('Error calling logout endpoint:', error)
+        }
+      }
     } catch (error) {
       console.error('Error during logout:', error)
     } finally {
-      setUser(null)
-      setToken(null)
+      clearLocalStorage()
       setIsFirstLogin(false)
-      // Clear all auth-related storage
-      localStorage.removeItem('sb-' + process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.split('.')[0] + '-auth-token')
-      sessionStorage.clear()
     }
   }
 
@@ -263,7 +259,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Clear active session for employee before clearing auth data
       if (user?.role === 'employee' || user?.role === 'Agent') {
         try {
-          const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
           const employeeRes = await fetch(`${API_URL}/api/employees/by-email/${user.email}`)
           if (employeeRes.ok) {
             const employeeData = await employeeRes.json()
@@ -280,23 +275,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           console.error('Error clearing active session:', error)
         }
       }
-      
-      await supabase.auth.signOut()
+
+      // Call backend logout endpoint
+      if (token) {
+        try {
+          await fetch(`${API_URL}/api/auth/logout`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ access_token: token }),
+          })
+        } catch (error) {
+          console.error('Error calling logout endpoint:', error)
+        }
+      }
     } catch (error) {
       console.error('Error clearing auth data:', error)
     } finally {
-      setUser(null)
-      setToken(null)
+      clearLocalStorage()
       setIsFirstLogin(false)
-      // Clear all auth-related storage
-      localStorage.removeItem('sb-' + process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.split('.')[0] + '-auth-token')
-      sessionStorage.clear()
     }
   }
 
   const checkFirstLogin = async (email: string): Promise<boolean> => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
       const response = await fetch(`${API_URL}/api/auth/check-first-login`, {
         method: 'POST',
         headers: {
