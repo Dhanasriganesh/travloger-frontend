@@ -771,7 +771,16 @@ const WebsiteEdit: React.FC = () => {
       await fetchApi(`/api/cms/cities/${citySlug}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ header, contact, tripOptions })
+        body: JSON.stringify({
+          header,
+          contact,
+          tripOptions,
+          hero,
+          reviews,
+          faq,
+          usp,
+          brands
+        })
       })
       setError(null)
       alert(`${cityName} content saved`)
