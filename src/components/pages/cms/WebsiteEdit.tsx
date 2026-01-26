@@ -16,6 +16,7 @@ interface HeroContent {
   subtitle: string
   backgroundImageUrl: string
   mobileVideoUrl: string
+  desktopVideoUrl?: string
   whatsappPhone: string
   whatsappMessage: string
   trustIndicators?: {
@@ -124,6 +125,25 @@ interface USPContent {
   }[]
 }
 
+interface HighlightImage {
+  id: string
+  src: string
+  alt: string
+}
+
+interface TripHighlightsContent {
+  heading: string
+  subheading: string
+  highlights: HighlightImage[]
+}
+
+interface GroupCTAContent {
+  heading: string
+  subtext: string
+  buttonLabel: string
+  backgroundImageUrl: string
+}
+
 // Removed advanced sections (USP, FAQ, GroupCTA) from editor to reduce confusion
 
 
@@ -212,7 +232,7 @@ const WebsiteEdit: React.FC = () => {
       }
 
       const sections = [
-        'header', 'hero', 'trip options', 'reviews', 'usp', 'brands', 'faq'
+        'header', 'hero', 'trip options', 'reviews', 'usp', 'brands', 'faq', 'trip highlights', 'group cta'
       ]
 
       const filtered = sections.filter(section =>
@@ -232,10 +252,13 @@ const WebsiteEdit: React.FC = () => {
     subtitle: 'Curated experiences across the globe',
     backgroundImageUrl: '',
     mobileVideoUrl: '',
+    desktopVideoUrl: '',
     whatsappPhone: '+919876543210',
     whatsappMessage: 'Hi! I am interested in your tour packages. Can you help me plan my trip?',
     trustIndicators: DEFAULT_TRUST_INDICATORS
   })
+
+
 
 
   const [contact, setContact] = useState<ContactContent>({
@@ -346,7 +369,21 @@ const WebsiteEdit: React.FC = () => {
     ]
   })
 
+  const [tripHighlights, setTripHighlights] = useState<TripHighlightsContent>({
+    heading: "Discover Hidden Gems",
+    subheading: "Experience the most breathtaking destinations",
+    highlights: []
+  })
+
+  const [groupCta, setGroupCta] = useState<GroupCTAContent>({
+    heading: "Travelling with 8 or more ?",
+    subtext: "Enjoy a free photographer on your trip or unlock up to 40% off as the trip planner.",
+    buttonLabel: "Plan my trip",
+    backgroundImageUrl: ""
+  })
+
   const [selectedUspItem, setSelectedUspItem] = useState<string>('1')
+  const [selectedHighlight, setSelectedHighlight] = useState<string>('')
   const [selectedReview, setSelectedReview] = useState<string>('')
   const [selectedBrand, setSelectedBrand] = useState<string>('')
   const [selectedCustomTrip, setSelectedCustomTrip] = useState<string>('')
@@ -492,6 +529,8 @@ const WebsiteEdit: React.FC = () => {
         }
         setHero({
           ...heroData,
+          mobileVideoUrl: heroData.mobileVideoUrl || '',
+          desktopVideoUrl: heroData.desktopVideoUrl || '',
           trustIndicators: heroData.trustIndicators ?? DEFAULT_TRUST_INDICATORS
         })
         setHeader(data.header ?? {
@@ -618,6 +657,17 @@ const WebsiteEdit: React.FC = () => {
           groupLabel: 'Group Departure',
           customTrips: [],
           groupTrips: []
+        })
+        setTripHighlights(data.tripHighlights ?? {
+          heading: "Discover Hidden Gems",
+          subheading: "Experience the most breathtaking destinations",
+          highlights: []
+        })
+        setGroupCta(data.groupCta ?? {
+          heading: "Travelling with 8 or more ?",
+          subtext: "Enjoy a free photographer on your trip or unlock up to 40% off as the trip planner.",
+          buttonLabel: "Plan my trip",
+          backgroundImageUrl: ""
         })
         // Advanced sections fetch skipped in simplified editor
         setError(null)
@@ -810,7 +860,9 @@ const WebsiteEdit: React.FC = () => {
           reviews,
           faq,
           usp,
-          brands
+          brands,
+          tripHighlights,
+          groupCta
         })
       })
       setError(null)
@@ -830,6 +882,10 @@ const WebsiteEdit: React.FC = () => {
 
       // Debug: Check for base64 data in payload
       const payloadString = JSON.stringify(data)
+      if (data.hero) {
+        console.log(`[CMS-DEBUG] Saving Hero - Keys:`, Object.keys(data.hero));
+        console.log(`[CMS-DEBUG] Saving Hero - Desktop Video:`, data.hero.desktopVideoUrl);
+      }
       const hasBase64 = payloadString.includes('data:image')
       console.log(`Saving ${sectionName} - Payload size: ${payloadString.length} bytes`)
       console.log(`Saving ${sectionName} - Contains base64: ${hasBase64}`)
@@ -1227,10 +1283,10 @@ const WebsiteEdit: React.FC = () => {
                   onChange={async (e) => {
                     const file = e.target.files?.[0]
                     if (file) {
-                      // Check file size (20MB limit for videos)
-                      const maxSize = 20 * 1024 * 1024 // 20MB
+                      // Check file size (50MB limit for videos)
+                      const maxSize = 50 * 1024 * 1024 // 50MB
                       if (file.size > maxSize) {
-                        alert(`File too large. Maximum size is 20MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB. Please compress the video and try again.`)
+                        alert(`File too large. Maximum size is 50MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB. Please compress the video and try again.`)
                         return
                       }
 
@@ -1269,6 +1325,63 @@ const WebsiteEdit: React.FC = () => {
                       className="text-xs text-red-600 hover:text-red-800"
                     >
                       Remove Video
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Desktop Video (MP4/WebM)
+                </label>
+                <input
+                  type="file"
+                  accept="video/mp4,video/webm"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      // Check file size (50MB limit for videos)
+                      const maxSize = 50 * 1024 * 1024 // 50MB
+                      if (file.size > maxSize) {
+                        alert(`File too large. Maximum size is 50MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB. Please compress the video and try again.`)
+                        return
+                      }
+
+                      try {
+                        const form = new FormData()
+                        form.append('file', file)
+                        form.append('slug', citySlug || 'common')
+                        form.append('folder', 'hero')
+
+                        const data = await fetchApi<{ url: string }>('/api/upload', { method: 'POST', body: form })
+                        setHero(prev => ({ ...prev, desktopVideoUrl: data.url }))
+                      } catch (err: any) {
+                        setError(err?.message || 'Failed to upload video')
+                      }
+                    }
+                  }}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                />
+              </div>
+
+              {hero.desktopVideoUrl && (
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Desktop Video Preview</label>
+                  <div className="relative w-full h-32 rounded-md overflow-hidden border border-gray-200">
+                    <video
+                      src={hero.desktopVideoUrl}
+                      className="w-full h-full object-cover"
+                      controls
+                      muted
+                    />
+                  </div>
+                  <div className="mt-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setHero(prev => ({ ...prev, desktopVideoUrl: '' }))}
+                      className="text-xs text-red-600 hover:text-red-800"
+                    >
+                      Remove Desktop Video
                     </button>
                   </div>
                 </div>
@@ -2853,52 +2966,138 @@ const WebsiteEdit: React.FC = () => {
                                   placeholder="Review text"
                                 />
                               </div>
-                              <div className="grid grid-cols-2 gap-2">
+                              <div className="grid grid-cols-2 gap-4">
                                 <div>
                                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                                    Image 1 URL
+                                    Image 1
                                   </label>
-                                  <input
-                                    type="url"
-                                    value={review.images[0]?.src || ''}
-                                    onChange={(e) => setReviews(prev => ({
-                                      ...prev,
-                                      reviews: prev.reviews.map(r =>
-                                        r.id === review.id ? {
-                                          ...r,
-                                          images: [
-                                            { ...r.images[0], src: e.target.value },
-                                            r.images[1] || { src: '', alt: '' }
-                                          ]
-                                        } : r
-                                      )
-                                    }))}
-                                    className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                                    placeholder="First image URL"
-                                  />
+                                  <div className="space-y-2">
+                                    {review.images[0]?.src && (
+                                      <div className="relative w-full h-32 rounded-lg border border-gray-300 overflow-hidden bg-gray-50">
+                                        <Image
+                                          src={review.images[0].src}
+                                          alt="Review Image 1"
+                                          fill
+                                          className="object-cover"
+                                          unoptimized={true}
+                                        />
+                                        <button
+                                          onClick={() => setReviews(prev => ({
+                                            ...prev,
+                                            reviews: prev.reviews.map(r =>
+                                              r.id === review.id ? {
+                                                ...r,
+                                                images: [
+                                                  { ...r.images[0], src: '' },
+                                                  r.images[1] || { src: '', alt: '' }
+                                                ]
+                                              } : r
+                                            )
+                                          }))}
+                                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all"
+                                          title="Remove image"
+                                        >
+                                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                          </svg>
+                                        </button>
+                                      </div>
+                                    )}
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={async (e) => {
+                                        const file = e.target.files?.[0]
+                                        if (file) {
+                                          if (file.size > 4 * 1024 * 1024) {
+                                            alert('File too large. Max size is 4MB.')
+                                            return
+                                          }
+                                          await handleImageUpload(file, (url) => {
+                                            setReviews(prev => ({
+                                              ...prev,
+                                              reviews: prev.reviews.map(r =>
+                                                r.id === review.id ? {
+                                                  ...r,
+                                                  images: [
+                                                    { ...r.images[0], src: url },
+                                                    r.images[1] || { src: '', alt: '' }
+                                                  ]
+                                                } : r
+                                              )
+                                            }))
+                                          })
+                                        }
+                                      }}
+                                      className="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                    />
+                                  </div>
                                 </div>
                                 <div>
                                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                                    Image 2 URL
+                                    Image 2
                                   </label>
-                                  <input
-                                    type="url"
-                                    value={review.images[1]?.src || ''}
-                                    onChange={(e) => setReviews(prev => ({
-                                      ...prev,
-                                      reviews: prev.reviews.map(r =>
-                                        r.id === review.id ? {
-                                          ...r,
-                                          images: [
-                                            r.images[0] || { src: '', alt: '' },
-                                            { ...r.images[1], src: e.target.value }
-                                          ]
-                                        } : r
-                                      )
-                                    }))}
-                                    className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                                    placeholder="Second image URL"
-                                  />
+                                  <div className="space-y-2">
+                                    {review.images[1]?.src && (
+                                      <div className="relative w-full h-32 rounded-lg border border-gray-300 overflow-hidden bg-gray-50">
+                                        <Image
+                                          src={review.images[1].src}
+                                          alt="Review Image 2"
+                                          fill
+                                          className="object-cover"
+                                          unoptimized={true}
+                                        />
+                                        <button
+                                          onClick={() => setReviews(prev => ({
+                                            ...prev,
+                                            reviews: prev.reviews.map(r =>
+                                              r.id === review.id ? {
+                                                ...r,
+                                                images: [
+                                                  r.images[0] || { src: '', alt: '' },
+                                                  { ...r.images[1], src: '' }
+                                                ]
+                                              } : r
+                                            )
+                                          }))}
+                                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all"
+                                          title="Remove image"
+                                        >
+                                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                          </svg>
+                                        </button>
+                                      </div>
+                                    )}
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={async (e) => {
+                                        const file = e.target.files?.[0]
+                                        if (file) {
+                                          if (file.size > 4 * 1024 * 1024) {
+                                            alert('File too large. Max size is 4MB.')
+                                            return
+                                          }
+                                          await handleImageUpload(file, (url) => {
+                                            setReviews(prev => ({
+                                              ...prev,
+                                              reviews: prev.reviews.map(r =>
+                                                r.id === review.id ? {
+                                                  ...r,
+                                                  images: [
+                                                    r.images[0] || { src: '', alt: '' },
+                                                    { ...r.images[1], src: url }
+                                                  ]
+                                                } : r
+                                              )
+                                            }))
+                                          })
+                                        }
+                                      }}
+                                      className="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                    />
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -3204,9 +3403,9 @@ const WebsiteEdit: React.FC = () => {
                                     const file = e.target.files?.[0]
                                     if (file) {
                                       // Check file size (4MB limit)
-                                      const maxSize = 4 * 1024 * 1024 // 4MB
+                                      const maxSize = 50 * 1024 * 1024 // 50MB
                                       if (file.size > maxSize) {
-                                        alert(`File too large. Maximum size is 4MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB. Please compress the image and try again.`)
+                                        alert(`File too large. Maximum size is 50MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB. Please compress the image and try again.`)
                                         return
                                       }
 
@@ -3453,6 +3652,279 @@ const WebsiteEdit: React.FC = () => {
                           </div>
                         );
                       })()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {/* Trip Highlights Section */}
+      {
+        isSectionVisible('trip highlights') && (
+          <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="h-10 w-10 bg-teal-600 rounded-lg flex items-center justify-center">
+                    <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">8. Trip Highlights</h2>
+                    <p className="text-xs text-gray-500">Carousel of destination highlights</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => saveSection('Trip Highlights', { tripHighlights })}
+                  disabled={saving}
+                  className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 shadow-sm transition-colors"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Heading</label>
+                  <input
+                    type="text"
+                    value={tripHighlights.heading}
+                    onChange={(e) => setTripHighlights(prev => ({ ...prev, heading: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Discover Hidden Gems"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Subheading</label>
+                  <input
+                    type="text"
+                    value={tripHighlights.subheading}
+                    onChange={(e) => setTripHighlights(prev => ({ ...prev, subheading: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Experience the most breathtaking destinations"
+                  />
+                </div>
+
+                <div className="mt-4 border-t border-gray-200 pt-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <label className="block text-sm font-medium text-gray-700">Highlights Images</label>
+                    <button
+                      onClick={() => {
+                        const newHighlight = {
+                          id: Date.now().toString(),
+                          src: '/highlights/1.png',
+                          alt: 'New Highlight'
+                        }
+                        setTripHighlights(prev => ({
+                          ...prev,
+                          highlights: [...prev.highlights, newHighlight]
+                        }))
+                        setSelectedHighlight(newHighlight.id)
+                      }}
+                      className="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                    >
+                      + Add Highlight
+                    </button>
+                  </div>
+
+                  <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                    {tripHighlights.highlights.map((highlight, index) => (
+                      <button
+                        key={highlight.id}
+                        onClick={() => setSelectedHighlight(highlight.id)}
+                        className={`flex-shrink-0 relative w-16 h-16 rounded-lg overflow-hidden border-2 ${selectedHighlight === highlight.id ? 'border-blue-500' : 'border-transparent'}`}
+                      >
+                        <Image
+                          src={highlight.src}
+                          alt={highlight.alt}
+                          fill
+                          className="object-cover"
+                          unoptimized={true}
+                        />
+                      </button>
+                    ))}
+                  </div>
+
+                  {selectedHighlight && tripHighlights.highlights.find(h => h.id === selectedHighlight) && (
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                      {(() => {
+                        const highlight = tripHighlights.highlights.find(h => h.id === selectedHighlight)!
+                        const index = tripHighlights.highlights.findIndex(h => h.id === selectedHighlight)
+                        return (
+                          <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                              <h4 className="text-sm font-semibold text-gray-800">Highlight {index + 1}</h4>
+                              <button
+                                onClick={() => {
+                                  setTripHighlights(prev => ({
+                                    ...prev,
+                                    highlights: prev.highlights.filter(h => h.id !== selectedHighlight)
+                                  }))
+                                  setSelectedHighlight('')
+                                }}
+                                className="text-red-600 hover:text-red-800 text-xs"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">Select Image</label>
+                              <div className="flex items-center gap-4">
+                                <div className="relative w-20 h-20 rounded-md border border-gray-300 overflow-hidden bg-white">
+                                  <Image
+                                    src={highlight.src}
+                                    alt={highlight.alt}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized={true}
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={async (e) => {
+                                      const file = e.target.files?.[0]
+                                      if (file) {
+                                        if (file.size > 50 * 1024 * 1024) {
+                                          alert('File size too large (max 50MB)')
+                                          return
+                                        }
+                                        await handleImageUpload(file, (url) => {
+                                          setTripHighlights(prev => ({
+                                            ...prev,
+                                            highlights: prev.highlights.map(h =>
+                                              h.id === highlight.id ? { ...h, src: url } : h
+                                            )
+                                          }))
+                                        })
+                                      }
+                                    }}
+                                    className="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                  />
+                                  <p className="text-xs text-gray-400 mt-1">Supported formats: JPG, PNG, WebP (Max 4MB)</p>
+                                </div>
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">Alt Text / Caption</label>
+                              <input
+                                type="text"
+                                value={highlight.alt}
+                                onChange={(e) => setTripHighlights(prev => ({
+                                  ...prev,
+                                  highlights: prev.highlights.map(h =>
+                                    h.id === highlight.id ? { ...h, alt: e.target.value } : h
+                                  )
+                                }))}
+                                className="w-full border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                placeholder="Image description"
+                              />
+                            </div>
+                          </div>
+                        )
+                      })()}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {/* Group CTA Section */}
+      {
+        isSectionVisible('group cta') && (
+          <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="h-10 w-10 bg-orange-500 rounded-lg flex items-center justify-center">
+                    <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">9. Group CTA</h2>
+                    <p className="text-xs text-gray-500">Group booking call-to-action</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => saveSection('Group CTA', { groupCta })}
+                  disabled={saving}
+                  className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 shadow-sm transition-colors"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Heading</label>
+                  <input
+                    type="text"
+                    value={groupCta.heading}
+                    onChange={(e) => setGroupCta(prev => ({ ...prev, heading: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Subtext</label>
+                  <textarea
+                    value={groupCta.subtext}
+                    onChange={(e) => setGroupCta(prev => ({ ...prev, subtext: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Button Label</label>
+                  <input
+                    type="text"
+                    value={groupCta.buttonLabel}
+                    onChange={(e) => setGroupCta(prev => ({ ...prev, buttonLabel: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Background Image</label>
+                  <div className="flex items-center gap-4">
+                    {groupCta.backgroundImageUrl && (
+                      <div className="relative w-32 h-20 rounded-md border border-gray-300 overflow-hidden bg-gray-50">
+                        <Image
+                          src={groupCta.backgroundImageUrl}
+                          alt="Group CTA Background"
+                          fill
+                          className="object-cover"
+                          unoptimized={true}
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            if (file.size > 4 * 1024 * 1024) {
+                              alert('File size too large (max 4MB)')
+                              return
+                            }
+                            await handleImageUpload(file, (url) => {
+                              setGroupCta(prev => ({ ...prev, backgroundImageUrl: url }))
+                            })
+                          }
+                        }}
+                        className="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      />
                     </div>
                   </div>
                 </div>
