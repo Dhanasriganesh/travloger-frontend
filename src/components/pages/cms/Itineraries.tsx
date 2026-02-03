@@ -83,7 +83,7 @@ interface PackageItineraryDay {
 interface PackageVehicleOption {
   id: string
   vehicleType: string
-  model: string
+  capacity: number
   price: number
   acType: 'AC' | 'Non-AC'
 }
@@ -109,6 +109,7 @@ const Itineraries: React.FC = () => {
   const [packageThemes, setPackageThemes] = useState<Array<{ id: number; name: string; status: string }>>([])
   const [dayItineraries, setDayItineraries] = useState<Array<{ id: number; name: string; numDays: number; destinations?: string[] }>>([])
   const [vehicleTypes, setVehicleTypes] = useState<Array<{ id: number; vehicle_type: string; capacity?: number; state?: string }>>([])
+  const [transfers, setTransfers] = useState<any[]>([])
   const [allInclusions, setAllInclusions] = useState<string[]>([])
   const [allExclusions, setAllExclusions] = useState<string[]>([])
   const navigate = useNavigate()
@@ -350,60 +351,79 @@ const Itineraries: React.FC = () => {
         setVehicleTypes([])
       }
 
-      // Fetch common inclusions/exclusions (you can create a master for these or use predefined list)
+      // Fetch transfers for automatic pricing
       try {
-        // For now, using predefined common inclusions/exclusions
-        // You can later create API endpoints for these if needed
-        setAllInclusions([
+        const transfersData = await fetchApi('/transfers')
+        setTransfers(transfersData.transfers || [])
+      } catch (error) {
+        console.error('Failed to fetch transfers:', handleApiError(error))
+        setTransfers([])
+      }
+
+      // Fetch common inclusions/exclusions from the master library
+      try {
+        console.log('🔍 [NOTES] Fetching from /api/itinerary-notes-inclusions...')
+        const notesData = await fetchApi('/api/itinerary-notes-inclusions')
+        console.log('🔍 [NOTES] Raw response:', notesData)
+
+        const activeNotes = (notesData.notesInclusions || []).filter((n: any) => {
+          const status = (n.status || 'Active').toLowerCase();
+          return status === 'active';
+        })
+        console.log('🔍 [NOTES] Active notes count:', activeNotes.length)
+
+        const inclusions = activeNotes
+          .filter((n: any) => {
+            const cat = (n.category || '').toLowerCase()
+            const title = (n.title || '').toLowerCase()
+            const desc = (n.description || '').toLowerCase()
+
+            // Inclusion if: category matches 'inc', OR title/desc has 'swim', OR it's NOT an exclusion
+            const isExclusion = cat.includes('exc') || cat.includes('exclude') || cat === 'exclusion'
+            const isSwim = title.includes('swim') || title.includes('swimi') || desc.includes('swim')
+            const isMatch = (cat.includes('inc') || cat.includes('include') || cat === 'inclusion' || isSwim || !isExclusion)
+
+            if (isMatch) console.log('✅ [NOTES] Found Inclusion match:', n.title)
+            return isMatch
+          })
+          .map((n: any) => n.description || n.title)
+
+        const exclusions = activeNotes
+          .filter((n: any) => {
+            const cat = (n.category || '').toLowerCase()
+            const isMatch = cat.includes('exc') || cat.includes('exclude') || cat === 'exclusion'
+            if (isMatch) console.log('✅ [NOTES] Found Exclusion match:', n.title)
+            return isMatch
+          })
+          .map((n: any) => n.description || n.title)
+
+        console.log('🔍 [NOTES] Final Inclusions:', inclusions)
+        console.log('🔍 [NOTES] Final Exclusions:', exclusions)
+
+        setAllInclusions(inclusions.length > 0 ? inclusions : [
           '2 nights stay (triple/couple sharing)',
-          '3 nights stay (triple/couple sharing)',
           'Breakfast included',
-          'Breakfast & Dinner included',
-          'All meals included (MAP)',
           'Private AC vehicle for entire trip',
-          'Private Non-AC vehicle for entire trip',
-          'Airport pickup and drop',
-          'Railway station pickup and drop',
-          'Sightseeing as per itinerary',
-          'Driver allowance',
           'Toll charges',
-          'Parking charges',
-          'Fuel charges',
-          'Professional tour guide',
-          'Entry tickets to monuments',
-          'Welcome drink on arrival',
-          'Complimentary breakfast',
-          'Travel insurance'
+          'Parking charges'
         ])
 
-        setAllExclusions([
+        setAllExclusions(exclusions.length > 0 ? exclusions : [
           'GST extra',
-          'GST @ 5% extra',
-          'Lunch not included',
-          'Dinner not included',
-          'Entry fees / adventure activities not included',
-          'Monument entry tickets not included',
           'Personal expenses',
-          'Tips and gratuities',
-          'Anything not mentioned in inclusions',
-          'Travel insurance',
-          'Medical expenses',
-          'Laundry charges',
-          'Room service charges',
-          'Alcoholic beverages',
-          'Camera fees at monuments',
-          'Guide charges',
-          'Optional tours',
-          'Early check-in charges',
-          'Late check-out charges'
+          'Lunch not included',
+          'Anything not mentioned in inclusions'
         ])
       } catch (error) {
-        console.error('Failed to set inclusions/exclusions:', error)
+        console.error('❌ [NOTES] Failed to fetch inclusions/exclusions:', handleApiError(error))
+        // Fallback to minimal defaults if fetch fails
+        setAllInclusions(['Breakfast included', 'Private vehicle'])
+        setAllExclusions(['GST extra', 'Personal expenses'])
       }
     } catch (error) {
       console.error('Error fetching masters:', handleApiError(error))
     }
-  }, [])
+  }, [showModal])
 
   // Fetch destinations when state changes
   useEffect(() => {
@@ -1353,7 +1373,7 @@ const Itineraries: React.FC = () => {
                         const newVehicle: PackageVehicleOption = {
                           id: `vehicle-${Date.now()}`,
                           vehicleType: '',
-                          model: '',
+                          capacity: 0,
                           price: 0,
                           acType: 'AC'
                         }
@@ -1368,7 +1388,7 @@ const Itineraries: React.FC = () => {
 
                   {form.state && (
                     <div className="text-xs text-gray-600 bg-blue-50 border border-blue-200 rounded p-2">
-                      <strong>Note:</strong> Pricing is for <strong>{form.state}</strong> - {form.primaryDestination}
+                      <strong>Note:</strong> Pricing is for <strong>{form.state}</strong> - {form.primaryDestination || <span className="text-red-500 font-bold">Please select Primary Destination in General tab</span>}
                       {form.otherDestinations.length > 0 && ` & ${form.otherDestinations.join(', ')}`}
                     </div>
                   )}
@@ -1383,9 +1403,9 @@ const Itineraries: React.FC = () => {
                         <thead>
                           <tr className="bg-gray-50 border-b border-gray-200">
                             <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Vehicle Type</th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Model</th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Price</th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">AC / Non-AC</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 w-24">Capacity</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 w-32">Price</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 w-32">AC / Non-AC</th>
                             <th className="px-3 py-2 text-center text-xs font-medium text-gray-700 w-20">Delete</th>
                           </tr>
                         </thead>
@@ -1396,8 +1416,38 @@ const Itineraries: React.FC = () => {
                                 <select
                                   value={vehicle.vehicleType}
                                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                                    const selectedVT = vehicleTypes.find(vt => vt.vehicle_type === e.target.value)
+
+                                    // Fetch price from transfers master
+                                    // Match by vehicle_type and primaryDestination (case-insensitive)
+                                    console.log('🔍 [PRICING] Searching for match:', {
+                                      selectedVehicle: e.target.value,
+                                      primaryDest: form.primaryDestination,
+                                      availableTransfers: transfers.length
+                                    });
+
+                                    const matchingTransfer = transfers.find(t => {
+                                      const tVehicle = (t.vehicle_type || '').toLowerCase().trim();
+                                      const selectedVT = (e.target.value || '').toLowerCase().trim();
+                                      const tDest = (t.destination || '').toLowerCase().trim();
+                                      const pDest = (form.primaryDestination || '').toLowerCase().trim();
+
+                                      const isMatch = tVehicle === selectedVT && tDest === pDest;
+                                      if (isMatch) console.log('✅ [PRICING] Found match:', t);
+                                      return isMatch;
+                                    })
+
+                                    if (!matchingTransfer) {
+                                      console.log('❌ [PRICING] No match found in transfers master');
+                                    }
+
                                     const updated = [...form.packageVehicles]
-                                    updated[index] = { ...vehicle, vehicleType: e.target.value }
+                                    updated[index] = {
+                                      ...vehicle,
+                                      vehicleType: e.target.value,
+                                      capacity: selectedVT?.capacity || 0,
+                                      price: matchingTransfer?.price || vehicle.price // Auto-fetch price
+                                    }
                                     setForm({ ...form, packageVehicles: updated })
                                   }}
                                   className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1416,17 +1466,9 @@ const Itineraries: React.FC = () => {
                                 </select>
                               </td>
                               <td className="px-3 py-2">
-                                <input
-                                  type="text"
-                                  value={vehicle.model}
-                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                    const updated = [...form.packageVehicles]
-                                    updated[index] = { ...vehicle, model: e.target.value }
-                                    setForm({ ...form, packageVehicles: updated })
-                                  }}
-                                  placeholder="e.g., Innova, Swift"
-                                  className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
+                                <div className="w-full bg-gray-50 border border-gray-200 rounded-md px-2 py-1 text-sm text-gray-600">
+                                  {vehicle.capacity ? `${vehicle.capacity} seats` : '-'}
+                                </div>
                               </td>
                               <td className="px-3 py-2">
                                 <input

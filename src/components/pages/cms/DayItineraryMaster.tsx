@@ -24,6 +24,7 @@ interface DayPlan {
 interface DayItineraryItem {
   id: number
   name: string
+  state: string
   destinations: string[]
   numDays: number
   days: DayPlan[]
@@ -40,19 +41,20 @@ const DayItinerary: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editingDayItinerary, setEditingDayItinerary] = useState<DayItineraryItem | null>(null)
-  
+
   // Masters
-  const [destinations, setDestinations] = useState<string[]>([])
+  const [destinations, setDestinations] = useState<{ name: string, state: string }[]>([])
   const [activities, setActivities] = useState<Activity[]>([])
   const [transfers, setTransfers] = useState<Transfer[]>([])
   const [hotels, setHotels] = useState<Hotel[]>([])
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([])
-  
+
   const [destinationInput, setDestinationInput] = useState('')
   const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false)
-  
+
   const [formData, setFormData] = useState({
     name: '',
+    state: '',
     destinations: [] as string[],
     numDays: 1,
     days: [
@@ -77,7 +79,7 @@ const DayItinerary: React.FC = () => {
         fetch(`${API_URL}/api/hotels`).then(r => r.json()),
         fetch(`${API_URL}/api/meal-plans`).then(r => r.json())
       ])
-      setDestinations((destRes.destinations || []).map((d: any) => d.name))
+      setDestinations((destRes.destinations || []).map((d: any) => ({ name: d.name, state: d.state || '' })))
       setActivities((actRes.activities || []).map((a: any) => ({ id: a.id, name: a.name, destination: a.destination })))
       setTransfers((trRes.transfers || []).map((t: any) => ({ id: t.id, name: t.name || t.transfer_name, destination: t.destination })))
       setHotels((hotelRes.hotels || []).map((h: any) => ({ id: h.id, name: h.name, destination: h.destination })))
@@ -91,10 +93,11 @@ const DayItinerary: React.FC = () => {
     try {
       setLoading(true)
       const data = await fetchApi('/api/day-itineraries')
-      
+
       const items: DayItineraryItem[] = (data.dayItineraries || []).map((it: any) => ({
         id: it.id,
         name: it.name || it.title || '',
+        state: it.state || '',
         destinations: it.destinations || [],
         numDays: it.numDays || (it.days?.length || 1),
         days: (it.days || []).map((d: any) => ({
@@ -134,7 +137,7 @@ const DayItinerary: React.FC = () => {
     try {
       setSaving(true)
       const method = editingDayItinerary ? 'PUT' : 'POST'
-      const body = editingDayItinerary 
+      const body = editingDayItinerary
         ? { id: editingDayItinerary.id, ...formData }
         : formData
 
@@ -146,7 +149,7 @@ const DayItinerary: React.FC = () => {
 
       await fetchDayItineraries()
       setShowAddForm(false)
-      setFormData({ name: '', destinations: [], numDays: 1, days: [{ title: '', description: '', activityIds: [], transferIds: [], mealCodes: [], notes: '' }], status: 'Active' })
+      setFormData({ name: '', state: '', destinations: [], numDays: 1, days: [{ title: '', description: '', activityIds: [], transferIds: [], mealCodes: [], notes: '' }], status: 'Active' })
       setEditingDayItinerary(null)
       alert(data.message || 'Day itinerary saved successfully')
     } catch (error) {
@@ -179,6 +182,7 @@ const DayItinerary: React.FC = () => {
     setEditingDayItinerary(dayItinerary)
     setFormData({
       name: dayItinerary.name,
+      state: dayItinerary.state || '',
       destinations: dayItinerary.destinations || [],
       numDays: dayItinerary.numDays || Math.max(1, dayItinerary.days?.length || 1),
       days: (dayItinerary.days && dayItinerary.days.length ? dayItinerary.days : [{ title: '', description: '', activityIds: [], transferIds: [], mealCodes: [], notes: '' }]),
@@ -190,7 +194,7 @@ const DayItinerary: React.FC = () => {
   const handleCloseForm = () => {
     setShowAddForm(false)
     setEditingDayItinerary(null)
-    setFormData({ name: '', destinations: [], numDays: 1, days: [{ title: '', description: '', activityIds: [], transferIds: [], mealCodes: [], notes: '' }], status: 'Active' })
+    setFormData({ name: '', state: '', destinations: [], numDays: 1, days: [{ title: '', description: '', activityIds: [], transferIds: [], mealCodes: [], notes: '' }], status: 'Active' })
     setDestinationInput('')
     setShowDestinationSuggestions(false)
   }
@@ -251,19 +255,19 @@ const DayItinerary: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 py-6">
         <Card>
           <CardContent className="p-0">
-            <div className="overflow-hidden">
-              <table className="w-full table-fixed">
+            <div className="overflow-x-auto">
+              <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="w-12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Icon</th>
                     <th className="w-56 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Itinerary Name</th>
+                    <th className="w-32 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
                     <th className="w-64 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Destinations</th>
                     <th className="w-16 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Days</th>
                     <th className="w-20 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="w-20 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">By</th>
                     <th className="w-24 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th className="w-12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
-                    <th className="w-12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                    <th className="w-24 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -273,6 +277,7 @@ const DayItinerary: React.FC = () => {
                         <FolderOpen className="h-5 w-5 text-orange-500" />
                       </td>
                       <td className="px-3 py-4 text-sm font-medium text-gray-900 truncate">{dayItinerary.name}</td>
+                      <td className="px-3 py-4 text-sm text-gray-900 truncate">{dayItinerary.state || '-'}</td>
                       <td className="px-3 py-4 text-sm text-gray-900 truncate">{(dayItinerary.destinations || []).join(', ') || '-'}</td>
                       <td className="px-3 py-4 text-sm text-gray-900">{dayItinerary.numDays}</td>
                       <td className="px-3 py-4 text-sm text-gray-900">
@@ -292,20 +297,22 @@ const DayItinerary: React.FC = () => {
                         {dayItinerary.date}
                       </td>
                       <td className="px-3 py-4 text-sm text-gray-500">
-                        <button 
-                          onClick={() => handleEditClick(dayItinerary)}
-                          className="hover:text-gray-700"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                      </td>
-                      <td className="px-3 py-4 text-sm text-gray-500">
-                        <button 
-                          onClick={() => handleDeleteDayItinerary(dayItinerary.id, dayItinerary.name)}
-                          className="hover:text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => handleEditClick(dayItinerary)}
+                            className="text-blue-600 hover:text-blue-800 transition-colors"
+                            title="Edit itinerary"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteDayItinerary(dayItinerary.id, dayItinerary.name)}
+                            className="text-red-500 hover:text-red-700 transition-colors"
+                            title="Delete itinerary"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -323,11 +330,11 @@ const DayItinerary: React.FC = () => {
       {/* Add Day Itinerary Form Panel */}
       {showAddForm && (
         <div className="fixed inset-0 z-50 overflow-hidden">
-          <div 
+          <div
             className="absolute inset-0 backdrop-blur-sm"
             onClick={handleCloseForm}
           />
-          
+
           <div className="absolute right-0 top-0 h-full w-[500px] bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
             <div className="flex flex-col h-full">
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -352,13 +359,38 @@ const DayItinerary: React.FC = () => {
                     </label>
                     <div className="relative">
                       <div className="absolute left-0 top-0 h-full w-0.5 bg-red-500 rounded-l-sm"></div>
-                      <Input 
-                        type="text" 
+                      <Input
+                        type="text"
                         className="pl-3.5"
                         placeholder="Enter day itinerary name"
                         value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      State <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                        value={formData.state}
+                        onChange={(e) => {
+                          const newState = e.target.value;
+                          // If state changes, clear destinations that don't belong to it
+                          const validDestinations = formData.destinations.filter(d =>
+                            destinations.some(dest => dest.name === d && dest.state === newState)
+                          );
+                          setFormData({ ...formData, state: newState, destinations: validDestinations });
+                        }}
+                      >
+                        <option value="">Select State</option>
+                        {Array.from(new Set(destinations.map(d => d.state).filter(Boolean))).sort().map(state => (
+                          <option key={state} value={state}>{state}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
@@ -367,8 +399,8 @@ const DayItinerary: React.FC = () => {
                       Destinations <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <Input 
-                        type="text" 
+                      <Input
+                        type="text"
                         placeholder="Type to search destinations..."
                         value={destinationInput}
                         onChange={(e) => {
@@ -378,28 +410,28 @@ const DayItinerary: React.FC = () => {
                         onFocus={() => setShowDestinationSuggestions(true)}
                         className="border-l-2 border-red-500"
                       />
-                      
+
                       {showDestinationSuggestions && destinationInput && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
                           {destinations
-                            .filter(d => d.toLowerCase().includes(destinationInput.toLowerCase()))
-                            .map((destination, idx) => (
+                            .filter(d => (!formData.state || d.state === formData.state) && d.name.toLowerCase().includes(destinationInput.toLowerCase()))
+                            .map((destObj, idx) => (
                               <button
                                 key={idx}
                                 type="button"
                                 className="w-full text-left px-4 py-2 hover:bg-blue-50 text-sm"
                                 onClick={() => {
-                                  if (!formData.destinations.includes(destination)) {
-                                    setFormData({...formData, destinations: [...formData.destinations, destination]})
+                                  if (!formData.destinations.includes(destObj.name)) {
+                                    setFormData({ ...formData, destinations: [...formData.destinations, destObj.name] })
                                   }
                                   setDestinationInput('')
                                   setShowDestinationSuggestions(false)
                                 }}
                               >
-                                {destination}
+                                {destObj.name} {destObj.state ? `(${destObj.state})` : ''}
                               </button>
                             ))}
-                          {destinations.filter(d => d.toLowerCase().includes(destinationInput.toLowerCase())).length === 0 && (
+                          {destinations.filter(d => (!formData.state || d.state === formData.state) && d.name.toLowerCase().includes(destinationInput.toLowerCase())).length === 0 && (
                             <div className="px-4 py-2 text-sm text-gray-500">No destinations found</div>
                           )}
                         </div>
@@ -412,7 +444,7 @@ const DayItinerary: React.FC = () => {
                             {dest}
                             <button
                               type="button"
-                              onClick={() => setFormData({...formData, destinations: formData.destinations.filter((_, i) => i !== idx)})}
+                              onClick={() => setFormData({ ...formData, destinations: formData.destinations.filter((_, i) => i !== idx) })}
                               className="text-blue-600 hover:text-blue-800"
                             >
                               ×
@@ -425,8 +457,8 @@ const DayItinerary: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Number of Days</label>
-                    <Input 
-                      type="number" 
+                    <Input
+                      type="number"
                       value={formData.numDays}
                       onChange={(e) => {
                         const val = Math.max(1, parseInt(e.target.value || '1', 10))
@@ -459,7 +491,7 @@ const DayItinerary: React.FC = () => {
                           </div>
                           <div>
                             <label className="block text-xs text-gray-600 mb-1">Description</label>
-                            <textarea 
+                            <textarea
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                               rows={3}
                               value={day.description}
@@ -615,10 +647,10 @@ const DayItinerary: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Status <span className="text-red-500">*</span>
                     </label>
-                    <select 
+                    <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.status}
-                      onChange={(e) => setFormData({...formData, status: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                     >
                       <option value="Active">Active</option>
                       <option value="Inactive">Inactive</option>

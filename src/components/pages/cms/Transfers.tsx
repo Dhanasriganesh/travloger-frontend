@@ -93,6 +93,9 @@ const Transfers: React.FC = () => {
   const [destinationInput, setDestinationInput] = useState('')
   const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false)
   const [suppliers, setSuppliers] = useState<{ id: number, name: string, city: string }[]>([])
+  const [vehicleTypes, setVehicleTypes] = useState<any[]>([])
+  const [vehicleTypeInput, setVehicleTypeInput] = useState('')
+  const [showVehicleSuggestions, setShowVehicleSuggestions] = useState(false)
 
   // File upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -168,10 +171,23 @@ const Transfers: React.FC = () => {
   useEffect(() => {
     if (formData.state) {
       fetchDestinations(formData.state)
+      fetchVehicleTypes(formData.state)
     } else {
       setDestinations([])
+      setVehicleTypes([])
     }
   }, [formData.state])
+
+  // Auto-calculate price based on distance * baseRate
+  useEffect(() => {
+    const distanceMatch = formData.distanceDuration.match(/(\d+\.?\d*)/)
+    const distance = distanceMatch ? parseFloat(distanceMatch[0]) : 0
+    const calculatedPrice = Math.round(distance * (formData.baseRate || 0))
+
+    if (calculatedPrice !== formData.price) {
+      setFormData(prev => ({ ...prev, price: calculatedPrice }))
+    }
+  }, [formData.distanceDuration, formData.baseRate])
 
   const fetchStates = async () => {
     try {
@@ -185,7 +201,7 @@ const Transfers: React.FC = () => {
   const fetchSuppliers = async () => {
     try {
       const data = await fetchApi('/suppliers')
-      setSuppliers((data.suppliers || []).map((s: any) => ({ id: s.id, name: s.company_name, city: s.city })))
+      setSuppliers((data.suppliers || []).map((s: any) => ({ id: s.id, name: s.supplier_name || s.company_name || 'Unnamed Supplier', city: s.city })))
     } catch (e) {
       console.error('Error fetching suppliers:', handleApiError(e))
       // Provide fallback empty array
@@ -203,6 +219,17 @@ const Transfers: React.FC = () => {
     } catch (error) {
       console.error('Error fetching destinations:', handleApiError(error))
       setDestinations([])
+    }
+  }
+
+  const fetchVehicleTypes = async (state?: string) => {
+    try {
+      const url = state ? `/api/vehicle-types?state=${encodeURIComponent(state)}` : '/api/vehicle-types'
+      const data = await fetchApi(url)
+      setVehicleTypes(data.vehicleTypes || [])
+    } catch (error) {
+      console.error('Error fetching vehicle types:', handleApiError(error))
+      setVehicleTypes([])
     }
   }
 
@@ -258,6 +285,8 @@ const Transfers: React.FC = () => {
       await fetchTransfers() // Refresh the list
       setShowAddForm(false)
       setFormData({ queryName: '', state: '', destination: '', supplierId: '', vehicleType: '', distanceDuration: '', rateType: 'fixed', baseRate: 0, extraKmRate: 0, waitingCharge: 0, price: 0, content: '', notes: '', status: 'Active' })
+      setDestinationInput('')
+      setVehicleTypeInput('')
       setSelectedFile(null)
       setImagePreview(null)
       setEditingTransfer(null)
@@ -307,6 +336,7 @@ const Transfers: React.FC = () => {
       status: transfer.status
     })
     setDestinationInput(transfer.destination || '')
+    setVehicleTypeInput(transfer.vehicle_type || '')
     setImagePreview(transfer.photo_url || null)
     setSelectedFile(null)
     setShowAddForm(true)
@@ -317,7 +347,9 @@ const Transfers: React.FC = () => {
     setEditingTransfer(null)
     setFormData({ queryName: '', state: '', destination: '', supplierId: '', vehicleType: '', distanceDuration: '', rateType: 'fixed', baseRate: 0, extraKmRate: 0, waitingCharge: 0, price: 0, content: '', notes: '', status: 'Active' })
     setDestinationInput('')
+    setVehicleTypeInput('')
     setShowDestinationSuggestions(false)
+    setShowVehicleSuggestions(false)
     setSelectedFile(null)
     setImagePreview(null)
   }
@@ -507,8 +539,8 @@ const Transfers: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 py-6">
           <Card>
             <CardContent className="p-0">
-              <div className="overflow-hidden">
-                <table className="w-full table-fixed">
+              <div className="overflow-x-auto">
+                <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="w-full px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Queries Name</th>
@@ -517,8 +549,7 @@ const Transfers: React.FC = () => {
                       <th className="w-20 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                       <th className="w-20 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">By</th>
                       <th className="w-24 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                      <th className="w-12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
-                      <th className="w-12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                      <th className="w-24 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -560,20 +591,22 @@ const Transfers: React.FC = () => {
                           {transfer.date}
                         </td>
                         <td className="px-3 py-4 text-sm text-gray-500">
-                          <button
-                            onClick={() => handleEditClick(transfer)}
-                            className="hover:text-gray-700"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                        </td>
-                        <td className="px-3 py-4 text-sm text-gray-500">
-                          <button
-                            onClick={() => handleDeleteTransfer(transfer.id, transfer.query_name)}
-                            className="hover:text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => handleEditClick(transfer)}
+                              className="text-blue-600 hover:text-blue-800 transition-colors"
+                              title="Edit transfer"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTransfer(transfer.id, transfer.query_name)}
+                              className="text-red-500 hover:text-red-700 transition-colors"
+                              title="Delete transfer"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -724,12 +757,52 @@ const Transfers: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Type</label>
-                        <Input
-                          type="text"
-                          placeholder="e.g., Sedan, SUV, Tempo Traveller"
-                          value={formData.vehicleType}
-                          onChange={(e) => setFormData({ ...formData, vehicleType: e.target.value })}
-                        />
+                        <div className="relative">
+                          <Input
+                            type="text"
+                            placeholder={formData.state ? "Type to search vehicles..." : "Select state first"}
+                            value={vehicleTypeInput}
+                            onChange={(e) => {
+                              setVehicleTypeInput(e.target.value)
+                              setShowVehicleSuggestions(true)
+                            }}
+                            onFocus={() => formData.state && setShowVehicleSuggestions(true)}
+                            disabled={!formData.state}
+                          />
+
+                          {showVehicleSuggestions && vehicleTypeInput && formData.state && (
+                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                              {vehicleTypes
+                                .filter(v => {
+                                  const vType = (v.vehicle_type || v).toLowerCase()
+                                  return vType.includes(vehicleTypeInput.toLowerCase())
+                                })
+                                .map((vehicle, idx) => {
+                                  const vType = vehicle.vehicle_type || vehicle
+                                  return (
+                                    <button
+                                      key={vehicle.id || idx}
+                                      type="button"
+                                      className="w-full text-left px-4 py-2 hover:bg-blue-50 text-sm"
+                                      onClick={() => {
+                                        setFormData({ ...formData, vehicleType: vType })
+                                        setVehicleTypeInput(vType)
+                                        setShowVehicleSuggestions(false)
+                                      }}
+                                    >
+                                      {vType}
+                                    </button>
+                                  )
+                                })}
+                              {vehicleTypes.filter(v => {
+                                const vType = (v.vehicle_type || v).toLowerCase()
+                                return vType.includes(vehicleTypeInput.toLowerCase())
+                              }).length === 0 && (
+                                  <div className="px-4 py-2 text-sm text-gray-500">No vehicles found</div>
+                                )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Distance / Duration</label>

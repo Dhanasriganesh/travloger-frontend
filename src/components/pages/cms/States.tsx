@@ -27,7 +27,7 @@ const States: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editingState, setEditingState] = useState<State | null>(null)
-  
+
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -61,7 +61,7 @@ const States: React.FC = () => {
     try {
       setSaving(true)
       const method = editingState ? 'PUT' : 'POST'
-      const body = editingState 
+      const body = editingState
         ? { id: editingState.id, ...formData }
         : formData
 
@@ -72,11 +72,11 @@ const States: React.FC = () => {
 
       await fetchStates()
       setShowAddForm(false)
-      setFormData({ 
-        name: '', 
+      setFormData({
+        name: '',
         code: '',
         country: 'India',
-        status: 'Active', 
+        status: 'Active',
         description: ''
       })
       setEditingState(null)
@@ -122,11 +122,11 @@ const States: React.FC = () => {
   const handleCloseForm = () => {
     setShowAddForm(false)
     setEditingState(null)
-    setFormData({ 
-      name: '', 
+    setFormData({
+      name: '',
       code: '',
       country: 'India',
-      status: 'Active', 
+      status: 'Active',
       description: ''
     })
   }
@@ -190,8 +190,8 @@ const States: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 py-6">
           <Card>
             <CardContent className="p-0">
-              <div className="overflow-hidden">
-                <table className="w-full table-fixed">
+              <div className="overflow-x-auto">
+                <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="w-32 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State Name</th>
@@ -200,8 +200,7 @@ const States: React.FC = () => {
                       <th className="w-20 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                       <th className="w-20 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">By</th>
                       <th className="w-16 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                      <th className="w-12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
-                      <th className="w-12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                      <th className="w-24 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -227,20 +226,22 @@ const States: React.FC = () => {
                           {state.date}
                         </td>
                         <td className="px-3 py-4 text-sm text-gray-500">
-                          <button 
-                            onClick={() => handleEditClick(state)}
-                            className="hover:text-gray-700"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                        </td>
-                        <td className="px-3 py-4 text-sm text-gray-500">
-                          <button 
-                            onClick={() => handleDeleteState(state.id, state.name)}
-                            className="hover:text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => handleEditClick(state)}
+                              className="text-blue-600 hover:text-blue-800 transition-colors"
+                              title="Edit state"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteState(state.id, state.name)}
+                              className="text-red-500 hover:text-red-700 transition-colors"
+                              title="Delete state"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -260,11 +261,11 @@ const States: React.FC = () => {
         {showAddForm && (
           <div className="fixed inset-0 z-50 overflow-hidden">
             {/* Backdrop */}
-            <div 
+            <div
               className="absolute inset-0 backdrop-blur-sm"
               onClick={handleCloseForm}
             />
-            
+
             {/* Sliding Panel */}
             <div className="absolute right-0 top-0 h-full w-[500px] bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
               <div className="flex flex-col h-full">
@@ -290,12 +291,12 @@ const States: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         State Name <span className="text-red-500">*</span>
                       </label>
-                      <Input 
-                        type="text" 
+                      <Input
+                        type="text"
                         className="border-l-2 border-red-500"
                         placeholder="Enter state name"
                         value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       />
                     </div>
 
@@ -303,11 +304,11 @@ const States: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         State Code
                       </label>
-                      <Input 
-                        type="text" 
+                      <Input
+                        type="text"
                         placeholder="Enter state code (e.g., MH, KA, DL)"
                         value={formData.code}
-                        onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase()})}
+                        onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                         maxLength={3}
                       />
                       <p className="text-xs text-gray-500 mt-1">Optional: 2-3 letter code (e.g., MH for Maharashtra)</p>
@@ -317,11 +318,11 @@ const States: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Country
                       </label>
-                      <Input 
-                        type="text" 
+                      <Input
+                        type="text"
                         placeholder="Enter country"
                         value={formData.country}
-                        onChange={(e) => setFormData({...formData, country: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                       />
                     </div>
 
@@ -329,10 +330,10 @@ const States: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Status
                       </label>
-                      <select 
+                      <select
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={formData.status}
-                        onChange={(e) => setFormData({...formData, status: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                       >
                         <option value="Active">Active</option>
                         <option value="Inactive">Inactive</option>
@@ -343,12 +344,12 @@ const States: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Description
                       </label>
-                      <textarea 
+                      <textarea
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
                         placeholder="Optional description or notes"
                         value={formData.description}
-                        onChange={(e) => setFormData({...formData, description: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       />
                     </div>
                   </form>

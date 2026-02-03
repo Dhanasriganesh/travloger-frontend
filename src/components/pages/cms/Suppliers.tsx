@@ -37,7 +37,7 @@ interface Supplier {
 }
 
 const getSupplierDisplayName = (supplier: Supplier): string => {
-  return supplier.company_name || supplier.supplier_name || 'Untitled Supplier'
+  return supplier.supplier_name || supplier.company_name || 'Untitled Supplier'
 }
 
 const getSupplierPhone = (supplier: Supplier): string | undefined => {
@@ -54,7 +54,7 @@ const Suppliers: React.FC = () => {
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null)
   const [destinations, setDestinations] = useState<any[]>([])
   const [states, setStates] = useState<any[]>([])
-  
+
   const [formData, setFormData] = useState({
     state: '',
     city: '',
@@ -131,7 +131,7 @@ const Suppliers: React.FC = () => {
     try {
       setSaving(true)
       const method = editingSupplier ? 'PUT' : 'POST'
-      const body = editingSupplier 
+      const body = editingSupplier
         ? { id: editingSupplier.id, ...formData }
         : formData
 
@@ -309,8 +309,8 @@ const Suppliers: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 py-6">
           <Card>
             <CardContent className="p-0">
-              <div className="overflow-hidden">
-                <table className="w-full table-fixed">
+              <div className="overflow-x-auto">
+                <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="w-28 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
@@ -320,8 +320,7 @@ const Suppliers: React.FC = () => {
                       <th className="w-28 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Destination</th>
                       <th className="w-20 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">By</th>
                       <th className="w-16 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                      <th className="w-12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
-                      <th className="w-12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                      <th className="w-24 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -352,20 +351,22 @@ const Suppliers: React.FC = () => {
                           {supplier.date}
                         </td>
                         <td className="px-3 py-4 text-sm text-gray-500">
-                          <button 
-                            onClick={() => handleEditClick(supplier)}
-                            className="hover:text-gray-700"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                        </td>
-                        <td className="px-3 py-4 text-sm text-gray-500">
-                          <button 
-                            onClick={() => handleDeleteSupplier(supplier.id, supplier)}
-                            className="hover:text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => handleEditClick(supplier)}
+                              className="text-blue-600 hover:text-blue-800 transition-colors"
+                              title="Edit supplier"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSupplier(supplier.id, supplier)}
+                              className="text-red-500 hover:text-red-700 transition-colors"
+                              title="Delete supplier"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -385,11 +386,11 @@ const Suppliers: React.FC = () => {
         {showAddForm && (
           <div className="fixed inset-0 z-50 overflow-hidden">
             {/* Backdrop */}
-            <div 
+            <div
               className="absolute inset-0 backdrop-blur-sm"
               onClick={() => setShowAddForm(false)}
             />
-            
+
             {/* Sliding Panel */}
             <div className="absolute right-0 top-0 h-full w-[500px] bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
               <div className="flex flex-col h-full">
@@ -435,11 +436,11 @@ const Suppliers: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         State <span className="text-red-500">*</span>
                       </label>
-                      <select 
+                      <select
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={formData.state}
                         onChange={(e) => {
-                          setFormData({...formData, state: e.target.value, city: ''})
+                          setFormData({ ...formData, state: e.target.value, city: '' })
                         }}
                       >
                         <option value="">Select state</option>
@@ -453,10 +454,10 @@ const Suppliers: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Destination
                       </label>
-                      <select 
+                      <select
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={formData.city}
-                        onChange={(e) => setFormData({...formData, city: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                         disabled={!formData.state}
                       >
                         <option value="">{formData.state ? 'Select destination' : 'Select state first'}</option>
@@ -468,44 +469,44 @@ const Suppliers: React.FC = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Supplier Name</label>
-                      <Input 
-                        type="text" 
+                      <Input
+                        type="text"
                         className="border-l-2 border-red-500"
                         placeholder="Enter supplier name"
                         value={formData.supplierName}
-                        onChange={(e) => setFormData({...formData, supplierName: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, supplierName: e.target.value })}
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Contact Person Name</label>
-                      <Input 
-                        type="text" 
+                      <Input
+                        type="text"
                         className="border-l-2 border-red-500"
                         placeholder="Enter contact person name"
                         value={formData.contactPersonName}
-                        onChange={(e) => setFormData({...formData, contactPersonName: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, contactPersonName: e.target.value })}
                       />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                        <Input 
-                          type="tel" 
+                        <Input
+                          type="tel"
                           className="border-l-2 border-red-500"
                           placeholder="Enter phone number"
                           value={formData.phoneNumber}
-                          onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp Number</label>
-                        <Input 
+                        <Input
                           type="tel"
                           placeholder="Enter WhatsApp number"
                           value={formData.whatsappNumber}
-                          onChange={(e) => setFormData({...formData, whatsappNumber: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, whatsappNumber: e.target.value })}
                         />
                       </div>
                     </div>
@@ -514,12 +515,12 @@ const Suppliers: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Email
                       </label>
-                      <Input 
-                        type="email" 
+                      <Input
+                        type="email"
                         className="border-l-2 border-red-500"
                         placeholder="Enter email"
                         value={formData.email}
-                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       />
                     </div>
 
@@ -527,32 +528,32 @@ const Suppliers: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Address
                       </label>
-                      <textarea 
+                      <textarea
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
                         placeholder="Enter address"
                         value={formData.address}
-                        onChange={(e) => setFormData({...formData, address: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                       />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">GST Number</label>
-                        <Input 
+                        <Input
                           type="text"
                           placeholder="Enter GST number"
                           value={formData.gstNumber}
-                          onChange={(e) => setFormData({...formData, gstNumber: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value })}
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">PAN Number</label>
-                        <Input 
+                        <Input
                           type="text"
                           placeholder="Enter PAN number"
                           value={formData.panNumber}
-                          onChange={(e) => setFormData({...formData, panNumber: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, panNumber: e.target.value })}
                         />
                       </div>
                     </div>
@@ -560,42 +561,42 @@ const Suppliers: React.FC = () => {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Bank Details</label>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input 
+                        <Input
                           type="text"
                           placeholder="Bank Name"
                           value={formData.bankName}
-                          onChange={(e) => setFormData({...formData, bankName: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
                         />
-                        <Input 
+                        <Input
                           type="text"
                           placeholder="Account Number"
                           value={formData.bankAccountNumber}
-                          onChange={(e) => setFormData({...formData, bankAccountNumber: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, bankAccountNumber: e.target.value })}
                         />
-                        <Input 
+                        <Input
                           type="text"
                           placeholder="IFSC / SWIFT"
                           value={formData.bankIfscSwift}
-                          onChange={(e) => setFormData({...formData, bankIfscSwift: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, bankIfscSwift: e.target.value })}
                         />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                        <Input 
+                        <Input
                           type="text"
                           placeholder="Enter country"
                           value={formData.country}
-                          onChange={(e) => setFormData({...formData, country: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                        <select 
+                        <select
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={formData.status}
-                          onChange={(e) => setFormData({...formData, status: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                         >
                           <option value="Active">Active</option>
                           <option value="Inactive">Inactive</option>
@@ -605,41 +606,41 @@ const Suppliers: React.FC = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Payment Terms</label>
-                      <Input 
+                      <Input
                         type="text"
                         placeholder="e.g., 50% advance, balance on checkout"
                         value={formData.paymentTerms}
-                        onChange={(e) => setFormData({...formData, paymentTerms: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, paymentTerms: e.target.value })}
                       />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Contract Start Date</label>
-                        <Input 
+                        <Input
                           type="date"
                           value={formData.contractStartDate}
-                          onChange={(e) => setFormData({...formData, contractStartDate: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, contractStartDate: e.target.value })}
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Contract End Date</label>
-                        <Input 
+                        <Input
                           type="date"
                           value={formData.contractEndDate}
-                          onChange={(e) => setFormData({...formData, contractEndDate: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, contractEndDate: e.target.value })}
                         />
                       </div>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                      <textarea 
+                      <textarea
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
                         placeholder="Special conditions, credit info, etc."
                         value={formData.notes}
-                        onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                       />
                     </div>
                   </form>

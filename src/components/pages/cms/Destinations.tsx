@@ -29,7 +29,7 @@ const Destinations: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editingDestination, setEditingDestination] = useState<Destination | null>(null)
-  
+
   const [formData, setFormData] = useState({
     name: '',
     status: 'Active',
@@ -51,7 +51,7 @@ const Destinations: React.FC = () => {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
       const response = await fetch(`${API_URL}/api/states`)
       const data = await response.json()
-      
+
       if (response.ok) {
         setStates(data.states || [])
       }
@@ -66,7 +66,7 @@ const Destinations: React.FC = () => {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
       const response = await fetch(`${API_URL}/api/destinations`)
       const data = await response.json()
-      
+
       if (response.ok) {
         setDestinations(data.destinations || [])
       } else {
@@ -91,7 +91,7 @@ const Destinations: React.FC = () => {
       setSaving(true)
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
       const method = editingDestination ? 'PUT' : 'POST'
-      const body = editingDestination 
+      const body = editingDestination
         ? { id: editingDestination.id, ...formData }
         : formData
 
@@ -106,15 +106,15 @@ const Destinations: React.FC = () => {
       if (response.ok) {
         await fetchDestinations()
         setShowAddForm(false)
-        setFormData({ 
-          name: '', 
-          status: 'Active', 
-          state: '', 
-          country: '', 
-          description: '', 
-          best_season: '', 
-          default_currency: 'INR', 
-          timezone: 'Asia/Kolkata' 
+        setFormData({
+          name: '',
+          status: 'Active',
+          state: '',
+          country: '',
+          description: '',
+          best_season: '',
+          default_currency: 'INR',
+          timezone: 'Asia/Kolkata'
         })
         setEditingDestination(null)
         alert(data.message || 'Destination saved successfully')
@@ -172,15 +172,15 @@ const Destinations: React.FC = () => {
   const handleCloseForm = () => {
     setShowAddForm(false)
     setEditingDestination(null)
-    setFormData({ 
-      name: '', 
-      status: 'Active', 
-      state: '', 
-      country: '', 
-      description: '', 
-      best_season: '', 
-      default_currency: 'INR', 
-      timezone: 'Asia/Kolkata' 
+    setFormData({
+      name: '',
+      status: 'Active',
+      state: '',
+      country: '',
+      description: '',
+      best_season: '',
+      default_currency: 'INR',
+      timezone: 'Asia/Kolkata'
     })
   }
 
@@ -242,8 +242,8 @@ const Destinations: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 py-6">
         <Card>
           <CardContent className="p-0">
-            <div className="overflow-hidden">
-              <table className="w-full table-fixed">
+            <div className="overflow-x-auto">
+              <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="w-12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Icon</th>
@@ -255,8 +255,7 @@ const Destinations: React.FC = () => {
                     <th className="w-20 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="w-20 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">By</th>
                     <th className="w-24 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th className="w-12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
-                    <th className="w-12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                    <th className="w-24 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -281,7 +280,7 @@ const Destinations: React.FC = () => {
                         {destination.default_currency || 'INR'}
                       </td>
                       <td className="px-3 py-4 text-sm text-gray-900">
-                        <Badge 
+                        <Badge
                           variant={destination.status === 'Active' ? 'success' : 'secondary'}
                           className={destination.status === 'Active' ? 'bg-green-600 text-white' : 'bg-gray-500 text-white'}
                         >
@@ -300,22 +299,22 @@ const Destinations: React.FC = () => {
                         {destination.date}
                       </td>
                       <td className="px-3 py-4 text-sm text-gray-500">
-                        <button 
-                          onClick={() => handleEditClick(destination)}
-                          className="hover:text-gray-700"
-                          title="Edit destination"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                      </td>
-                      <td className="px-3 py-4 text-sm text-gray-500">
-                        <button 
-                          onClick={() => handleDeleteDestination(destination.id, destination.name)}
-                          className="hover:text-red-600"
-                          title="Delete destination"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => handleEditClick(destination)}
+                            className="text-blue-600 hover:text-blue-800 transition-colors"
+                            title="Edit destination"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteDestination(destination.id, destination.name)}
+                            className="text-red-500 hover:text-red-700 transition-colors"
+                            title="Delete destination"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -333,11 +332,11 @@ const Destinations: React.FC = () => {
       {/* Add/Edit Destination Form Panel */}
       {showAddForm && (
         <div className="fixed inset-0 z-50 overflow-hidden">
-          <div 
+          <div
             className="absolute inset-0 backdrop-blur-sm"
             onClick={handleCloseForm}
           />
-          
+
           <div className="absolute right-0 top-0 h-full w-[500px] bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
             <div className="flex flex-col h-full">
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -362,22 +361,22 @@ const Destinations: React.FC = () => {
                     </label>
                     <div className="relative">
                       <div className="absolute left-0 top-0 h-full w-0.5 bg-red-500 rounded-l-sm"></div>
-                      <Input 
-                        type="text" 
+                      <Input
+                        type="text"
                         className="pl-3.5"
                         placeholder="Enter destination name"
                         value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       />
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">State <span className="text-red-500">*</span></label>
-                    <select 
+                    <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.state}
-                      onChange={(e) => setFormData({...formData, state: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                     >
                       <option value="">Select state</option>
                       {states.filter(s => s.status === 'Active').map(state => (
@@ -388,41 +387,41 @@ const Destinations: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                    <Input 
-                      type="text" 
+                    <Input
+                      type="text"
                       placeholder="Enter country"
                       value={formData.country}
-                      onChange={(e) => setFormData({...formData, country: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                    <textarea 
+                    <textarea
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                       rows={3}
                       placeholder="Enter destination description"
                       value={formData.description}
-                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Best Season</label>
-                    <Input 
-                      type="text" 
+                    <Input
+                      type="text"
                       placeholder="e.g., October to March"
                       value={formData.best_season}
-                      onChange={(e) => setFormData({...formData, best_season: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, best_season: e.target.value })}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Default Currency</label>
-                    <select 
+                    <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.default_currency}
-                      onChange={(e) => setFormData({...formData, default_currency: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, default_currency: e.target.value })}
                     >
                       <option value="INR">INR - Indian Rupee</option>
                       <option value="USD">USD - US Dollar</option>
@@ -435,10 +434,10 @@ const Destinations: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
-                    <select 
+                    <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.timezone}
-                      onChange={(e) => setFormData({...formData, timezone: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
                     >
                       <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
                       <option value="America/New_York">America/New_York (EST)</option>
@@ -453,10 +452,10 @@ const Destinations: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Status <span className="text-red-500">*</span>
                     </label>
-                    <select 
+                    <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.status}
-                      onChange={(e) => setFormData({...formData, status: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                     >
                       <option value="Active">Active</option>
                       <option value="Inactive">Inactive</option>
