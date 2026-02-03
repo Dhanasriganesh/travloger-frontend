@@ -144,13 +144,19 @@ interface GroupCTAContent {
   backgroundImageUrl: string
 }
 
-// Removed advanced sections (USP, FAQ, GroupCTA) from editor to reduce confusion
+interface AccommodationContent {
+  heading: string
+  stockImage: string
+  realImage: string
+}
 
+// Removed advanced sections (USP, FAQ, GroupCTA) from editor to reduce confusion
 
 interface ContactContent {
   email: string
   phone: string
   address: string
+  formBackgroundImageUrl?: string
 }
 
 // Itinerary (Packages) types reused here in a simplified way
@@ -264,7 +270,14 @@ const WebsiteEdit: React.FC = () => {
   const [contact, setContact] = useState<ContactContent>({
     email: 'info@example.com',
     phone: '+1 555-0100',
-    address: '123 Main St, City, Country'
+    address: '123 Main St, City, Country',
+    formBackgroundImageUrl: ''
+  })
+
+  const [accommodation, setAccommodation] = useState<AccommodationContent>({
+    heading: "What You See Is Where You'll Stay. Literally.",
+    stockImage: '',
+    realImage: ''
   })
 
   const [header, setHeader] = useState<HeaderContent>({
@@ -545,7 +558,13 @@ const WebsiteEdit: React.FC = () => {
         setContact(data.contact ?? {
           email: 'info@example.com',
           phone: '+1 555-0100',
-          address: '123 Main St, City, Country'
+          address: '123 Main St, City, Country',
+          formBackgroundImageUrl: ''
+        })
+        setAccommodation(data.accommodation ?? {
+          heading: "What You See Is Where You'll Stay. Literally.",
+          stockImage: '',
+          realImage: ''
         })
         setReviews(data.reviews ?? {
           heading: 'Unfiltered Reviews',
@@ -862,7 +881,8 @@ const WebsiteEdit: React.FC = () => {
           usp,
           brands,
           tripHighlights,
-          groupCta
+          groupCta,
+          accommodation
         })
       })
       setError(null)
@@ -1168,7 +1188,7 @@ const WebsiteEdit: React.FC = () => {
                 </div>
               </div>
               <button
-                onClick={() => saveSection('Hero', { hero })}
+                onClick={() => saveSection('Hero', { hero, contact })}
                 disabled={saving}
                 className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 shadow-sm transition-colors"
               >
@@ -1398,6 +1418,30 @@ const WebsiteEdit: React.FC = () => {
                   placeholder="+919876543210"
                 />
               </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Enquiry Form Background Image</label>
+                <div className="flex items-center gap-4">
+                  {contact.formBackgroundImageUrl && (
+                    <div className="relative w-20 h-12 rounded border border-gray-300 overflow-hidden">
+                      <Image src={contact.formBackgroundImageUrl} alt="Form BG" fill className="object-cover" unoptimized />
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        await handleImageUpload(file, (url) => {
+                          setContact(prev => ({ ...prev, formBackgroundImageUrl: url }))
+                        })
+                      }
+                    }}
+                    className="flex-1 text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Trust Indicators Section */}
@@ -1558,6 +1602,95 @@ const WebsiteEdit: React.FC = () => {
                       })}
                       className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
                       placeholder="https://instagram.com/yourpage"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Accommodation Section */}
+      {isSectionVisible('accommodation') && (
+        <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-10 bg-indigo-600 rounded-lg flex items-center justify-center">
+                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Accommodation</h2>
+                  <p className="text-xs text-gray-500">Stock vs Real comparison images</p>
+                </div>
+              </div>
+              <button
+                onClick={() => saveSection('Accommodation', { accommodation })}
+                disabled={saving}
+                className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 shadow-sm transition-colors"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+          <div className="p-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Heading</label>
+                <input
+                  type="text"
+                  value={accommodation.heading}
+                  onChange={(e) => setAccommodation(prev => ({ ...prev, heading: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Stock Image (What they promise)</label>
+                  <div className="space-y-3">
+                    {accommodation.stockImage && (
+                      <div className="relative w-full h-40 rounded-lg border border-gray-300 overflow-hidden bg-gray-50">
+                        <Image src={accommodation.stockImage} alt="Stock" fill className="object-cover" unoptimized />
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          await handleImageUpload(file, (url) => {
+                            setAccommodation(prev => ({ ...prev, stockImage: url }))
+                          })
+                        }
+                      }}
+                      className="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Real Image (What you get)</label>
+                  <div className="space-y-3">
+                    {accommodation.realImage && (
+                      <div className="relative w-full h-40 rounded-lg border border-gray-300 overflow-hidden bg-gray-50">
+                        <Image src={accommodation.realImage} alt="Real" fill className="object-cover" unoptimized />
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          await handleImageUpload(file, (url) => {
+                            setAccommodation(prev => ({ ...prev, realImage: url }))
+                          })
+                        }
+                      }}
+                      className="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                     />
                   </div>
                 </div>
