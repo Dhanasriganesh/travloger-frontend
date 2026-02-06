@@ -51,7 +51,7 @@ interface TripOption {
   image: string
   nights: number
   days: number
-  price: number
+  price: string | number
   category: 'custom' | 'group'
   route?: string
   trending?: boolean
@@ -167,7 +167,7 @@ interface ItineraryPackage {
   name: string
   destination: string
   duration: string
-  price: number
+  price: string | number
   original_price: number
   description: string
   highlights: string[]
@@ -188,7 +188,7 @@ interface NewItineraryForm {
   name: string
   destination: string
   duration: string
-  price: number
+  price: string | number
   originalPrice: number
   description: string
   highlights: string
@@ -440,7 +440,7 @@ const WebsiteEdit: React.FC = () => {
         image: '/cards/1.jpg',
         nights: 4,
         days: 5,
-        price: 18999,
+        price: '18,999/- Pp',
         category: 'custom',
         route: 'Kochi → Alleppey → Kumarakom',
         trending: true,
@@ -499,7 +499,7 @@ const WebsiteEdit: React.FC = () => {
     name: '',
     destination: '',
     duration: '',
-    price: 0,
+    price: '',
     originalPrice: 0,
     description: '',
     highlights: '',
@@ -516,7 +516,7 @@ const WebsiteEdit: React.FC = () => {
     name: '',
     destination: '',
     duration: '',
-    price: 0,
+    price: '',
     originalPrice: 0,
     description: '',
     highlights: '',
@@ -2005,11 +2005,11 @@ const WebsiteEdit: React.FC = () => {
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
                             <input
-                              type="number"
+                              type="text"
                               value={trip.price || ''}
                               onChange={(e) => {
                                 const newTrips = [...(tripOptions.customTrips || [])]
-                                newTrips[tripIndex] = { ...trip, price: parseInt(e.target.value) || 0 }
+                                newTrips[tripIndex] = { ...trip, price: e.target.value }
                                 setTripOptions({ ...tripOptions, customTrips: newTrips })
                               }}
                               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
@@ -2584,11 +2584,11 @@ const WebsiteEdit: React.FC = () => {
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
                             <input
-                              type="number"
+                              type="text"
                               value={trip.price || ''}
                               onChange={(e) => {
                                 const newTrips = [...(tripOptions.groupTrips || [])]
-                                newTrips[tripIndex] = { ...trip, price: parseInt(e.target.value) || 0 }
+                                newTrips[tripIndex] = { ...trip, price: e.target.value }
                                 setTripOptions({ ...tripOptions, groupTrips: newTrips })
                               }}
                               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
