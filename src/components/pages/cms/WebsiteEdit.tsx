@@ -1831,10 +1831,10 @@ const WebsiteEdit: React.FC = () => {
                       detailedItinerary: {
                         subtitle: 'Custom Travel Experience',
                         briefItinerary: [
-                          { day: 1, title: 'Day 1', description: 'Day 1 description' }
+                          { day: 1, title: '', description: '' }
                         ],
-                        keyAttractions: ['Attraction 1'],
-                        inclusions: ['Inclusion 1']
+                        keyAttractions: [],
+                        inclusions: []
                       },
                       features: [
                         { name: 'Sightseeing', icon: 'default' as const, included: true },
@@ -2424,10 +2424,10 @@ const WebsiteEdit: React.FC = () => {
                       detailedItinerary: {
                         subtitle: 'Group Travel Experience',
                         briefItinerary: [
-                          { day: 1, title: 'Day 1', description: 'Day 1 description' }
+                          { day: 1, title: '', description: '' }
                         ],
-                        keyAttractions: ['Attraction 1'],
-                        inclusions: ['Inclusion 1']
+                        keyAttractions: [],
+                        inclusions: []
                       },
                       features: [
                         { name: 'Sightseeing', icon: 'default' as const, included: true },
