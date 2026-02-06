@@ -1200,30 +1200,7 @@ const WebsiteEdit: React.FC = () => {
           {/* Section Content */}
           <div className="p-6">
             <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Title
-                </label>
-                <input
-                  type="text"
-                  value={hero.title}
-                  onChange={(e) => setHero(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
-                  placeholder="Hero title"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Subtitle
-                </label>
-                <input
-                  type="text"
-                  value={hero.subtitle}
-                  onChange={(e) => setHero(prev => ({ ...prev, subtitle: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
-                  placeholder="Hero subtitle"
-                />
-              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Background Image URL
@@ -1644,7 +1621,7 @@ const WebsiteEdit: React.FC = () => {
                   type="text"
                   value={accommodation.heading}
                   onChange={(e) => setAccommodation(prev => ({ ...prev, heading: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1738,7 +1715,7 @@ const WebsiteEdit: React.FC = () => {
                   type="text"
                   value={tripOptions.heading}
                   onChange={(e) => setTripOptions(prev => ({ ...prev, heading: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                   placeholder="Trip options heading"
                 />
               </div>
@@ -1750,7 +1727,7 @@ const WebsiteEdit: React.FC = () => {
                   type="text"
                   value={tripOptions.subheading}
                   onChange={(e) => setTripOptions(prev => ({ ...prev, subheading: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                   placeholder="Trip options subheading"
                 />
               </div>
@@ -1762,7 +1739,7 @@ const WebsiteEdit: React.FC = () => {
                   type="text"
                   value={tripOptions.customLabel}
                   onChange={(e) => setTripOptions(prev => ({ ...prev, customLabel: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                   placeholder="Custom trips label"
                 />
               </div>
@@ -1774,7 +1751,7 @@ const WebsiteEdit: React.FC = () => {
                   type="text"
                   value={tripOptions.groupLabel}
                   onChange={(e) => setTripOptions(prev => ({ ...prev, groupLabel: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                   placeholder="Group trips label"
                 />
               </div>
@@ -1796,7 +1773,7 @@ const WebsiteEdit: React.FC = () => {
                 <select
                   value={selectedCustomTrip}
                   onChange={(e) => setSelectedCustomTrip(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                 >
                   <option value="">Select a custom trip to edit</option>
                   {(tripOptions.customTrips || []).map((trip, index) => (
@@ -1884,7 +1861,7 @@ const WebsiteEdit: React.FC = () => {
                                 newTrips[tripIndex] = { ...trip, title: e.target.value }
                                 setTripOptions({ ...tripOptions, customTrips: newTrips })
                               }}
-                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                             />
                           </div>
                           <div>
@@ -1897,7 +1874,7 @@ const WebsiteEdit: React.FC = () => {
                                 newTrips[tripIndex] = { ...trip, description: e.target.value }
                                 setTripOptions({ ...tripOptions, customTrips: newTrips })
                               }}
-                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                             />
                           </div>
                           <div>
@@ -1953,7 +1930,7 @@ const WebsiteEdit: React.FC = () => {
                                     }
                                   }
                                 }}
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                               />
                             </div>
                           </div>
@@ -1967,7 +1944,7 @@ const WebsiteEdit: React.FC = () => {
                                 newTrips[tripIndex] = { ...trip, route: e.target.value }
                                 setTripOptions({ ...tripOptions, customTrips: newTrips })
                               }}
-                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                             />
                           </div>
                           <div>
@@ -1980,7 +1957,7 @@ const WebsiteEdit: React.FC = () => {
                                 newTrips[tripIndex] = { ...trip, nights: parseInt(e.target.value) || 0 }
                                 setTripOptions({ ...tripOptions, customTrips: newTrips })
                               }}
-                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                             />
                           </div>
                           <div>
@@ -1993,7 +1970,7 @@ const WebsiteEdit: React.FC = () => {
                                 newTrips[tripIndex] = { ...trip, days: parseInt(e.target.value) || 0 }
                                 setTripOptions({ ...tripOptions, customTrips: newTrips })
                               }}
-                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                             />
                           </div>
                           <div>
@@ -2006,7 +1983,7 @@ const WebsiteEdit: React.FC = () => {
                                 newTrips[tripIndex] = { ...trip, price: parseInt(e.target.value) || 0 }
                                 setTripOptions({ ...tripOptions, customTrips: newTrips })
                               }}
-                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                             />
                           </div>
                         </div>
@@ -2035,7 +2012,7 @@ const WebsiteEdit: React.FC = () => {
                                   }
                                   setTripOptions({ ...tripOptions, customTrips: newTrips })
                                 }}
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                                 placeholder="Custom Travel Experience"
                               />
                             </div>
@@ -2064,7 +2041,7 @@ const WebsiteEdit: React.FC = () => {
                                         }
                                         setTripOptions({ ...tripOptions, customTrips: newTrips })
                                       }}
-                                      className="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                      className="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                                       placeholder="Day"
                                     />
                                     <input
@@ -2085,7 +2062,7 @@ const WebsiteEdit: React.FC = () => {
                                         }
                                         setTripOptions({ ...tripOptions, customTrips: newTrips })
                                       }}
-                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                                       placeholder="Day title"
                                     />
                                     <button
@@ -2156,7 +2133,7 @@ const WebsiteEdit: React.FC = () => {
                                         }
                                         setTripOptions({ ...tripOptions, customTrips: newTrips })
                                       }}
-                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                                       placeholder="Key attraction"
                                     />
                                     <button
@@ -2300,7 +2277,7 @@ const WebsiteEdit: React.FC = () => {
                                         newTrips[tripIndex] = { ...trip, features: newFeatures }
                                         setTripOptions({ ...tripOptions, customTrips: newTrips })
                                       }}
-                                      className="w-28 border border-gray-300 rounded-md px-2 py-1.5 text-xs"
+                                      className="w-28 border border-gray-300 rounded-md px-2 py-1.5 text-xs text-black bg-white"
                                     >
                                       <option value="default">Checkmark</option>
                                       <option value="flights">Flights</option>
@@ -2375,7 +2352,7 @@ const WebsiteEdit: React.FC = () => {
                 <select
                   value={selectedGroupTrip}
                   onChange={(e) => setSelectedGroupTrip(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                 >
                   <option value="">Select a group trip to edit</option>
                   {(tripOptions.groupTrips || []).map((trip, index) => (
@@ -2463,7 +2440,7 @@ const WebsiteEdit: React.FC = () => {
                                 newTrips[tripIndex] = { ...trip, title: e.target.value }
                                 setTripOptions({ ...tripOptions, groupTrips: newTrips })
                               }}
-                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                             />
                           </div>
                           <div>
@@ -2476,7 +2453,7 @@ const WebsiteEdit: React.FC = () => {
                                 newTrips[tripIndex] = { ...trip, description: e.target.value }
                                 setTripOptions({ ...tripOptions, groupTrips: newTrips })
                               }}
-                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                             />
                           </div>
                           <div>
@@ -2532,7 +2509,7 @@ const WebsiteEdit: React.FC = () => {
                                     }
                                   }
                                 }}
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                               />
                             </div>
                           </div>
@@ -2546,7 +2523,7 @@ const WebsiteEdit: React.FC = () => {
                                 newTrips[tripIndex] = { ...trip, route: e.target.value }
                                 setTripOptions({ ...tripOptions, groupTrips: newTrips })
                               }}
-                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                             />
                           </div>
                           <div>
@@ -2559,7 +2536,7 @@ const WebsiteEdit: React.FC = () => {
                                 newTrips[tripIndex] = { ...trip, nights: parseInt(e.target.value) || 0 }
                                 setTripOptions({ ...tripOptions, groupTrips: newTrips })
                               }}
-                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                             />
                           </div>
                           <div>
@@ -2572,7 +2549,7 @@ const WebsiteEdit: React.FC = () => {
                                 newTrips[tripIndex] = { ...trip, days: parseInt(e.target.value) || 0 }
                                 setTripOptions({ ...tripOptions, groupTrips: newTrips })
                               }}
-                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                             />
                           </div>
                           <div>
@@ -2585,7 +2562,7 @@ const WebsiteEdit: React.FC = () => {
                                 newTrips[tripIndex] = { ...trip, price: parseInt(e.target.value) || 0 }
                                 setTripOptions({ ...tripOptions, groupTrips: newTrips })
                               }}
-                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                             />
                           </div>
                         </div>
@@ -2614,7 +2591,7 @@ const WebsiteEdit: React.FC = () => {
                                   }
                                   setTripOptions({ ...tripOptions, groupTrips: newTrips })
                                 }}
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                                 placeholder="Group Travel Experience"
                               />
                             </div>
@@ -2643,7 +2620,7 @@ const WebsiteEdit: React.FC = () => {
                                         }
                                         setTripOptions({ ...tripOptions, groupTrips: newTrips })
                                       }}
-                                      className="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                      className="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                                       placeholder="Day"
                                     />
                                     <input
@@ -2664,7 +2641,7 @@ const WebsiteEdit: React.FC = () => {
                                         }
                                         setTripOptions({ ...tripOptions, groupTrips: newTrips })
                                       }}
-                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                                       placeholder="Day title"
                                     />
                                     <button
@@ -2735,7 +2712,7 @@ const WebsiteEdit: React.FC = () => {
                                         }
                                         setTripOptions({ ...tripOptions, groupTrips: newTrips })
                                       }}
-                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                                       placeholder="Key attraction"
                                     />
                                     <button
@@ -2805,7 +2782,7 @@ const WebsiteEdit: React.FC = () => {
                                         }
                                         setTripOptions({ ...tripOptions, groupTrips: newTrips })
                                       }}
-                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                                       placeholder="Inclusion"
                                     />
                                     <button
@@ -2867,7 +2844,7 @@ const WebsiteEdit: React.FC = () => {
                                         newTrips[tripIndex] = { ...trip, features: newFeatures }
                                         setTripOptions({ ...tripOptions, groupTrips: newTrips })
                                       }}
-                                      className="flex-1 border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+                                      className="flex-1 border border-gray-300 rounded-md px-3 py-1.5 text-sm text-black bg-white"
                                       placeholder="Feature name"
                                     />
                                     <select
@@ -2879,7 +2856,7 @@ const WebsiteEdit: React.FC = () => {
                                         newTrips[tripIndex] = { ...trip, features: newFeatures }
                                         setTripOptions({ ...tripOptions, groupTrips: newTrips })
                                       }}
-                                      className="w-28 border border-gray-300 rounded-md px-2 py-1.5 text-xs"
+                                      className="w-28 border border-gray-300 rounded-md px-2 py-1.5 text-xs text-black bg-white"
                                     >
                                       <option value="default">Checkmark</option>
                                       <option value="flights">Flights</option>
@@ -2981,7 +2958,7 @@ const WebsiteEdit: React.FC = () => {
                     type="text"
                     value={reviews.heading}
                     onChange={(e) => setReviews(prev => ({ ...prev, heading: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-black"
                     placeholder="Reviews heading"
                   />
                 </div>
@@ -2993,7 +2970,7 @@ const WebsiteEdit: React.FC = () => {
                     type="text"
                     value={reviews.subheading}
                     onChange={(e) => setReviews(prev => ({ ...prev, subheading: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-black"
                     placeholder="Reviews subheading"
                   />
                 </div>
@@ -3007,7 +2984,7 @@ const WebsiteEdit: React.FC = () => {
                     <select
                       value={selectedReview}
                       onChange={(e) => setSelectedReview(e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-black"
                     >
                       <option value="">Select a review to edit</option>
                       {reviews.reviews.map((review, index) => (
@@ -3078,7 +3055,7 @@ const WebsiteEdit: React.FC = () => {
                                       r.id === review.id ? { ...r, name: e.target.value } : r
                                     )
                                   }))}
-                                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-black"
                                   placeholder="Reviewer name"
                                 />
                               </div>
@@ -3094,7 +3071,7 @@ const WebsiteEdit: React.FC = () => {
                                       r.id === review.id ? { ...r, review: e.target.value } : r
                                     )
                                   }))}
-                                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-black"
                                   rows={2}
                                   placeholder="Review text"
                                 />
@@ -3228,7 +3205,7 @@ const WebsiteEdit: React.FC = () => {
                                           })
                                         }
                                       }}
-                                      className="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                      className="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 bg-white text-black"
                                     />
                                   </div>
                                 </div>
@@ -3285,7 +3262,7 @@ const WebsiteEdit: React.FC = () => {
                     type="text"
                     value={usp.heading}
                     onChange={(e) => setUsp(prev => ({ ...prev, heading: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black"
                     placeholder="USP heading"
                   />
                 </div>
@@ -3297,7 +3274,7 @@ const WebsiteEdit: React.FC = () => {
                     type="text"
                     value={usp.subheading || ''}
                     onChange={(e) => setUsp(prev => ({ ...prev, subheading: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black"
                     placeholder="USP subheading"
                   />
                 </div>
@@ -3308,7 +3285,7 @@ const WebsiteEdit: React.FC = () => {
                   <select
                     value={selectedUspItem}
                     onChange={(e) => setSelectedUspItem(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 bg-white text-black"
                   >
                     {usp.items.map((item, index) => (
                       <option key={item.id} value={item.id}>
@@ -3352,7 +3329,7 @@ const WebsiteEdit: React.FC = () => {
                                   i.id === selectedUspItem ? { ...i, title: e.target.value } : i
                                 )
                               }))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black"
                               placeholder="Item title"
                             />
                           </div>
@@ -3368,7 +3345,7 @@ const WebsiteEdit: React.FC = () => {
                                   i.id === selectedUspItem ? { ...i, description: e.target.value } : i
                                 )
                               }))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black"
                               rows={3}
                               placeholder="Item description"
                             />
@@ -3421,7 +3398,7 @@ const WebsiteEdit: React.FC = () => {
                     type="text"
                     value={brands.heading}
                     onChange={(e) => setBrands({ ...brands, heading: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                     placeholder="Brands Who've Worked with Us"
                   />
                 </div>
@@ -3433,7 +3410,7 @@ const WebsiteEdit: React.FC = () => {
                     type="number"
                     value={brands.scrollDuration || 25}
                     onChange={(e) => setBrands({ ...brands, scrollDuration: parseInt(e.target.value) || 25 })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                     placeholder="25"
                     min="5"
                     max="120"
@@ -3470,7 +3447,7 @@ const WebsiteEdit: React.FC = () => {
                     <select
                       value={selectedBrand}
                       onChange={(e) => setSelectedBrand(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black"
                     >
                       <option value="">Select a brand to edit</option>
                       {brands.brands.map((brand, index) => (
@@ -3522,7 +3499,7 @@ const WebsiteEdit: React.FC = () => {
                                       b.id === brand.id ? { ...b, name: e.target.value } : b
                                     )
                                   })}
-                                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-black"
                                   placeholder="Microsoft"
                                 />
                               </div>
@@ -3572,7 +3549,7 @@ const WebsiteEdit: React.FC = () => {
                                       }
                                     }
                                   }}
-                                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-black"
                                 />
                                 {brand.logoUrl && (
                                   <p className="text-xs text-gray-500 mt-1">
@@ -3593,7 +3570,7 @@ const WebsiteEdit: React.FC = () => {
                                         b.id === brand.id ? { ...b, width: parseInt(e.target.value) || 120 } : b
                                       )
                                     })}
-                                    className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                    className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-black"
                                     min="50"
                                     max="500"
                                   />
@@ -3610,7 +3587,7 @@ const WebsiteEdit: React.FC = () => {
                                         b.id === brand.id ? { ...b, height: parseInt(e.target.value) || 60 } : b
                                       )
                                     })}
-                                    className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                    className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-black"
                                     min="30"
                                     max="200"
                                   />
@@ -3700,7 +3677,7 @@ const WebsiteEdit: React.FC = () => {
                     type="text"
                     value={faq.heading}
                     onChange={(e) => setFaq({ ...faq, heading: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-white text-black"
                     placeholder="Before You Pack, Read This FAQs."
                   />
                 </div>
@@ -3716,7 +3693,7 @@ const WebsiteEdit: React.FC = () => {
                       <select
                         value={selectedFaqItem}
                         onChange={(e) => setSelectedFaqItem(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 bg-white text-black"
                       >
                         {faq.items.map((item, index) => (
                           <option key={item.id} value={item.id}>
@@ -3760,7 +3737,7 @@ const WebsiteEdit: React.FC = () => {
                                       i.id === selectedFaqItem ? { ...i, question: e.target.value } : i
                                     )
                                   }))}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black"
                                   placeholder="FAQ question"
                                 />
                               </div>
@@ -3776,7 +3753,7 @@ const WebsiteEdit: React.FC = () => {
                                       i.id === selectedFaqItem ? { ...i, answer: e.target.value } : i
                                     )
                                   }))}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black"
                                   rows={4}
                                   placeholder="FAQ answer"
                                 />
@@ -3828,7 +3805,7 @@ const WebsiteEdit: React.FC = () => {
                     type="text"
                     value={tripHighlights.heading}
                     onChange={(e) => setTripHighlights(prev => ({ ...prev, heading: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-white text-black"
                     placeholder="Discover Hidden Gems"
                   />
                 </div>
@@ -3838,7 +3815,7 @@ const WebsiteEdit: React.FC = () => {
                     type="text"
                     value={tripHighlights.subheading}
                     onChange={(e) => setTripHighlights(prev => ({ ...prev, subheading: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-white text-black"
                     placeholder="Experience the most breathtaking destinations"
                   />
                 </div>
@@ -3938,7 +3915,7 @@ const WebsiteEdit: React.FC = () => {
                                         })
                                       }
                                     }}
-                                    className="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                    className="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 bg-white text-black"
                                   />
                                   <p className="text-xs text-gray-400 mt-1">Supported formats: JPG, PNG, WebP (Max 4MB)</p>
                                 </div>
@@ -3955,7 +3932,7 @@ const WebsiteEdit: React.FC = () => {
                                     h.id === highlight.id ? { ...h, alt: e.target.value } : h
                                   )
                                 }))}
-                                className="w-full border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                className="w-full border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-white text-black"
                                 placeholder="Image description"
                               />
                             </div>
@@ -4005,7 +3982,7 @@ const WebsiteEdit: React.FC = () => {
                     type="text"
                     value={groupCta.heading}
                     onChange={(e) => setGroupCta(prev => ({ ...prev, heading: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-white text-black"
                   />
                 </div>
                 <div>
@@ -4013,7 +3990,7 @@ const WebsiteEdit: React.FC = () => {
                   <textarea
                     value={groupCta.subtext}
                     onChange={(e) => setGroupCta(prev => ({ ...prev, subtext: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-white text-black"
                     rows={2}
                   />
                 </div>
@@ -4023,7 +4000,7 @@ const WebsiteEdit: React.FC = () => {
                     type="text"
                     value={groupCta.buttonLabel}
                     onChange={(e) => setGroupCta(prev => ({ ...prev, buttonLabel: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-white text-black"
                   />
                 </div>
                 <div>
@@ -4056,7 +4033,7 @@ const WebsiteEdit: React.FC = () => {
                             })
                           }
                         }}
-                        className="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        className="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 bg-white text-black"
                       />
                     </div>
                   </div>
