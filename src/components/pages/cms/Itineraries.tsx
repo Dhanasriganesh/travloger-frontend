@@ -608,7 +608,7 @@ const Itineraries: React.FC = () => {
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3" />
                 <Input
                   placeholder="Search by name"
-                  className="pl-7 py-1.5 text-sm rounded border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="pl-7 py-1.5 text-sm rounded border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                   value={search}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
                 />
@@ -935,7 +935,7 @@ const Itineraries: React.FC = () => {
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setForm({ ...form, name: e.target.value })
                       }
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                       required
                     />
                   </div>
@@ -951,7 +951,7 @@ const Itineraries: React.FC = () => {
                           console.log('🔴 [INLINE] onChange triggered!!!', e.target.value)
                           handleStateChange(e)
                         }}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                       >
                         <option value="">Select state</option>
                         {states.map((state) => (
@@ -971,7 +971,7 @@ const Itineraries: React.FC = () => {
                           setForm({ ...form, primaryDestination: e.target.value })
                         }
                         disabled={!form.state}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed text-black bg-white"
                       >
                         <option value="">
                           {form.state ? 'Select destination' : 'Select state first'}
@@ -1006,7 +1006,7 @@ const Itineraries: React.FC = () => {
                         }}
                         onKeyDown={handleOtherDestinationKeyPress}
                         disabled={!form.state}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed text-black bg-white"
                       />
                       {showOtherDestinationsDropdown && filteredOtherDestinations.length > 0 && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
@@ -1064,9 +1064,9 @@ const Itineraries: React.FC = () => {
                         min={1}
                         value={form.numDays}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          setForm({ ...form, numDays: Number(e.target.value) || 1 })
+                          setForm({ ...form, numDays: e.target.value === '' ? ('' as any) : Number(e.target.value) })
                         }
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                       />
                     </div>
                     <div>
@@ -1078,9 +1078,9 @@ const Itineraries: React.FC = () => {
                         min={0}
                         value={form.numNights}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          setForm({ ...form, numNights: Number(e.target.value) || 0 })
+                          setForm({ ...form, numNights: e.target.value === '' ? ('' as any) : Number(e.target.value) })
                         }
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                       />
                     </div>
                   </div>
@@ -1095,7 +1095,7 @@ const Itineraries: React.FC = () => {
                         onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                           setForm({ ...form, packageType: e.target.value })
                         }
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                       >
                         <option value="">Select type</option>
                         {PACKAGE_TYPES.map(type => (
@@ -1112,7 +1112,7 @@ const Itineraries: React.FC = () => {
                         onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                           setForm({ ...form, packageCategory: e.target.value })
                         }
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                       >
                         <option value="">Select category</option>
                         {PACKAGE_CATEGORIES.map(category => (
@@ -1132,7 +1132,7 @@ const Itineraries: React.FC = () => {
                         onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                           setForm({ ...form, packageTheme: e.target.value })
                         }
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                       >
                         <option value="">Select package theme</option>
                         {packageThemes.map((theme) => (
@@ -1151,7 +1151,7 @@ const Itineraries: React.FC = () => {
                         onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                           setForm({ ...form, status: e.target.value })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black bg-white"
                       >
                         <option value="Active">Active</option>
                         <option value="Inactive">Inactive</option>
@@ -1171,7 +1171,7 @@ const Itineraries: React.FC = () => {
                           setForm({ ...form, pickupPoint: e.target.value })
                         }
                         disabled={!form.state}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed text-black bg-white"
                       >
                         <option value="">
                           {form.state ? 'Select pickup point' : 'Select state first'}
@@ -1193,7 +1193,7 @@ const Itineraries: React.FC = () => {
                           setForm({ ...form, dropPoint: e.target.value })
                         }
                         disabled={!form.state}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed text-black bg-white"
                       >
                         <option value="">
                           {form.state ? 'Select drop point' : 'Select state first'}
@@ -1212,7 +1212,7 @@ const Itineraries: React.FC = () => {
                       Short Description
                     </label>
                     <textarea
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-black bg-white"
                       rows={3}
                       placeholder="Quick marketing summary for this package"
                       value={form.shortDescription}
@@ -1286,7 +1286,7 @@ const Itineraries: React.FC = () => {
                                     }
                                     setForm({ ...form, packageItineraries: updated })
                                   }}
-                                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black bg-white"
                                 >
                                   <option value="">Select itinerary</option>
                                   {filteredDayItineraries.length === 0 && form.primaryDestination && (
@@ -1450,7 +1450,7 @@ const Itineraries: React.FC = () => {
                                     }
                                     setForm({ ...form, packageVehicles: updated })
                                   }}
-                                  className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black bg-white"
                                 >
                                   <option value="">Select type</option>
                                   {vehicleTypes
@@ -1481,7 +1481,7 @@ const Itineraries: React.FC = () => {
                                   }}
                                   placeholder="0"
                                   min={0}
-                                  className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black bg-white"
                                 />
                               </td>
                               <td className="px-3 py-2">
@@ -1492,7 +1492,7 @@ const Itineraries: React.FC = () => {
                                     updated[index] = { ...vehicle, acType: e.target.value as 'AC' | 'Non-AC' }
                                     setForm({ ...form, packageVehicles: updated })
                                   }}
-                                  className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black bg-white"
                                 >
                                   <option value="AC">AC</option>
                                   <option value="Non-AC">Non-AC</option>
@@ -1582,7 +1582,7 @@ const Itineraries: React.FC = () => {
                               setForm({ ...form, packageIncludes: updated })
                             }}
                             placeholder="e.g., 2 nights stay (triple/couple sharing)"
-                            className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black bg-white"
                           />
                           <button
                             onClick={() => {
@@ -1664,7 +1664,7 @@ const Itineraries: React.FC = () => {
                               setForm({ ...form, packageExcludes: updated })
                             }}
                             placeholder="e.g., GST extra"
-                            className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black bg-white"
                           />
                           <button
                             onClick={() => {
@@ -1771,8 +1771,8 @@ const Itineraries: React.FC = () => {
                         state: form.state,
                         primaryDestination: form.primaryDestination,
                         otherDestinations: form.otherDestinations,
-                        numDays: form.numDays,
-                        numNights: form.numNights,
+                        numDays: Number(form.numDays) || 1,
+                        numNights: Number(form.numNights) || 0,
                         packageType: form.packageType,
                         packageCategory: form.packageCategory,
                         packageTheme: form.packageTheme,
