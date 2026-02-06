@@ -57,6 +57,7 @@ interface TripOption {
   trending?: boolean
   detailedItinerary?: {
     subtitle: string
+    headerImage?: string
     briefItinerary: TripDay[]
     keyAttractions: string[]
     inclusions: string[]
@@ -1830,6 +1831,7 @@ const WebsiteEdit: React.FC = () => {
                       trending: false,
                       detailedItinerary: {
                         subtitle: 'Custom Travel Experience',
+                        headerImage: '',
                         briefItinerary: [
                           { day: 1, title: '', description: '' }
                         ],
@@ -2058,6 +2060,48 @@ const WebsiteEdit: React.FC = () => {
                                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                                 placeholder="Custom Travel Experience"
                               />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Itinerary Header Image</label>
+                              <div className="flex items-center gap-4">
+                                {trip.detailedItinerary?.headerImage && (
+                                  <div className="relative w-16 h-10 rounded border border-gray-300 overflow-hidden bg-gray-100 p-0.5">
+                                    <Image
+                                      src={trip.detailedItinerary.headerImage}
+                                      alt="Header"
+                                      fill
+                                      className="object-cover"
+                                      unoptimized={true}
+                                    />
+                                  </div>
+                                )}
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0]
+                                    if (file) {
+                                      await handleImageUpload(file, (url) => {
+                                        const newTrips = [...(tripOptions.customTrips || [])]
+                                        newTrips[tripIndex] = {
+                                          ...trip,
+                                          detailedItinerary: {
+                                            ...trip.detailedItinerary,
+                                            headerImage: url,
+                                            subtitle: trip.detailedItinerary?.subtitle || '',
+                                            briefItinerary: trip.detailedItinerary?.briefItinerary || [],
+                                            keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                            inclusions: trip.detailedItinerary?.inclusions || []
+                                          }
+                                        }
+                                        setTripOptions({ ...tripOptions, customTrips: newTrips })
+                                      })
+                                    }
+                                  }}
+                                  className="flex-1 border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary text-xs bg-white text-black"
+                                />
+                              </div>
                             </div>
 
                             {/* Brief Itinerary */}
@@ -2423,6 +2467,7 @@ const WebsiteEdit: React.FC = () => {
                       trending: false,
                       detailedItinerary: {
                         subtitle: 'Group Travel Experience',
+                        headerImage: '',
                         briefItinerary: [
                           { day: 1, title: '', description: '' }
                         ],
@@ -2651,6 +2696,48 @@ const WebsiteEdit: React.FC = () => {
                                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                                 placeholder="Group Travel Experience"
                               />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Itinerary Header Image</label>
+                              <div className="flex items-center gap-4">
+                                {trip.detailedItinerary?.headerImage && (
+                                  <div className="relative w-16 h-10 rounded border border-gray-300 overflow-hidden bg-gray-100 p-0.5">
+                                    <Image
+                                      src={trip.detailedItinerary.headerImage}
+                                      alt="Header"
+                                      fill
+                                      className="object-cover"
+                                      unoptimized={true}
+                                    />
+                                  </div>
+                                )}
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0]
+                                    if (file) {
+                                      await handleImageUpload(file, (url) => {
+                                        const newTrips = [...(tripOptions.groupTrips || [])]
+                                        newTrips[tripIndex] = {
+                                          ...trip,
+                                          detailedItinerary: {
+                                            ...trip.detailedItinerary,
+                                            headerImage: url,
+                                            subtitle: trip.detailedItinerary?.subtitle || '',
+                                            briefItinerary: trip.detailedItinerary?.briefItinerary || [],
+                                            keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                            inclusions: trip.detailedItinerary?.inclusions || []
+                                          }
+                                        }
+                                        setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                      })
+                                    }
+                                  }}
+                                  className="flex-1 border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary text-xs bg-white text-black"
+                                />
+                              </div>
                             </div>
 
                             {/* Brief Itinerary */}
