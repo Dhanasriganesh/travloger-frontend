@@ -2015,6 +2015,20 @@ const WebsiteEdit: React.FC = () => {
                               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                             />
                           </div>
+                          <div className="flex items-center gap-2 pt-6">
+                            <input
+                              type="checkbox"
+                              id={`trending-custom-${tripIndex}`}
+                              checked={trip.trending || false}
+                              onChange={(e) => {
+                                const newTrips = [...(tripOptions.customTrips || [])]
+                                newTrips[tripIndex] = { ...trip, trending: e.target.checked }
+                                setTripOptions({ ...tripOptions, customTrips: newTrips })
+                              }}
+                              className="w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded"
+                            />
+                            <label htmlFor={`trending-custom-${tripIndex}`} className="text-sm font-medium text-gray-700">Trending</label>
+                          </div>
                         </div>
 
                         {/* Detailed Itinerary Section */}
@@ -2593,6 +2607,20 @@ const WebsiteEdit: React.FC = () => {
                               }}
                               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                             />
+                          </div>
+                          <div className="flex items-center gap-2 pt-6">
+                            <input
+                              type="checkbox"
+                              id={`trending-group-${tripIndex}`}
+                              checked={trip.trending || false}
+                              onChange={(e) => {
+                                const newTrips = [...(tripOptions.groupTrips || [])]
+                                newTrips[tripIndex] = { ...trip, trending: e.target.checked }
+                                setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                              }}
+                              className="w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded"
+                            />
+                            <label htmlFor={`trending-group-${tripIndex}`} className="text-sm font-medium text-gray-700">Trending</label>
                           </div>
                         </div>
 
