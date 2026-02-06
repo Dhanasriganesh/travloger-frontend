@@ -1123,7 +1123,7 @@ const WebsiteEdit: React.FC = () => {
                           newNavItems[index] = { ...item, label: e.target.value }
                           setHeader({ ...header, navItems: newNavItems })
                         }}
-                        className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                        className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                         placeholder="Label"
                       />
                       <input
@@ -1134,7 +1134,7 @@ const WebsiteEdit: React.FC = () => {
                           newNavItems[index] = { ...item, href: e.target.value }
                           setHeader({ ...header, navItems: newNavItems })
                         }}
-                        className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                        className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                         placeholder="Link"
                       />
                     </div>
@@ -1149,7 +1149,7 @@ const WebsiteEdit: React.FC = () => {
                   type="text"
                   value={header.enquireLabel}
                   onChange={(e) => setHeader({ ...header, enquireLabel: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                   placeholder="Enquire now"
                 />
               </div>
@@ -1161,7 +1161,7 @@ const WebsiteEdit: React.FC = () => {
                   type="text"
                   value={header.callNumber}
                   onChange={(e) => setHeader({ ...header, callNumber: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                   placeholder="+919876543210"
                 />
               </div>
@@ -1208,7 +1208,7 @@ const WebsiteEdit: React.FC = () => {
                   type="text"
                   value={hero.title}
                   onChange={(e) => setHero(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                   placeholder="Hero title"
                 />
               </div>
@@ -1220,7 +1220,7 @@ const WebsiteEdit: React.FC = () => {
                   type="text"
                   value={hero.subtitle}
                   onChange={(e) => setHero(prev => ({ ...prev, subtitle: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                   placeholder="Hero subtitle"
                 />
               </div>
@@ -1232,7 +1232,7 @@ const WebsiteEdit: React.FC = () => {
                   type="url"
                   value={hero.backgroundImageUrl}
                   onChange={(e) => setHero(prev => ({ ...prev, backgroundImageUrl: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                   placeholder="https://example.com/image.jpg"
                 />
                 <div className="mt-2">
@@ -1265,7 +1265,7 @@ const WebsiteEdit: React.FC = () => {
                         setError(err?.message || 'Failed to upload image')
                       }
                     }}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                   />
                 </div>
 
@@ -1323,7 +1323,7 @@ const WebsiteEdit: React.FC = () => {
                       }
                     }
                   }}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                 />
               </div>
 
@@ -1380,7 +1380,7 @@ const WebsiteEdit: React.FC = () => {
                       }
                     }
                   }}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                 />
               </div>
 
@@ -1414,7 +1414,7 @@ const WebsiteEdit: React.FC = () => {
                   type="text"
                   value={hero.whatsappPhone}
                   onChange={(e) => setHero(prev => ({ ...prev, whatsappPhone: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
                   placeholder="+919876543210"
                 />
               </div>
@@ -1470,7 +1470,7 @@ const WebsiteEdit: React.FC = () => {
                           }
                         }
                       })}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-black bg-white"
                       placeholder="4.9"
                     />
                   </div>
@@ -1489,7 +1489,7 @@ const WebsiteEdit: React.FC = () => {
                           }
                         }
                       })}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-black bg-white"
                       placeholder="Ratings"
                     />
                   </div>
@@ -1516,7 +1516,7 @@ const WebsiteEdit: React.FC = () => {
                           }
                         }
                       })}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-black bg-white"
                       placeholder="Pay Later"
                     />
                   </div>
@@ -1535,7 +1535,7 @@ const WebsiteEdit: React.FC = () => {
                           }
                         }
                       })}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-black bg-white"
                       placeholder="Flexible"
                     />
                   </div>
@@ -1562,7 +1562,7 @@ const WebsiteEdit: React.FC = () => {
                           }
                         }
                       })}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-black bg-white"
                       placeholder="5K+"
                     />
                   </div>
@@ -1581,7 +1581,7 @@ const WebsiteEdit: React.FC = () => {
                           }
                         }
                       })}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-black bg-white"
                       placeholder="Followers"
                     />
                   </div>
@@ -1600,7 +1600,7 @@ const WebsiteEdit: React.FC = () => {
                           }
                         }
                       })}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-black bg-white"
                       placeholder="https://instagram.com/yourpage"
                     />
                   </div>
