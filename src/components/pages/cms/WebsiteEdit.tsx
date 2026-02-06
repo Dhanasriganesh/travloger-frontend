@@ -157,6 +157,8 @@ interface ContactContent {
   phone: string
   address: string
   formBackgroundImageUrl?: string
+  whatsapp?: string
+  expertButtonText?: string
 }
 
 // Itinerary (Packages) types reused here in a simplified way
@@ -1396,6 +1398,33 @@ const WebsiteEdit: React.FC = () => {
                 />
               </div>
 
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Floating Bar WhatsApp Number
+                </label>
+                <input
+                  type="text"
+                  value={contact.whatsapp || ''}
+                  onChange={(e) => setContact(prev => ({ ...prev, whatsapp: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
+                  placeholder="+919876543210"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Expert Button Text
+                </label>
+                <input
+                  type="text"
+                  value={contact.expertButtonText || ''}
+                  onChange={(e) => setContact(prev => ({ ...prev, expertButtonText: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
+                  placeholder="Talk to an Expert"
+                />
+              </div>
+
               <div className="md:col-span-2">
                 <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Enquiry Form Background Image</label>
                 <div className="flex items-center gap-4">
@@ -1415,7 +1444,7 @@ const WebsiteEdit: React.FC = () => {
                         })
                       }
                     }}
-                    className="flex-1 text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    className="flex-1 text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 bg-white text-black"
                   />
                 </div>
               </div>
