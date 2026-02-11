@@ -117,10 +117,7 @@ const Itineraries: React.FC = () => {
   // Function to calculate total price from all events
   const calculateTotalPrice = useCallback(async (itineraryId: number): Promise<number> => {
     try {
-      const response = await fetch(`${API_URL}/api/itineraries/${itineraryId}/events`)
-      if (!response.ok) return 0
-
-      const data = await response.json()
+      const data = await fetchApi(`/api/itineraries/${itineraryId}/events`)
       const events = data.events || []
 
       let total = 0
@@ -184,70 +181,59 @@ const Itineraries: React.FC = () => {
       setLoading(true)
       console.log('🔵 [FETCH] Calling /api/itineraries endpoint...')
 
-      const res = await fetch(`${API_URL}/api/itineraries`)
-      console.log('🔵 [FETCH] Response status:', res.status, res.ok ? '✅ OK' : '❌ ERROR')
-
-      const data = await res.json().catch(() => ({}))
+      const data = await fetchApi('/api/itineraries')
       console.log('🔵 [FETCH] Raw response data:', data)
-      console.log('🔵 [FETCH] data.itineraries exists?', !!data.itineraries)
-      console.log('🔵 [FETCH] data.itineraries length:', data.itineraries?.length || 0)
-
-      if (res.ok) {
-        // Helper function to parse JSONB fields
-        const parseJsonb = (value: any) => {
-          if (!value) return null
-          if (typeof value === 'string') {
-            try {
-              return JSON.parse(value)
-            } catch {
-              return value
-            }
+      // Helper function to parse JSONB fields
+      const parseJsonb = (value: any) => {
+        if (!value) return null
+        if (typeof value === 'string') {
+          try {
+            return JSON.parse(value)
+          } catch {
+            return value
           }
-          return value
         }
-
-        // Normalize backend data (snake_case to camelCase, parse JSONB)
-        const itineraries = (data.itineraries || []).map((itinerary: any) => ({
-          ...itinerary,
-          primaryDestination: itinerary.primary_destination || itinerary.primaryDestination,
-          otherDestinations: parseJsonb(itinerary.other_destinations) || itinerary.otherDestinations || [],
-          numDays: itinerary.num_days || itinerary.numDays,
-          numNights: itinerary.num_nights || itinerary.numNights,
-          packageType: itinerary.package_type || itinerary.packageType,
-          packageCategory: itinerary.package_category || itinerary.packageCategory,
-          packageTheme: itinerary.package_theme || itinerary.packageTheme,
-          pickupPoint: itinerary.pickup_point || itinerary.pickupPoint,
-          dropPoint: itinerary.drop_point || itinerary.dropPoint,
-          shortDescription: itinerary.short_description || itinerary.shortDescription,
-          packageItineraries: parseJsonb(itinerary.package_itineraries) || itinerary.packageItineraries || [],
-          packageVehicles: parseJsonb(itinerary.package_vehicles) || itinerary.packageVehicles || [],
-          packageIncludes: parseJsonb(itinerary.package_includes) || itinerary.packageIncludes || [],
-          packageExcludes: parseJsonb(itinerary.package_excludes) || itinerary.packageExcludes || []
-        }))
-
-        console.log('🔵 [FETCH] Normalized itineraries count:', itineraries.length)
-        console.log('🔵 [FETCH] First itinerary sample:', itineraries[0])
-
-        // Calculate total price for each itinerary
-        console.log('🔵 [FETCH] Calculating total prices...')
-        const itinerariesWithTotalPrice = await Promise.all(
-          itineraries.map(async (itinerary: Itinerary) => {
-            const totalPrice = await calculateTotalPrice(itinerary.id)
-            return { ...itinerary, totalPrice }
-          })
-        )
-
-        console.log('🔵 [FETCH] Final itineraries with prices:', itinerariesWithTotalPrice.length)
-        console.log('🔵 [FETCH] Setting rows state with:', itinerariesWithTotalPrice)
-
-        setRows(itinerariesWithTotalPrice)
-        setError(null)
-
-        console.log('✅ [FETCH] Successfully loaded', itinerariesWithTotalPrice.length, 'itineraries')
-      } else {
-        console.error('❌ [FETCH] API returned error:', data.error || 'Failed to load itineraries')
-        setError(data.error || 'Failed to load itineraries')
+        return value
       }
+
+      // Normalize backend data (snake_case to camelCase, parse JSONB)
+      const itineraries = (data.itineraries || []).map((itinerary: any) => ({
+        ...itinerary,
+        primaryDestination: itinerary.primary_destination || itinerary.primaryDestination,
+        otherDestinations: parseJsonb(itinerary.other_destinations) || itinerary.otherDestinations || [],
+        numDays: itinerary.num_days || itinerary.numDays,
+        numNights: itinerary.num_nights || itinerary.numNights,
+        packageType: itinerary.package_type || itinerary.packageType,
+        packageCategory: itinerary.package_category || itinerary.packageCategory,
+        packageTheme: itinerary.package_theme || itinerary.packageTheme,
+        pickupPoint: itinerary.pickup_point || itinerary.pickupPoint,
+        dropPoint: itinerary.drop_point || itinerary.dropPoint,
+        shortDescription: itinerary.short_description || itinerary.shortDescription,
+        packageItineraries: parseJsonb(itinerary.package_itineraries) || itinerary.packageItineraries || [],
+        packageVehicles: parseJsonb(itinerary.package_vehicles) || itinerary.packageVehicles || [],
+        packageIncludes: parseJsonb(itinerary.package_includes) || itinerary.packageIncludes || [],
+        packageExcludes: parseJsonb(itinerary.package_excludes) || itinerary.packageExcludes || []
+      }))
+
+      console.log('🔵 [FETCH] Normalized itineraries count:', itineraries.length)
+      console.log('🔵 [FETCH] First itinerary sample:', itineraries[0])
+
+      // Calculate total price for each itinerary
+      console.log('🔵 [FETCH] Calculating total prices...')
+      const itinerariesWithTotalPrice = await Promise.all(
+        itineraries.map(async (itinerary: Itinerary) => {
+          const totalPrice = await calculateTotalPrice(itinerary.id)
+          return { ...itinerary, totalPrice }
+        })
+      )
+
+      console.log('🔵 [FETCH] Final itineraries with prices:', itinerariesWithTotalPrice.length)
+      console.log('🔵 [FETCH] Setting rows state with:', itinerariesWithTotalPrice)
+
+      setRows(itinerariesWithTotalPrice)
+      setError(null)
+
+      console.log('✅ [FETCH] Successfully loaded', itinerariesWithTotalPrice.length, 'itineraries')
     } catch (error) {
       console.error('❌ [FETCH] Exception occurred:', error)
       setError('Failed to load itineraries')
@@ -470,15 +456,12 @@ const Itineraries: React.FC = () => {
     await Promise.all(
       toCreate.map(async (name) => {
         try {
-          const res = await fetch(`${API_URL}/api/destinations`, {
+          await fetchApi('/api/destinations', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, state: form.state || '' })
           })
-          if (res.ok) {
-            // Refresh destinations list
-            await fetchDestinations(form.state)
-          }
+          // Refresh destinations list
+          await fetchDestinations(form.state)
         } catch {
           // Ignore single insert failures; itinerary can still be created
         }
@@ -760,26 +743,20 @@ const Itineraries: React.FC = () => {
                         <button
                           onClick={async () => {
                             try {
-                              const res = await fetch(`${API_URL}/api/itineraries/${r.id}`, {
+                              const data = await fetchApi(`/api/itineraries/${r.id}`, {
                                 method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
                                   marketplace_shared: !r.marketplace_shared
                                 })
                               })
-                              const data = await res.json().catch(() => ({}))
-                              if (res.ok) {
-                                setRows(prev => prev.map(item =>
-                                  item.id === r.id
-                                    ? { ...item, marketplace_shared: !item.marketplace_shared }
-                                    : item
-                                ))
-                              } else {
-                                alert(data.error || 'Failed to update marketplace status')
-                              }
+                              setRows(prev => prev.map(item =>
+                                item.id === r.id
+                                  ? { ...item, marketplace_shared: !item.marketplace_shared }
+                                  : item
+                              ))
                             } catch (error) {
                               console.error('Error updating marketplace status:', error)
-                              alert('Error updating marketplace status')
+                              alert(handleApiError(error, 'Error updating marketplace status'))
                             }
                           }}
                           className={`inline-flex items-center px-2 py-1 rounded text-sm font-medium text-white cursor-pointer hover:opacity-80 transition-opacity ${r.marketplace_shared ? 'bg-green-500' : 'bg-red-500'
@@ -845,15 +822,16 @@ const Itineraries: React.FC = () => {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={async () => {
-                                const payload = { ...r, name: `${r.name} Copy` }
-                                const res = await fetch(`${API_URL}/api/itineraries`, {
-                                  method: 'POST',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify(payload)
-                                })
-                                const data = await res.json().catch(() => ({}))
-                                if (res.ok) setRows(prev => [data.itinerary, ...prev])
-                                else alert(data.error || 'Failed to duplicate')
+                                try {
+                                  const payload = { ...r, name: `${r.name} Copy` }
+                                  const data = await fetchApi('/api/itineraries', {
+                                    method: 'POST',
+                                    body: JSON.stringify(payload)
+                                  })
+                                  setRows(prev => [data.itinerary, ...prev])
+                                } catch (error) {
+                                  alert(handleApiError(error, 'Failed to duplicate'))
+                                }
                               }}
                               className="cursor-pointer"
                             >
@@ -867,9 +845,12 @@ const Itineraries: React.FC = () => {
                         <button
                           onClick={async () => {
                             if (!window.confirm('Are you sure you want to delete this package?')) return
-                            const res = await fetch(`${API_URL}/api/itineraries/${r.id}`, { method: 'DELETE' })
-                            if (res.ok) setRows(prev => prev.filter(x => x.id !== r.id))
-                            else alert('Failed to delete package')
+                            try {
+                              await fetchApi(`/api/itineraries/${r.id}`, { method: 'DELETE' })
+                              setRows(prev => prev.filter(x => x.id !== r.id))
+                            } catch (error) {
+                              alert(handleApiError(error, 'Failed to delete package'))
+                            }
                           }}
                           className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center"
                         >
@@ -1788,38 +1769,21 @@ const Itineraries: React.FC = () => {
 
                       console.log('🟣 [SAVE] Payload:', payload)
 
-                      const res = await fetch(`${API_URL}${endpoint}`, {
+                      const data = await fetchApi(endpoint, {
                         method,
-                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                       })
 
-                      console.log('🟣 [SAVE] Response status:', res.status, res.ok ? '✅ OK' : '❌ ERROR')
+                      console.log('🟣 [SAVE] SUCCESS! Package saved to database')
+                      console.log('🟣 [SAVE] Table Used: PACKAGES')
+                      console.log('🟣 [SAVE] Package ID:', data.itinerary?.id)
+                      console.log('🟣 [SAVE] Package Name:', data.itinerary?.name)
+                      console.log('🟣 [SAVE] Database Operation: ' + (editingId ? 'UPDATE' : 'INSERT'))
+                      console.log('🟣 [SAVE] Saved Package Data:', data.itinerary)
 
-                      const responseText = await res.text()
-                      console.log('🟣 [SAVE] Raw response text:', responseText)
-
-                      let data: any = {}
-                      try {
-                        data = JSON.parse(responseText)
-                        console.log('🟣 [SAVE] Parsed response data:', data)
-                      } catch (e) {
-                        console.error('🟣 [SAVE] JSON parse error:', e)
-                        console.error('🟣 [SAVE] Response was not valid JSON')
-                      }
-
-                      console.log('🟣 [SAVE] Response data:', data)
-                      console.log('🟣 [SAVE] data.itinerary exists?', !!data.itinerary)
-
-                      if (res.ok) {
+                      if (data.itinerary) {
                         console.log('='.repeat(60))
                         console.log('✅ [SAVE] SUCCESS! Package saved to database')
-                        console.log('✅ [SAVE] Table Used: PACKAGES')
-                        console.log('✅ [SAVE] Package ID:', data.itinerary?.id)
-                        console.log('✅ [SAVE] Package Name:', data.itinerary?.name)
-                        console.log('✅ [SAVE] Database Operation: ' + (editingId ? 'UPDATE' : 'INSERT'))
-                        console.log('✅ [SAVE] Saved Package Data:', data.itinerary)
-                        console.log('='.repeat(60))
                         if (editingId) {
                           console.log('🟣 [SAVE] Updating existing itinerary in state')
                           setRows(prev => prev.map(r => (r.id === editingId ? data.itinerary : r)))
@@ -1860,19 +1824,13 @@ const Itineraries: React.FC = () => {
                         setDestinationInput('')
                         setOtherDestinationsInput('')
                         setActiveTab('general')
-                      } else {
-                        console.log('='.repeat(60))
-                        console.error('❌ [SAVE] FAILED! Package was NOT saved to database')
-                        console.error('❌ [SAVE] Error:', data.error || 'Failed to save package')
-                        console.error('❌ [SAVE] Response Status:', res.status)
-                        console.log('='.repeat(60))
-                        alert(data.error || 'Failed to save package')
                       }
                     } catch (error) {
                       console.log('='.repeat(60))
                       console.error('❌ [SAVE] EXCEPTION! Package was NOT saved to database')
                       console.error('❌ [SAVE] Exception:', error)
                       console.log('='.repeat(60))
+                      handleApiError(error)
                     } finally {
                       setSaving(false)
                       console.log('🟣 [SAVE] Save operation complete')

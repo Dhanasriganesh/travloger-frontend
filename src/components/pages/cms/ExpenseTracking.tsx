@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card'
 import { Badge } from '../../ui/badge'
 import { Plus, Search, Edit, Trash2, ArrowLeft, Receipt, DollarSign, Calendar, Filter, Download, Eye } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { fetchApi, handleApiError } from '../../../lib/api'
 
 interface ExpenseCategory {
   id: number
@@ -50,7 +51,7 @@ const ExpenseTracking: React.FC = () => {
   const [saving, setSaving] = useState(false)
   const [editingExpense, setEditingExpense] = useState<ExpenseRecord | null>(null)
   const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null)
-  
+
   // Filters
   const [filters, setFilters] = useState({
     category_id: '',
@@ -94,25 +95,17 @@ const ExpenseTracking: React.FC = () => {
   const fetchExpenses = async () => {
     try {
       setLoading(true)
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      
+
       const queryParams = new URLSearchParams()
       Object.entries(filters).forEach(([key, value]) => {
         if (value) queryParams.append(key, value)
       })
-      
-      const response = await fetch(`${API_URL}/api/expense-tracking?${queryParams}`)
-      const data = await response.json()
-      
-      if (response.ok) {
-        setExpenses(data.expenses || [])
-      } else {
-        console.error('Failed to fetch expenses:', data.error)
-        alert('Failed to fetch expenses: ' + (data.error || 'Unknown error'))
-      }
+
+      const data = await fetchApi(`/api/expense-tracking?${queryParams}`)
+      setExpenses(data.expenses || [])
     } catch (error) {
       console.error('Error fetching expenses:', error)
-      alert('Error fetching expenses. Please check your connection.')
+      handleApiError(error)
     } finally {
       setLoading(false)
     }
@@ -120,17 +113,11 @@ const ExpenseTracking: React.FC = () => {
 
   const fetchCategories = async () => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const response = await fetch(`${API_URL}/api/expense-tracking/categories`)
-      const data = await response.json()
-      
-      if (response.ok) {
-        setCategories(data.categories || [])
-      } else {
-        console.error('Failed to fetch categories:', data.error)
-      }
+      const data = await fetchApi('/api/expense-tracking/categories')
+      setCategories(data.categories || [])
     } catch (error) {
       console.error('Error fetching categories:', error)
+      handleApiError(error)
     }
   }
 
@@ -147,31 +134,23 @@ const ExpenseTracking: React.FC = () => {
 
     try {
       setSaving(true)
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
       const method = editingExpense ? 'PUT' : 'POST'
-      const body = editingExpense 
+      const body = editingExpense
         ? { id: editingExpense.id, ...expenseFormData }
         : expenseFormData
 
-      const response = await fetch(`${API_URL}/api/expense-tracking`, {
+      const data = await fetchApi('/api/expense-tracking', {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
 
-      const data = await response.json()
-
-      if (response.ok) {
-        await fetchExpenses()
-        setShowAddForm(false)
-        resetExpenseForm()
-        alert(data.message || 'Expense saved successfully')
-      } else {
-        alert('Error saving expense: ' + (data.error || 'Unknown error'))
-      }
+      await fetchExpenses()
+      setShowAddForm(false)
+      resetExpenseForm()
+      alert(data.message || 'Expense saved successfully')
     } catch (error) {
       console.error('Error saving expense:', error)
-      alert('Error saving expense. Please try again.')
+      handleApiError(error)
     } finally {
       setSaving(false)
     }
@@ -185,27 +164,19 @@ const ExpenseTracking: React.FC = () => {
 
     try {
       setSaving(true)
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      
-      const response = await fetch(`${API_URL}/api/expense-tracking/categories`, {
+
+      const data = await fetchApi('/api/expense-tracking/categories', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(categoryFormData)
       })
 
-      const data = await response.json()
-
-      if (response.ok) {
-        await fetchCategories()
-        setShowAddForm(false)
-        resetCategoryForm()
-        alert(data.message || 'Category saved successfully')
-      } else {
-        alert('Error saving category: ' + (data.error || 'Unknown error'))
-      }
+      await fetchCategories()
+      setShowAddForm(false)
+      resetCategoryForm()
+      alert(data.message || 'Category saved successfully')
     } catch (error) {
       console.error('Error saving category:', error)
-      alert('Error saving category. Please try again.')
+      handleApiError(error)
     } finally {
       setSaving(false)
     }
@@ -217,22 +188,15 @@ const ExpenseTracking: React.FC = () => {
     }
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const response = await fetch(`${API_URL}/api/expense-tracking?id=${id}`, {
+      const data = await fetchApi(`/api/expense-tracking?id=${id}`, {
         method: 'DELETE'
       })
 
-      const data = await response.json()
-
-      if (response.ok) {
-        await fetchExpenses()
-        alert(data.message || 'Expense deleted successfully')
-      } else {
-        alert('Error deleting expense: ' + (data.error || 'Unknown error'))
-      }
+      await fetchExpenses()
+      alert(data.message || 'Expense deleted successfully')
     } catch (error) {
       console.error('Error deleting expense:', error)
-      alert('Error deleting expense. Please try again.')
+      handleApiError(error)
     }
   }
 
@@ -339,26 +303,24 @@ const ExpenseTracking: React.FC = () => {
                 <span className="text-xs">Back to Settings</span>
               </button>
               <h1 className="text-lg font-bold text-gray-900">Expense Tracking Master</h1>
-              
+
               {/* Tabs */}
               <div className="flex border border-gray-300 rounded-md overflow-hidden ml-4">
                 <button
                   onClick={() => setActiveTab('expenses')}
-                  className={`px-3 py-1 text-xs font-medium ${
-                    activeTab === 'expenses' 
-                      ? 'bg-blue-600 text-white' 
+                  className={`px-3 py-1 text-xs font-medium ${activeTab === 'expenses'
+                      ? 'bg-blue-600 text-white'
                       : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   Expenses
                 </button>
                 <button
                   onClick={() => setActiveTab('categories')}
-                  className={`px-3 py-1 text-xs font-medium ${
-                    activeTab === 'categories' 
-                      ? 'bg-blue-600 text-white' 
+                  className={`px-3 py-1 text-xs font-medium ${activeTab === 'categories'
+                      ? 'bg-blue-600 text-white'
                       : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   Categories
                 </button>
@@ -395,10 +357,10 @@ const ExpenseTracking: React.FC = () => {
                 <Filter className="h-4 w-4 text-gray-500" />
                 <span className="text-sm font-medium text-gray-700">Filters:</span>
               </div>
-              
+
               <select
                 value={filters.category_id}
-                onChange={(e) => setFilters({...filters, category_id: e.target.value})}
+                onChange={(e) => setFilters({ ...filters, category_id: e.target.value })}
                 className="text-xs border border-gray-300 rounded px-2 py-1"
               >
                 <option value="">All Categories</option>
@@ -409,7 +371,7 @@ const ExpenseTracking: React.FC = () => {
 
               <select
                 value={filters.approval_status}
-                onChange={(e) => setFilters({...filters, approval_status: e.target.value})}
+                onChange={(e) => setFilters({ ...filters, approval_status: e.target.value })}
                 className="text-xs border border-gray-300 rounded px-2 py-1"
               >
                 <option value="">All Status</option>
@@ -421,7 +383,7 @@ const ExpenseTracking: React.FC = () => {
               <input
                 type="date"
                 value={filters.start_date}
-                onChange={(e) => setFilters({...filters, start_date: e.target.value})}
+                onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
                 className="text-xs border border-gray-300 rounded px-2 py-1"
                 placeholder="Start Date"
               />
@@ -429,13 +391,13 @@ const ExpenseTracking: React.FC = () => {
               <input
                 type="date"
                 value={filters.end_date}
-                onChange={(e) => setFilters({...filters, end_date: e.target.value})}
+                onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
                 className="text-xs border border-gray-300 rounded px-2 py-1"
                 placeholder="End Date"
               />
 
               <button
-                onClick={() => setFilters({category_id: '', approval_status: '', start_date: '', end_date: '', payment_method: ''})}
+                onClick={() => setFilters({ category_id: '', approval_status: '', start_date: '', end_date: '', payment_method: '' })}
                 className="text-xs text-blue-600 hover:text-blue-800"
               >
                 Clear Filters
@@ -504,7 +466,7 @@ const ExpenseTracking: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-3 py-4 text-sm text-gray-500">
-                          <button 
+                          <button
                             onClick={() => handleEditExpense(expense)}
                             className="hover:text-gray-700"
                             title="Edit expense"
@@ -513,7 +475,7 @@ const ExpenseTracking: React.FC = () => {
                           </button>
                         </td>
                         <td className="px-3 py-4 text-sm text-gray-500">
-                          <button 
+                          <button
                             onClick={() => handleDeleteExpense(expense.id, expense.expense_name)}
                             className="hover:text-red-600"
                             title="Delete expense"
@@ -550,7 +512,7 @@ const ExpenseTracking: React.FC = () => {
                           {category.description || '-'}
                         </td>
                         <td className="px-3 py-4 text-sm text-gray-900">
-                          <Badge 
+                          <Badge
                             variant={category.status === 'Active' ? 'success' : 'secondary'}
                             className={category.status === 'Active' ? 'bg-green-600 text-white' : 'bg-gray-500 text-white'}
                           >
@@ -584,16 +546,16 @@ const ExpenseTracking: React.FC = () => {
       {/* Add/Edit Form Panel */}
       {showAddForm && (
         <div className="fixed inset-0 z-50 overflow-hidden">
-          <div 
+          <div
             className="absolute inset-0 backdrop-blur-sm"
             onClick={handleCloseForm}
           />
-          
+
           <div className="absolute right-0 top-0 h-full w-[600px] bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
             <div className="flex flex-col h-full">
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  {activeTab === 'expenses' 
+                  {activeTab === 'expenses'
                     ? (editingExpense ? 'Edit Expense' : 'Add Expense')
                     : 'Add Category'
                   }
@@ -616,20 +578,20 @@ const ExpenseTracking: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Expense Name <span className="text-red-500">*</span>
                         </label>
-                        <Input 
-                          type="text" 
+                        <Input
+                          type="text"
                           placeholder="Enter expense name"
                           value={expenseFormData.expense_name}
-                          onChange={(e) => setExpenseFormData({...expenseFormData, expense_name: e.target.value})}
+                          onChange={(e) => setExpenseFormData({ ...expenseFormData, expense_name: e.target.value })}
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                        <select 
+                        <select
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={expenseFormData.category_id}
-                          onChange={(e) => setExpenseFormData({...expenseFormData, category_id: e.target.value})}
+                          onChange={(e) => setExpenseFormData({ ...expenseFormData, category_id: e.target.value })}
                         >
                           <option value="">Select category</option>
                           {categories.map(cat => (
@@ -644,21 +606,21 @@ const ExpenseTracking: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Amount <span className="text-red-500">*</span>
                         </label>
-                        <Input 
-                          type="number" 
+                        <Input
+                          type="number"
                           step="0.01"
                           placeholder="0.00"
                           value={expenseFormData.amount}
-                          onChange={(e) => setExpenseFormData({...expenseFormData, amount: parseFloat(e.target.value) || 0})}
+                          onChange={(e) => setExpenseFormData({ ...expenseFormData, amount: parseFloat(e.target.value) || 0 })}
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
-                        <select 
+                        <select
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={expenseFormData.currency}
-                          onChange={(e) => setExpenseFormData({...expenseFormData, currency: e.target.value})}
+                          onChange={(e) => setExpenseFormData({ ...expenseFormData, currency: e.target.value })}
                         >
                           <option value="INR">INR</option>
                           <option value="USD">USD</option>
@@ -671,42 +633,42 @@ const ExpenseTracking: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Date <span className="text-red-500">*</span>
                         </label>
-                        <Input 
-                          type="date" 
+                        <Input
+                          type="date"
                           value={expenseFormData.expense_date}
-                          onChange={(e) => setExpenseFormData({...expenseFormData, expense_date: e.target.value})}
+                          onChange={(e) => setExpenseFormData({ ...expenseFormData, expense_date: e.target.value })}
                         />
                       </div>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                      <textarea 
+                      <textarea
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                         rows={3}
                         placeholder="Enter expense description"
                         value={expenseFormData.description}
-                        onChange={(e) => setExpenseFormData({...expenseFormData, description: e.target.value})}
+                        onChange={(e) => setExpenseFormData({ ...expenseFormData, description: e.target.value })}
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Vendor Name</label>
-                        <Input 
-                          type="text" 
+                        <Input
+                          type="text"
                           placeholder="Enter vendor name"
                           value={expenseFormData.vendor_name}
-                          onChange={(e) => setExpenseFormData({...expenseFormData, vendor_name: e.target.value})}
+                          onChange={(e) => setExpenseFormData({ ...expenseFormData, vendor_name: e.target.value })}
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
-                        <select 
+                        <select
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={expenseFormData.payment_method}
-                          onChange={(e) => setExpenseFormData({...expenseFormData, payment_method: e.target.value})}
+                          onChange={(e) => setExpenseFormData({ ...expenseFormData, payment_method: e.target.value })}
                         >
                           {paymentMethods.map(method => (
                             <option key={method} value={method}>{method}</option>
@@ -717,21 +679,21 @@ const ExpenseTracking: React.FC = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Receipt URL</label>
-                      <Input 
-                        type="url" 
+                      <Input
+                        type="url"
                         placeholder="https://..."
                         value={expenseFormData.receipt_url}
-                        onChange={(e) => setExpenseFormData({...expenseFormData, receipt_url: e.target.value})}
+                        onChange={(e) => setExpenseFormData({ ...expenseFormData, receipt_url: e.target.value })}
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Approval Status</label>
-                        <select 
+                        <select
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={expenseFormData.approval_status}
-                          onChange={(e) => setExpenseFormData({...expenseFormData, approval_status: e.target.value})}
+                          onChange={(e) => setExpenseFormData({ ...expenseFormData, approval_status: e.target.value })}
                         >
                           {approvalStatuses.map(status => (
                             <option key={status} value={status}>{status}</option>
@@ -744,7 +706,7 @@ const ExpenseTracking: React.FC = () => {
                           type="checkbox"
                           id="is_reimbursable"
                           checked={expenseFormData.is_reimbursable}
-                          onChange={(e) => setExpenseFormData({...expenseFormData, is_reimbursable: e.target.checked})}
+                          onChange={(e) => setExpenseFormData({ ...expenseFormData, is_reimbursable: e.target.checked })}
                           className="mr-2"
                         />
                         <label htmlFor="is_reimbursable" className="text-sm text-gray-700">
@@ -759,31 +721,31 @@ const ExpenseTracking: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Category Name <span className="text-red-500">*</span>
                       </label>
-                      <Input 
-                        type="text" 
+                      <Input
+                        type="text"
                         placeholder="Enter category name"
                         value={categoryFormData.name}
-                        onChange={(e) => setCategoryFormData({...categoryFormData, name: e.target.value})}
+                        onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                      <textarea 
+                      <textarea
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                         rows={3}
                         placeholder="Enter category description"
                         value={categoryFormData.description}
-                        onChange={(e) => setCategoryFormData({...categoryFormData, description: e.target.value})}
+                        onChange={(e) => setCategoryFormData({ ...categoryFormData, description: e.target.value })}
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                      <select 
+                      <select
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={categoryFormData.status}
-                        onChange={(e) => setCategoryFormData({...categoryFormData, status: e.target.value})}
+                        onChange={(e) => setCategoryFormData({ ...categoryFormData, status: e.target.value })}
                       >
                         <option value="Active">Active</option>
                         <option value="Inactive">Inactive</option>
