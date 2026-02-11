@@ -1866,7 +1866,53 @@ const WebsiteEdit: React.FC = () => {
                     return (
                       <>
                         <div className="flex justify-between items-center mb-4">
-                          <h4 className="text-md font-medium text-gray-800">Custom Trip {tripIndex + 1}</h4>
+                          <div className="flex items-center gap-4">
+                            <h4 className="text-md font-medium text-gray-800">Custom Trip {tripIndex + 1}</h4>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => {
+                                  if (tripIndex > 0) {
+                                    const newTrips = [...(tripOptions.customTrips || [])];
+                                    [newTrips[tripIndex], newTrips[tripIndex - 1]] = [newTrips[tripIndex - 1], newTrips[tripIndex]];
+                                    setTripOptions({ ...tripOptions, customTrips: newTrips });
+                                  }
+                                }}
+                                disabled={tripIndex === 0}
+                                className="p-1 text-gray-400 hover:text-blue-600 disabled:opacity-30"
+                                title="Move Up"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (tripIndex < (tripOptions.customTrips?.length || 0) - 1) {
+                                    const newTrips = [...(tripOptions.customTrips || [])];
+                                    [newTrips[tripIndex], newTrips[tripIndex + 1]] = [newTrips[tripIndex + 1], newTrips[tripIndex]];
+                                    setTripOptions({ ...tripOptions, customTrips: newTrips });
+                                  }
+                                }}
+                                disabled={tripIndex === (tripOptions.customTrips?.length || 0) - 1}
+                                className="p-1 text-gray-400 hover:text-blue-600 disabled:opacity-30"
+                                title="Move Down"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const newTrip = JSON.parse(JSON.stringify(trip));
+                                  newTrip.id = `custom-${Date.now()}`;
+                                  newTrip.title = `${newTrip.title} (Copy)`;
+                                  const newTrips = [...(tripOptions.customTrips || []), newTrip];
+                                  setTripOptions({ ...tripOptions, customTrips: newTrips });
+                                  setSelectedCustomTrip(newTrip.id);
+                                }}
+                                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded border border-blue-200 ml-2"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
+                                Duplicate
+                              </button>
+                            </div>
+                          </div>
                           <button
                             onClick={() => {
                               setTripOptions({
@@ -2152,15 +2198,71 @@ const WebsiteEdit: React.FC = () => {
                                       className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                                       placeholder="Day title"
                                     />
+                                    <div className="flex gap-1">
+                                      <button
+                                        onClick={() => {
+                                          if (dayIndex > 0) {
+                                            const newTrips = [...(tripOptions.customTrips || [])]
+                                            const newItinerary = [...(trip.detailedItinerary?.briefItinerary || [])];
+                                            [newItinerary[dayIndex], newItinerary[dayIndex - 1]] = [newItinerary[dayIndex - 1], newItinerary[dayIndex]];
+                                            // Re-index days to be 1, 2, 3...
+                                            const updatedItinerary = newItinerary.map((d, i) => ({ ...d, day: i + 1 }));
+                                            newTrips[tripIndex] = {
+                                              ...trip,
+                                              detailedItinerary: {
+                                                subtitle: trip.detailedItinerary?.subtitle || '',
+                                                headerImage: trip.detailedItinerary?.headerImage,
+                                                briefItinerary: updatedItinerary,
+                                                keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                                inclusions: trip.detailedItinerary?.inclusions || []
+                                              }
+                                            }
+                                            setTripOptions({ ...tripOptions, customTrips: newTrips })
+                                          }
+                                        }}
+                                        disabled={dayIndex === 0}
+                                        className="p-1 text-gray-400 hover:text-blue-600 disabled:opacity-20"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          if (dayIndex < (trip.detailedItinerary?.briefItinerary?.length || 0) - 1) {
+                                            const newTrips = [...(tripOptions.customTrips || [])]
+                                            const newItinerary = [...(trip.detailedItinerary?.briefItinerary || [])];
+                                            [newItinerary[dayIndex], newItinerary[dayIndex + 1]] = [newItinerary[dayIndex + 1], newItinerary[dayIndex]];
+                                            // Re-index days to be 1, 2, 3...
+                                            const updatedItinerary = newItinerary.map((d, i) => ({ ...d, day: i + 1 }));
+                                            newTrips[tripIndex] = {
+                                              ...trip,
+                                              detailedItinerary: {
+                                                subtitle: trip.detailedItinerary?.subtitle || '',
+                                                headerImage: trip.detailedItinerary?.headerImage,
+                                                briefItinerary: updatedItinerary,
+                                                keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                                inclusions: trip.detailedItinerary?.inclusions || []
+                                              }
+                                            }
+                                            setTripOptions({ ...tripOptions, customTrips: newTrips })
+                                          }
+                                        }}
+                                        disabled={dayIndex === (trip.detailedItinerary?.briefItinerary?.length || 0) - 1}
+                                        className="p-1 text-gray-400 hover:text-blue-600 disabled:opacity-20"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                      </button>
+                                    </div>
                                     <button
                                       onClick={() => {
                                         const newTrips = [...(tripOptions.customTrips || [])]
                                         const newItinerary = (trip.detailedItinerary?.briefItinerary || []).filter((_, i) => i !== dayIndex)
+                                        // Re-index days to be 1, 2, 3...
+                                        const updatedItinerary = newItinerary.map((d, i) => ({ ...d, day: i + 1 }));
                                         newTrips[tripIndex] = {
                                           ...trip,
                                           detailedItinerary: {
                                             subtitle: trip.detailedItinerary?.subtitle || '',
-                                            briefItinerary: newItinerary,
+                                            briefItinerary: updatedItinerary,
                                             keyAttractions: trip.detailedItinerary?.keyAttractions || [],
                                             inclusions: trip.detailedItinerary?.inclusions || []
                                           }
@@ -2502,7 +2604,53 @@ const WebsiteEdit: React.FC = () => {
                     return (
                       <>
                         <div className="flex justify-between items-center mb-4">
-                          <h4 className="text-md font-medium text-gray-800">Group Trip {tripIndex + 1}</h4>
+                          <div className="flex items-center gap-4">
+                            <h4 className="text-md font-medium text-gray-800">Group Trip {tripIndex + 1}</h4>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => {
+                                  if (tripIndex > 0) {
+                                    const newTrips = [...(tripOptions.groupTrips || [])];
+                                    [newTrips[tripIndex], newTrips[tripIndex - 1]] = [newTrips[tripIndex - 1], newTrips[tripIndex]];
+                                    setTripOptions({ ...tripOptions, groupTrips: newTrips });
+                                  }
+                                }}
+                                disabled={tripIndex === 0}
+                                className="p-1 text-gray-400 hover:text-blue-600 disabled:opacity-30"
+                                title="Move Up"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (tripIndex < (tripOptions.groupTrips?.length || 0) - 1) {
+                                    const newTrips = [...(tripOptions.groupTrips || [])];
+                                    [newTrips[tripIndex], newTrips[tripIndex + 1]] = [newTrips[tripIndex + 1], newTrips[tripIndex]];
+                                    setTripOptions({ ...tripOptions, groupTrips: newTrips });
+                                  }
+                                }}
+                                disabled={tripIndex === (tripOptions.groupTrips?.length || 0) - 1}
+                                className="p-1 text-gray-400 hover:text-blue-600 disabled:opacity-30"
+                                title="Move Down"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const newTrip = JSON.parse(JSON.stringify(trip));
+                                  newTrip.id = `group-${Date.now()}`;
+                                  newTrip.title = `${newTrip.title} (Copy)`;
+                                  const newTrips = [...(tripOptions.groupTrips || []), newTrip];
+                                  setTripOptions({ ...tripOptions, groupTrips: newTrips });
+                                  setSelectedGroupTrip(newTrip.id);
+                                }}
+                                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded border border-blue-200 ml-2"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
+                                Duplicate
+                              </button>
+                            </div>
+                          </div>
                           <button
                             onClick={() => {
                               setTripOptions({
@@ -2788,15 +2936,71 @@ const WebsiteEdit: React.FC = () => {
                                       className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                                       placeholder="Day title"
                                     />
+                                    <div className="flex gap-1">
+                                      <button
+                                        onClick={() => {
+                                          if (dayIndex > 0) {
+                                            const newTrips = [...(tripOptions.groupTrips || [])]
+                                            const newItinerary = [...(trip.detailedItinerary?.briefItinerary || [])];
+                                            [newItinerary[dayIndex], newItinerary[dayIndex - 1]] = [newItinerary[dayIndex - 1], newItinerary[dayIndex]];
+                                            // Re-index days
+                                            const updatedItinerary = newItinerary.map((d, i) => ({ ...d, day: i + 1 }));
+                                            newTrips[tripIndex] = {
+                                              ...trip,
+                                              detailedItinerary: {
+                                                subtitle: trip.detailedItinerary?.subtitle || '',
+                                                headerImage: trip.detailedItinerary?.headerImage,
+                                                briefItinerary: updatedItinerary,
+                                                keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                                inclusions: trip.detailedItinerary?.inclusions || []
+                                              }
+                                            }
+                                            setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                          }
+                                        }}
+                                        disabled={dayIndex === 0}
+                                        className="p-1 text-gray-400 hover:text-blue-600 disabled:opacity-20"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          if (dayIndex < (trip.detailedItinerary?.briefItinerary?.length || 0) - 1) {
+                                            const newTrips = [...(tripOptions.groupTrips || [])]
+                                            const newItinerary = [...(trip.detailedItinerary?.briefItinerary || [])];
+                                            [newItinerary[dayIndex], newItinerary[dayIndex + 1]] = [newItinerary[dayIndex + 1], newItinerary[dayIndex]];
+                                            // Re-index days
+                                            const updatedItinerary = newItinerary.map((d, i) => ({ ...d, day: i + 1 }));
+                                            newTrips[tripIndex] = {
+                                              ...trip,
+                                              detailedItinerary: {
+                                                subtitle: trip.detailedItinerary?.subtitle || '',
+                                                headerImage: trip.detailedItinerary?.headerImage,
+                                                briefItinerary: updatedItinerary,
+                                                keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                                inclusions: trip.detailedItinerary?.inclusions || []
+                                              }
+                                            }
+                                            setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                          }
+                                        }}
+                                        disabled={dayIndex === (trip.detailedItinerary?.briefItinerary?.length || 0) - 1}
+                                        className="p-1 text-gray-400 hover:text-blue-600 disabled:opacity-20"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                      </button>
+                                    </div>
                                     <button
                                       onClick={() => {
                                         const newTrips = [...(tripOptions.groupTrips || [])]
                                         const newItinerary = (trip.detailedItinerary?.briefItinerary || []).filter((_, i) => i !== dayIndex)
+                                        // Re-index days
+                                        const updatedItinerary = newItinerary.map((d, i) => ({ ...d, day: i + 1 }));
                                         newTrips[tripIndex] = {
                                           ...trip,
                                           detailedItinerary: {
                                             subtitle: trip.detailedItinerary?.subtitle || '',
-                                            briefItinerary: newItinerary,
+                                            briefItinerary: updatedItinerary,
                                             keyAttractions: trip.detailedItinerary?.keyAttractions || [],
                                             inclusions: trip.detailedItinerary?.inclusions || []
                                           }

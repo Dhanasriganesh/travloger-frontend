@@ -19,15 +19,17 @@ export async function fetchApi<T = any>(url: string, options: FetchOptions = {})
       ? url
       : `${API_URL}/api${url.startsWith('/') ? url : `/${url}`}`;
 
+  // Get token from localStorage
+  const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+
   // Check if body is FormData - if so, don't set Content-Type header
   const isFormData = rest.body instanceof FormData;
-  const requestHeaders: HeadersInit = isFormData
-    ? { ...headers } // FormData sets its own Content-Type with boundary
-    : {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      ...headers,
-    };
+  const requestHeaders: HeadersInit = {
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+    'Accept': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    ...headers,
+  };
 
   try {
     const response = await fetch(fullUrl, {
