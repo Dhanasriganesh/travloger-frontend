@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import { fetchApi, handleApiError } from '../../../lib/api'
 import { Button } from '../../ui/button'
 import { Input } from '../../ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card'
@@ -82,12 +83,8 @@ const Activities: React.FC = () => {
 
   const fetchSuppliers = async () => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const response = await fetch(`${API_URL}/api/suppliers`)
-      const data = await response.json()
-      if (response.ok) {
-        setSuppliers((data.suppliers || []).map((s: any) => ({ id: s.id, name: s.company_name, city: s.city })))
-      }
+      const data = await fetchApi('/suppliers')
+      setSuppliers((data.suppliers || []).map((s: any) => ({ id: s.id, name: s.supplier_name || s.company_name, city: s.city })))
     } catch (error) {
       console.error('Error fetching suppliers:', error)
     }
@@ -95,13 +92,8 @@ const Activities: React.FC = () => {
 
   const fetchStates = async () => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const response = await fetch(`${API_URL}/api/states`)
-      const data = await response.json()
-
-      if (response.ok) {
-        setStates(data.states || [])
-      }
+      const data = await fetchApi('/api/states')
+      setStates(data.states || [])
     } catch (error) {
       console.error('Error fetching states:', error)
     }
@@ -109,14 +101,9 @@ const Activities: React.FC = () => {
 
   const fetchDestinations = async (state?: string) => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const url = state ? `${API_URL}/api/destinations?state=${encodeURIComponent(state)}` : `${API_URL}/api/destinations`
-      const response = await fetch(url)
-      const data = await response.json()
-
-      if (response.ok) {
-        setDestinations(data.destinations || [])
-      }
+      const url = state ? `/api/destinations?state=${encodeURIComponent(state)}` : `/api/destinations`
+      const data = await fetchApi(url)
+      setDestinations(data.destinations || [])
     } catch (error) {
       console.error('Error fetching destinations:', error)
       setDestinations([])
@@ -126,17 +113,11 @@ const Activities: React.FC = () => {
   const fetchActivities = async () => {
     try {
       setLoading(true)
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const response = await fetch(`${API_URL}/api/activities`)
-      const data = await response.json()
-
-      if (response.ok) {
-        setActivities(data.activities || [])
-      } else {
-        console.error('Failed to fetch activities:', data.error)
-      }
+      const data = await fetchApi('/api/activities')
+      setActivities(data.activities || [])
     } catch (error) {
       console.error('Error fetching activities:', error)
+      handleApiError(error)
     } finally {
       setLoading(false)
     }
@@ -155,27 +136,20 @@ const Activities: React.FC = () => {
         ? { id: editingActivity.id, ...formData, supplierId: formData.supplierId ? Number(formData.supplierId) : null, timeSlots: formData.timeSlots ? formData.timeSlots.split(',').map(s => s.trim()).filter(Boolean) : [], gallery: formData.gallery }
         : { ...formData, supplierId: formData.supplierId ? Number(formData.supplierId) : null, timeSlots: formData.timeSlots ? formData.timeSlots.split(',').map(s => s.trim()).filter(Boolean) : [], gallery: formData.gallery }
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const response = await fetch(`${API_URL}/api/activities`, {
+      const data = await fetchApi('/api/activities', {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
 
-      const data = await response.json()
-
-      if (response.ok) {
-        await fetchActivities() // Refresh the list
-        setShowAddForm(false)
-        setFormData({ name: '', state: '', destination: '', supplierId: '', type: '', duration: '', inclusions: '', exclusions: '', price: 0, costType: 'per_person', operatingDays: '', timeSlots: '', gallery: [], notes: '', status: 'Active' })
-        setEditingActivity(null)
-        alert(data.message || 'Activity saved successfully')
-      } else {
-        alert(data.error || 'Failed to save activity')
-      }
-    } catch (error) {
+      await fetchActivities() // Refresh the list
+      setShowAddForm(false)
+      setFormData({ name: '', state: '', destination: '', supplierId: '', type: '', duration: '', inclusions: '', exclusions: '', price: 0, costType: 'per_person', operatingDays: '', timeSlots: '', gallery: [], notes: '', status: 'Active' })
+      setEditingActivity(null)
+      alert(data.message || 'Activity saved successfully')
+    } catch (error: any) {
       console.error('Error saving activity:', error)
       alert('Error saving activity')
+      handleApiError(error)
     } finally {
       setSaving(false)
     }
@@ -187,22 +161,16 @@ const Activities: React.FC = () => {
     }
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const response = await fetch(`${API_URL}/api/activities?id=${id}`, {
+      const data = await fetchApi(`/api/activities?id=${id}`, {
         method: 'DELETE'
       })
 
-      const data = await response.json()
-
-      if (response.ok) {
-        await fetchActivities() // Refresh the list
-        alert(data.message || 'Activity deleted successfully')
-      } else {
-        alert(data.error || 'Failed to delete activity')
-      }
-    } catch (error) {
+      await fetchActivities() // Refresh the list
+      alert(data.message || 'Activity deleted successfully')
+    } catch (error: any) {
       console.error('Error deleting activity:', error)
       alert('Error deleting activity')
+      handleApiError(error)
     }
   }
 

@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import Image from 'next/image'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import { fetchApi, handleApiError } from '../../../lib/api'
 
 interface Package {
   id: number
@@ -89,7 +90,7 @@ const Packages: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [hotelsLoading, setHotelsLoading] = useState(true)
-  
+
   // Get city from URL query parameter, default to 'all' if not provided
   const citySlug = searchParams.get('city') || 'all'
 
@@ -108,7 +109,7 @@ const Packages: React.FC = () => {
     { slug: 'bengaluru', name: 'Bengaluru' },
     { slug: 'manali', name: 'Manali' }
   ], [])
-  
+
   // Human-readable city name for storage/display
   const cityName = (LOCATIONS.find(l => l.slug === citySlug)?.name) || citySlug
   // Hero thumbnails per location for the initial location cards grid
@@ -122,7 +123,7 @@ const Packages: React.FC = () => {
         const cacheKey = 'cmsHeroThumbs:v2'
         const cached = typeof window !== 'undefined' ? localStorage.getItem(cacheKey) : null
         if (!thumbsLoadedRef.current && cached) {
-          try { 
+          try {
             const parsed = JSON.parse(cached)
             // Check if cache is not too old (24 hours)
             if (parsed.timestamp && Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
@@ -138,14 +139,14 @@ const Packages: React.FC = () => {
         const entries = await Promise.allSettled(
           LOCATIONS.map(async (loc) => {
             try {
-              const res = await fetch(`/api/cms/cities/${loc.slug}`, {
-                cache: 'force-cache', // Use browser cache
+              const res = await fetchApi(`/api/cms/cities/${loc.slug}`, {
+                cache: 'force-cache',
                 headers: { 'Cache-Control': 'max-age=3600' }
               })
-              if (!res.ok) return [loc.slug, ''] as const
-              const data = await res.json().catch(() => ({}))
+              // fetchApi returns the parsed JSON directly on success, or throws
+              const data = res
               const url = data?.hero?.backgroundImageUrl || ''
-              
+
               // Preload image with better error handling
               if (url) {
                 return new Promise<[string, string]>((resolve) => {
@@ -163,7 +164,7 @@ const Packages: React.FC = () => {
             }
           })
         )
-        
+
         const map: Record<string, string> = {}
         entries.forEach((result) => {
           if (result.status === 'fulfilled') {
@@ -171,10 +172,10 @@ const Packages: React.FC = () => {
             if (url) map[slug] = url
           }
         })
-        
+
         if (Object.keys(map).length) {
           setHeroThumbs(map)
-          try { 
+          try {
             localStorage.setItem(cacheKey, JSON.stringify({
               data: map,
               timestamp: Date.now()
@@ -186,14 +187,14 @@ const Packages: React.FC = () => {
     }
     if (citySlug === 'all') loadThumbs()
   }, [citySlug, LOCATIONS])
-  
+
   // Location management state
   const [hotelLocations, setHotelLocations] = useState<HotelLocation[]>([])
   const [vehicleLocations, setVehicleLocations] = useState<VehicleLocation[]>([])
   const [showAddLocationModal, setShowAddLocationModal] = useState(false)
   const [newLocationName, setNewLocationName] = useState('')
   const [newLocationType, setNewLocationType] = useState<'hotel' | 'vehicle' | 'fixed'>('hotel')
-  
+
   // Hotels management state
   const [hotels, setHotels] = useState<Hotel[]>([])
   const [showAddHotelModal, setShowAddHotelModal] = useState(false)
@@ -228,7 +229,7 @@ const Packages: React.FC = () => {
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null)
   const [filter, setFilter] = useState<FilterType>('all')
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false)
-  
+
   const [creating, setCreating] = useState<boolean>(false)
   const [newPackage, setNewPackage] = useState<NewPackage>({
     destination: '',
@@ -244,18 +245,14 @@ const Packages: React.FC = () => {
     try {
       setLoading(true)
       const url = citySlug && citySlug !== 'all' ? `/api/packages/city/${encodeURIComponent(cityName)}` : '/api/packages'
-      const response = await fetch(url)
-      const data = await response.json()
-      
-      if (response.ok) {
-        setPackages(data.packages || [])
-        setError(null)
-      } else {
-        setError(data.error || 'Failed to fetch packages')
-      }
+      const data = await fetchApi(url)
+
+      setPackages(data.packages || [])
+      setError(null)
     } catch (err) {
       setError('Failed to fetch packages')
       console.error('Error fetching packages:', err)
+      handleApiError(err)
     } finally {
       setLoading(false)
     }
@@ -265,54 +262,38 @@ const Packages: React.FC = () => {
   const fetchLocations = useCallback(async () => {
     try {
       console.log('Fetching locations...')
-      
-      // Use real Supabase endpoints
-      const [hotelsRes, vehiclesRes] = await Promise.all([
-        fetch('/api/locations/hotels'),
-        fetch('/api/locations/vehicles')
+
+      const [hotelsData, vehiclesData] = await Promise.all([
+        fetchApi('/api/locations/hotels').catch(() => ({ locations: [] })),
+        fetchApi('/api/locations/vehicles').catch(() => ({ locations: [] }))
       ])
-      
-      console.log('Hotels response status:', hotelsRes.status)
-      console.log('Vehicles response status:', vehiclesRes.status)
-      
-      if (hotelsRes.ok) {
-        const hotelsData = await hotelsRes.json()
-        console.log('Hotels data:', hotelsData)
-        setHotelLocations(hotelsData.locations || [])
-      } else {
-        console.error('Failed to fetch hotel locations:', await hotelsRes.text())
-        setHotelLocations([])
-      }
-      
-      if (vehiclesRes.ok) {
-        const vehiclesData = await vehiclesRes.json()
-        console.log('Vehicles data:', vehiclesData)
-        setVehicleLocations(vehiclesData.locations || [])
-      } else {
-        console.error('Failed to fetch vehicle locations:', await vehiclesRes.text())
-        setVehicleLocations([])
-      }
+
+      console.log('Hotels data:', hotelsData)
+      console.log('Vehicles data:', vehiclesData)
+      setHotelLocations(hotelsData.locations || [])
+      setVehicleLocations(vehiclesData.locations || [])
     } catch (error) {
       console.error('Failed to fetch locations:', error)
+      handleApiError(error)
     }
   }, [])
 
   // Add new location
   const addNewLocation = async () => {
     console.log('addNewLocation called:', { newLocationName, citySlug, newLocationType })
-    
+
     if (!newLocationName.trim()) {
       console.log('Validation failed: No location name')
       alert('Please enter a location name')
       return
     }
-    
+
     if (!citySlug || citySlug === 'all') {
       console.log('Validation failed: No city selected', { citySlug })
       alert('Please navigate to Packages from a specific location in WebsiteEdit to add locations')
       return
     }
-    
+
     try {
       // Use real Supabase endpoint
       const endpoint = newLocationType === 'hotel' ? '/api/locations/hotels' : (newLocationType === 'vehicle' ? '/api/locations/vehicles' : '/api/locations/fixed')
@@ -320,48 +301,36 @@ const Packages: React.FC = () => {
         name: newLocationName.trim(),
         city: citySlug
       }
-      
+
       console.log('Sending request to:', endpoint, 'with payload:', payload)
-      
-      const res = await fetch(endpoint, {
-          method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+
+      const data = await fetchApi(endpoint, {
+        method: 'POST',
         body: JSON.stringify(payload)
       })
-      
-      console.log('Response status:', res.status)
-      
-      if (res.ok) {
-        let data: any = null
-        try { data = await res.json() } catch (_) { data = null }
-        console.log('Success response:', data)
-        
-        // Refresh the locations list
-        await fetchLocations()
-        
-        if (newLocationType === 'hotel') {
-          // Add to custom hotel locations list
-          setHotelLocations((prev) => [{ id: data.location.id, name: data.location.name, city: data.location.city }, ...prev])
-          setNewPackage(prev => ({ ...prev, hotelLocation: data.location.id }))
-        } else if (newLocationType === 'vehicle') {
-          setNewPackage(prev => ({ ...prev, vehicleLocation: data.location.id }))
-        } else if ((newLocationType as any) === 'fixed') {
-          // For Fixed Plan separate locations
-          setFixedLocations((prev) => [{ id: data.location.id, name: data.location.name, city: data.location.city } as any, ...prev])
-          setNewPackage(prev => ({ ...(prev as any), fixedLocationId: data.location.id }))
-        }
-        setNewLocationName('')
-        setShowAddLocationModal(false)
-        alert('Location added successfully!')
-      } else {
-        let error: any = {}
-        try { error = await res.json() } catch (_) { error = { message: await res.text() } }
-        console.error('Error response:', error)
-        alert(error.error || error.message || `Failed to add location (status ${res.status})`)
+
+      console.log('Success response:', data)
+
+      // Refresh the locations list
+      await fetchLocations()
+
+      if (newLocationType === 'hotel') {
+        // Add to custom hotel locations list
+        setHotelLocations((prev) => [{ id: data.location.id, name: data.location.name, city: data.location.city }, ...prev])
+        setNewPackage(prev => ({ ...prev, hotelLocation: data.location.id }))
+      } else if (newLocationType === 'vehicle') {
+        setNewPackage(prev => ({ ...prev, vehicleLocation: data.location.id }))
+      } else if ((newLocationType as any) === 'fixed') {
+        // For Fixed Plan separate locations
+        setFixedLocations((prev) => [{ id: data.location.id, name: data.location.name, city: data.location.city } as any, ...prev])
+        setNewPackage(prev => ({ ...(prev as any), fixedLocationId: data.location.id }))
       }
+      setNewLocationName('')
+      setShowAddLocationModal(false)
+      alert('Location added successfully!')
     } catch (error: any) {
       console.error('Exception in addNewLocation:', error)
-      alert('Failed to add location: ' + error.message)
+      handleApiError(error)
     }
   }
 
@@ -371,23 +340,16 @@ const Packages: React.FC = () => {
       setHotels([])
       return
     }
-    
+
     try {
       console.log('Fetching hotels for location:', locationId)
-      // Use real Supabase endpoint
-      const res = await fetch(`/api/hotels?locationId=${locationId}`)
-      
-      if (res.ok) {
-        const data = await res.json()
-        console.log('Hotels data:', data)
-        setHotels(data.hotels || [])
-      } else {
-        console.error('Failed to fetch hotels:', await res.text())
-        setHotels([])
-      }
+      const data = await fetchApi(`/api/hotels?locationId=${locationId}`)
+      console.log('Hotels data:', data)
+      setHotels(data.hotels || [])
     } catch (error) {
       console.error('Error fetching hotels:', error)
       setHotels([])
+      handleApiError(error)
     }
   }, [])
 
@@ -397,7 +359,7 @@ const Packages: React.FC = () => {
       alert('Please enter hotel name and ensure a hotel location is selected')
       return
     }
-    
+
     try {
       const payload = {
         name: newHotel.name.trim(),
@@ -406,37 +368,28 @@ const Packages: React.FC = () => {
         category: newHotel.category.trim(),
         locationId: newPackage.hotelLocation
       }
-      
+
       console.log('Adding new hotel:', payload)
-      
-      // Use real Supabase endpoint
-      const res = await fetch('/api/hotels', {
-          method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+
+      const data = await fetchApi('/api/hotels', {
+        method: 'POST',
         body: JSON.stringify(payload)
       })
-      
-      if (res.ok) {
-        const data = await res.json()
-        console.log('Hotel added:', data)
-        
-        // Refresh hotels list
-        await fetchHotels(newPackage.hotelLocation)
-        
-        // Automatically select the newly added hotel
-        setNewPackage(prev => ({ ...prev, selectedHotel: data.hotel.id }))
-        
-        setNewHotel({ name: '', mapRate: 0, eb: 0, category: '' })
-        setShowAddHotelModal(false)
-        alert('Hotel added successfully and selected!')
-      } else {
-        const error = await res.json()
-        console.error('Error adding hotel:', error)
-        alert(error.error || 'Failed to add hotel')
-      }
+
+      console.log('Hotel added:', data)
+
+      // Refresh hotels list
+      await fetchHotels(newPackage.hotelLocation)
+
+      // Automatically select the newly added hotel
+      setNewPackage(prev => ({ ...prev, selectedHotel: data.hotel.id }))
+
+      setNewHotel({ name: '', mapRate: 0, eb: 0, category: '' })
+      setShowAddHotelModal(false)
+      alert('Hotel added successfully and selected!')
     } catch (error: any) {
       console.error('Exception in addNewHotel:', error)
-      alert('Failed to add hotel: ' + error.message)
+      handleApiError(error)
     }
   }
 
@@ -453,53 +406,39 @@ const Packages: React.FC = () => {
         acExtra: newVehicle.acExtra,
         locationId: newPackage.vehicleLocation
       }
-      const res = await fetch('/api/vehicles', {
+      const data = await fetchApi('/api/vehicles', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-      if (res.ok) {
-        const data = await res.json()
-        // Refresh list
-        const fres = await fetch(`/api/vehicles?locationId=${newPackage.vehicleLocation}`)
-        const fdata = fres.ok ? await fres.json() : { vehicles: [] }
-        setVehicles(fdata.vehicles || [])
-        // Select new vehicle
-        setNewPackage(prev => ({ ...prev, selectedVehicle: data.vehicle.id }))
-        setNewVehicle({ vehicleType: '', rate: 0, acExtra: 0 })
-        setShowAddVehicleModal(false)
-        alert('Vehicle added successfully and selected!')
-      } else {
-        const error = await res.json()
-        alert(error.error || 'Failed to add vehicle')
-      }
+
+      // Refresh list
+      const fdata = await fetchApi(`/api/vehicles?locationId=${newPackage.vehicleLocation}`).catch(() => ({ vehicles: [] }))
+      setVehicles(fdata.vehicles || [])
+      // Select new vehicle
+      setNewPackage(prev => ({ ...prev, selectedVehicle: data.vehicle.id }))
+      setNewVehicle({ vehicleType: '', rate: 0, acExtra: 0 })
+      setShowAddVehicleModal(false)
+      alert('Vehicle added successfully and selected!')
     } catch (e: any) {
-      alert('Failed to add vehicle: ' + e.message)
+      handleApiError(e)
     }
   }
+
+
+
 
   // Create new package
   const createPackage = async (packageData: any, city: string) => {
     try {
-      const response = await fetch('/api/packages', {
+      const data = await fetchApi('/api/packages', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(packageData),
       })
-      
-      let data: any = null
-      try { data = await response.json() } catch (_) { data = {} }
-      
-      if (response.ok) {
-        // Do not mutate local state here. Let caller fetch full row and update list.
-        return { success: true, package: data.package }
-      } else {
-        return { success: false, error: data?.error || 'Failed to create package' }
-      }
-    } catch (err) {
-      return { success: false, error: 'Failed to create package' }
+
+      // Do not mutate local state here. Let caller fetch full row and update list.
+      return { success: true, package: data.package }
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to create package' }
     }
   }
 
@@ -507,19 +446,14 @@ const Packages: React.FC = () => {
   // Delete package
   const deletePackage = async (id: number) => {
     try {
-      const response = await fetch(`/api/packages/${id}`, {
+      await fetchApi(`/api/packages/${id}`, {
         method: 'DELETE',
       })
-      
-      if (response.ok) {
-        await fetchPackages() // Refresh the list
-        return { success: true }
-      } else {
-        const data = await response.json()
-        return { success: false, error: data.error }
-      }
-    } catch (err) {
-      return { success: false, error: 'Failed to delete package' }
+
+      await fetchPackages() // Refresh the list
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to delete package' }
     }
   }
 
@@ -533,26 +467,20 @@ const Packages: React.FC = () => {
     const loadAllData = async () => {
       try {
         setHotelsLoading(true)
-        // Load all hotels from all locations
-        const hotelsRes = await fetch('/api/hotels')
-        if (hotelsRes.ok) {
-          const hotelsData = await hotelsRes.json()
-          setHotels(hotelsData.hotels || [])
-        }
-        
-        // Load all vehicles from all locations  
-        const vehiclesRes = await fetch('/api/vehicles')
-        if (vehiclesRes.ok) {
-          const vehiclesData = await vehiclesRes.json()
-          setVehicles(vehiclesData.vehicles || [])
-        }
+        const [hotelsData, vehiclesData] = await Promise.all([
+          fetchApi('/api/hotels').catch(() => ({ hotels: [] })),
+          fetchApi('/api/vehicles').catch(() => ({ vehicles: [] }))
+        ])
+        setHotels(hotelsData.hotels || [])
+        setVehicles(vehiclesData.vehicles || [])
       } catch (error) {
         console.error('Failed to load hotels/vehicles:', error)
+        handleApiError(error)
       } finally {
         setHotelsLoading(false)
       }
     }
-    
+
     loadAllData()
   }, [])
 
@@ -574,13 +502,8 @@ const Packages: React.FC = () => {
   useEffect(() => {
     const fetchFixedDays = async () => {
       try {
-        const res = await fetch(`/api/fixed-days?city=${citySlug}`)
-        if (res.ok) {
-          const data = await res.json()
-          setFixedDaysOptions((data.options || []).map((o: any) => ({ id: o.id, days: o.days, label: o.label || '' })))
-        } else {
-          setFixedDaysOptions([])
-        }
+        const data = await fetchApi(`/api/fixed-days?city=${citySlug}`)
+        setFixedDaysOptions((data.options || []).map((o: any) => ({ id: o.id, days: o.days, label: o.label || '' })))
       } catch (_) {
         setFixedDaysOptions([])
       }
@@ -592,13 +515,8 @@ const Packages: React.FC = () => {
   useEffect(() => {
     const fetchFixedLocations = async () => {
       try {
-        const res = await fetch(`/api/locations/fixed?city=${citySlug}`)
-        if (res.ok) {
-          const data = await res.json()
-          setFixedLocations(data.locations || [])
-        } else {
-          setFixedLocations([])
-        }
+        const data = await fetchApi(`/api/locations/fixed?city=${citySlug}`)
+        setFixedLocations(data.locations || [])
       } catch (_) {
         setFixedLocations([])
       }
@@ -618,11 +536,8 @@ const Packages: React.FC = () => {
       await Promise.all(locationIds.map(async (locId) => {
         if (fixedPlansByLocation[locId]) return
         try {
-          const res = await fetch(`/api/fixed-plans?city=${citySlug}&locationId=${locId}`)
-          if (res.ok) {
-            const data = await res.json()
-            setFixedPlansByLocation(prev => ({ ...prev, [locId]: (data.plans || []).map((p: any) => ({ id: p.id, name: p.name })) }))
-          }
+          const data = await fetchApi(`/api/fixed-plans?city=${citySlug}&locationId=${locId}`)
+          setFixedPlansByLocation(prev => ({ ...prev, [locId]: (data.plans || []).map((p: any) => ({ id: p.id, name: p.name })) }))
         } catch (_) {
           // ignore
         }
@@ -639,13 +554,8 @@ const Packages: React.FC = () => {
   useEffect(() => {
     const fetchFixedPlans = async () => {
       try {
-        const res = await fetch(`/api/fixed-plans?city=${citySlug}&locationId=${fixedLocationId}`)
-        if (res.ok) {
-          const data = await res.json()
-          setFixedPlans((data.plans || []).map((p: any) => ({ id: p.id, name: p.name })))
-        } else {
-          setFixedPlans([])
-        }
+        const data = await fetchApi(`/api/fixed-plans?city=${citySlug}&locationId=${fixedLocationId}`)
+        setFixedPlans((data.plans || []).map((p: any) => ({ id: p.id, name: p.name })))
       } catch (_) {
         setFixedPlans([])
       }
@@ -658,13 +568,8 @@ const Packages: React.FC = () => {
   useEffect(() => {
     const fetchVariants = async () => {
       try {
-        const res = await fetch(`/api/fixed-plan-options?city=${citySlug}&locationId=${fixedLocationId}&planId=${fixedPlanId}`)
-        if (res.ok) {
-          const data = await res.json()
-          setFixedPlanVariants(data.options || [])
-        } else {
-          setFixedPlanVariants([])
-        }
+        const data = await fetchApi(`/api/fixed-plan-options?city=${citySlug}&locationId=${fixedLocationId}&planId=${fixedPlanId}`)
+        setFixedPlanVariants(data.options || [])
       } catch (_) {
         setFixedPlanVariants([])
       }
@@ -677,13 +582,8 @@ const Packages: React.FC = () => {
   useEffect(() => {
     const fetchVehicles = async (locationId: string) => {
       try {
-        const res = await fetch(`/api/vehicles?locationId=${locationId}`)
-        if (res.ok) {
-          const data = await res.json()
-          setVehicles(data.vehicles || [])
-        } else {
-          setVehicles([])
-        }
+        const data = await fetchApi(`/api/vehicles?locationId=${locationId}`)
+        setVehicles(data.vehicles || [])
       } catch (_) {
         setVehicles([])
       }
@@ -695,20 +595,14 @@ const Packages: React.FC = () => {
   // Publish/Unpublish
   const updatePackageStatus = async (id: number, nextStatus: 'Active' | 'Draft' | 'Inactive') => {
     try {
-      const response = await fetch(`/api/packages/${id}/status`, {
+      await fetchApi(`/api/packages/${id}/status`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: nextStatus })
       })
-      if (response.ok) {
-        await fetchPackages()
-        return { success: true }
-      } else {
-        const data = await response.json()
-        return { success: false, error: data.error }
-      }
-    } catch (_) {
-      return { success: false, error: 'Failed to update status' }
+      await fetchPackages()
+      return { success: true }
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Failed to update status' }
     }
   }
 
@@ -756,10 +650,10 @@ const Packages: React.FC = () => {
 
     try {
       const results = await Promise.allSettled(
-        packages.map((p) => fetch(`/api/packages/${p.id}`, { method: 'DELETE' }))
+        packages.map((p) => fetchApi(`/api/packages/${p.id}`, { method: 'DELETE' }))
       )
       const failed = results.filter(
-        (r) => r.status === 'rejected' || (r.status === 'fulfilled' && !(r.value as Response).ok)
+        (r) => r.status === 'rejected'
       )
       if (failed.length > 0) {
         alert(`Some deletions failed (${failed.length}/${packages.length}). Refreshing list...`)
@@ -769,6 +663,7 @@ const Packages: React.FC = () => {
       await fetchPackages()
     } catch (e) {
       console.error('Bulk delete error:', e)
+      handleApiError(e)
       alert('Failed to delete all itineraries')
     }
   }
@@ -828,13 +723,11 @@ const Packages: React.FC = () => {
     try {
       setCreating(true)
       const result = await createPackage(packageData, citySlug)
-      
+
       if (result.success && result.package?.id) {
         try {
-          const fullRes = await fetch(`/api/packages/${result.package.id}`)
-          let fullData: any = null
-          try { fullData = await fullRes.json() } catch (_) { fullData = {} }
-          if (fullRes.ok && fullData?.package) {
+          const fullData = await fetchApi(`/api/packages/${result.package.id}`)
+          if (fullData?.package) {
             setPackages(prev => [fullData.package, ...prev])
           } else {
             // Fallback: refresh entire list
@@ -881,11 +774,11 @@ const Packages: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900">Choose a Location</h1>
             <p className="text-sm text-gray-600">Select a location to manage itineraries (create and view) for that city</p>
           </div>
-         
+
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {LOCATIONS.map((loc, idx) => (
+          {LOCATIONS.map((loc, idx) => (
             <button
               key={loc.slug}
               onClick={() => navigate(`/packages?city=${loc.slug}`)}
@@ -971,8 +864,8 @@ const Packages: React.FC = () => {
             )}
           </h1>
           <p className="text-sm text-gray-600">
-            {citySlug === 'all' 
-              ? 'Create and manage travel itineraries for all cities' 
+            {citySlug === 'all'
+              ? 'Create and manage travel itineraries for all cities'
               : `Create and manage travel itineraries for ${cityName}`
             }
           </p>
@@ -984,14 +877,14 @@ const Packages: React.FC = () => {
           >
             Change Location
           </button>
-          
+
           <button
             className="bg-primary text-white px-3 py-1.5 text-sm rounded-md hover:opacity-90 transition-colors"
             onClick={() => setShowCreateModal(true)}
           >
             New Itinerary
           </button>
-          
+
           {/* <button
             onClick={deleteAllPackagesForCity}
             className="px-4 py-2 rounded-lg border border-red-300 text-red-700 hover:bg-red-50"
@@ -1082,29 +975,26 @@ const Packages: React.FC = () => {
         <div className="flex flex-wrap gap-1.5">
           <button
             onClick={() => setFilter('all')}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-              filter === 'all' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${filter === 'all' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             All ({packages.length})
           </button>
           <button
             onClick={() => setFilter('active')}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-              filter === 'active' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${filter === 'active' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             Active ({packages.filter((p: Package) => p.status === 'Active').length})
           </button>
           <button
             onClick={() => setFilter('inactive')}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-              filter === 'inactive' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${filter === 'inactive' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             Inactive ({packages.filter((p: Package) => p.status === 'Inactive').length})
           </button>
-          
+
         </div>
       </div>
 
@@ -1129,18 +1019,17 @@ const Packages: React.FC = () => {
                   </div>
                 )}
                 <div className="absolute top-2 right-2">
-                  <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
-                    pkg.status === 'Active' 
-                      ? 'bg-primary/10 text-primary border border-primary/20' 
-                      : pkg.status === 'Draft' 
-                        ? 'bg-primary/10 text-primary border border-primary/20' 
-                        : 'bg-primary/10 text-primary border border-primary/20'
-                  }`}>
+                  <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${pkg.status === 'Active'
+                    ? 'bg-primary/10 text-primary border border-primary/20'
+                    : pkg.status === 'Draft'
+                      ? 'bg-primary/10 text-primary border border-primary/20'
+                      : 'bg-primary/10 text-primary border border-primary/20'
+                    }`}>
                     {pkg.status}
                   </span>
                 </div>
               </div>
-              
+
               {/* Card Content */}
               <div className="p-3">
                 <div className="mb-2">
@@ -1167,7 +1056,7 @@ const Packages: React.FC = () => {
                     </>
                   )}
                 </div>
-                
+
                 {/* Package Details - Only show when expanded */}
                 {isExpanded && (
                   <div className="space-y-1.5 mb-3">
@@ -1292,7 +1181,7 @@ const Packages: React.FC = () => {
                     })()}
                   </div>
                 )}
-                
+
                 {/* Card Footer */}
                 <div className="pt-2 border-t border-gray-100">
                   <button
@@ -1406,13 +1295,13 @@ const Packages: React.FC = () => {
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">Fill in the details to create a new itinerary.</h3>
-                <button
-                  onClick={() => setShowCreateModal(false)}
+              <button
+                onClick={() => setShowCreateModal(false)}
                 className="text-gray-400 hover:text-gray-600 p-1"
-                >
-                  ✕
-                </button>
-                </div>
+              >
+                ✕
+              </button>
+            </div>
 
             {/* Form Content */}
             <div className="p-4">
@@ -1431,10 +1320,10 @@ const Packages: React.FC = () => {
                     required
                   />
                 </div>
-                
+
                 {/* Date Fields - Side by Side */}
                 <div className="grid grid-cols-2 gap-4">
-                <div>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
                     <div className="relative">
                       <input
@@ -1446,8 +1335,8 @@ const Packages: React.FC = () => {
                         <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                  </div>
-                  </div>
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
@@ -1461,8 +1350,8 @@ const Packages: React.FC = () => {
                         <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                  </div>
-                  </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1510,7 +1399,7 @@ const Packages: React.FC = () => {
                     placeholder="Additional notes or special requirements..."
                   />
                 </div>
-                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1522,38 +1411,37 @@ const Packages: React.FC = () => {
           <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
             <div className="mt-1">
               <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Add New {newLocationType === 'hotel' ? 'Hotel' : newLocationType === 'vehicle' ? 'Vehicle' : 'Fixed Plan'} Location</h3>
+                <h3 className="text-lg font-medium text-gray-900">Add New {newLocationType === 'hotel' ? 'Hotel' : newLocationType === 'vehicle' ? 'Vehicle' : 'Fixed Plan'} Location</h3>
                 <button onClick={() => setShowAddLocationModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
               </div>
               <div className="space-y-4">
-                  <div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Location Name</label>
-                    <input
-                      type="text"
-                    value={newLocationName} 
+                  <input
+                    type="text"
+                    value={newLocationName}
                     onChange={(e) => setNewLocationName(e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder={`Enter ${newLocationType} location name`}
-                    />
-                  </div>
+                  />
+                </div>
                 <div className="text-sm text-gray-600">
                   {citySlug === 'all' ? (
                     <span className="text-red-600">⚠️ Please navigate to Packages from a specific location in WebsiteEdit</span>
                   ) : (
                     <span>This will be added to <strong>{citySlug}</strong> locations.</span>
                   )}
-                  </div>
                 </div>
+              </div>
               <div className="mt-6 flex justify-end gap-2">
                 <button onClick={() => setShowAddLocationModal(false)} className="px-4 py-2 bg-gray-200 rounded">Cancel</button>
-                <button 
-                  onClick={addNewLocation} 
+                <button
+                  onClick={addNewLocation}
                   disabled={citySlug === 'all'}
-                  className={`px-4 py-2 rounded ${
-                    citySlug === 'all' 
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                      : 'bg-primary text-white hover:opacity-90'
-                  }`}
+                  className={`px-4 py-2 rounded ${citySlug === 'all'
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-primary text-white hover:opacity-90'
+                    }`}
                 >
                   Add Location
                 </button>
@@ -1576,47 +1464,47 @@ const Packages: React.FC = () => {
                 <button onClick={() => setShowAddHotelModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
               </div>
               <div className="space-y-4">
-                  <div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Hotel Name</label>
-                    <input
-                      type="text"
-                    value={newHotel.name} 
+                  <input
+                    type="text"
+                    value={newHotel.name}
                     onChange={(e) => setNewHotel({ ...newHotel, name: e.target.value })}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Enter hotel name"
-                    />
-                  </div>
-                  <div>
+                  />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">MAP Rate</label>
-                    <input
-                      type="number"
-                    value={newHotel.mapRate} 
+                  <input
+                    type="number"
+                    value={newHotel.mapRate}
                     onChange={(e) => setNewHotel({ ...newHotel, mapRate: Number(e.target.value) })}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Enter MAP rate"
-                    />
-                  </div>
-                  <div>
+                  />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">EB</label>
-                    <input
-                      type="number"
-                    value={newHotel.eb} 
+                  <input
+                    type="number"
+                    value={newHotel.eb}
                     onChange={(e) => setNewHotel({ ...newHotel, eb: Number(e.target.value) })}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Enter EB rate"
-                    />
-                  </div>
-                  <div>
+                  />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                  <input 
-                    type="text" 
-                    value={newHotel.category} 
+                  <input
+                    type="text"
+                    value={newHotel.category}
                     onChange={(e) => setNewHotel({ ...newHotel, category: e.target.value })}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="e.g., 3 star Premier, 4 star, 3 star Dlx"
                   />
-                  </div>
                 </div>
+              </div>
               <div className="mt-6 flex justify-end gap-2">
                 <button onClick={() => setShowAddHotelModal(false)} className="px-4 py-2 bg-gray-200 rounded">Cancel</button>
                 <button onClick={addNewHotel} className="px-4 py-2 bg-primary text-white rounded">Add Hotel</button>
@@ -1648,27 +1536,27 @@ const Packages: React.FC = () => {
                     placeholder="e.g., Sedan, SUV, Tempo Traveller"
                   />
                 </div>
-                  <div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Rate (₹)</label>
-                    <input
-                      type="number"
+                  <input
+                    type="number"
                     value={newVehicle.rate}
                     onChange={(e) => setNewVehicle({ ...newVehicle, rate: Number(e.target.value) })}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Enter base rate"
-                    />
-                  </div>
-                  <div>
+                  />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Extra for AC (₹)</label>
-                    <input
-                      type="number"
+                  <input
+                    type="number"
                     value={newVehicle.acExtra}
                     onChange={(e) => setNewVehicle({ ...newVehicle, acExtra: Number(e.target.value) })}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Enter AC extra"
-                    />
-                  </div>
+                  />
                 </div>
+              </div>
               <div className="mt-6 flex justify-end gap-2">
                 <button onClick={() => setShowAddVehicleModal(false)} className="px-4 py-2 bg-gray-200 rounded">Cancel</button>
                 <button onClick={addNewVehicle} className="px-4 py-2 bg-primary text-white rounded">Add Vehicle</button>
@@ -1715,20 +1603,17 @@ const Packages: React.FC = () => {
                 <button
                   onClick={async () => {
                     if (citySlug === 'all') { alert('Select a specific city first'); return }
-                    const res = await fetch('/api/fixed-days', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ city: citySlug, days: newFixedDays.days, label: newFixedDays.label })
-                    })
-                    if (res.ok) {
-                      const data = await res.json()
-                      setFixedDaysOptions(prev => [...prev, { id: data.option.id, days: data.option.days, label: data.option.label || '' }].sort((a,b)=>a.days-b.days))
+                    try {
+                      const data = await fetchApi('/api/fixed-days', {
+                        method: 'POST',
+                        body: JSON.stringify({ city: citySlug, days: newFixedDays.days, label: newFixedDays.label })
+                      })
+                      setFixedDaysOptions(prev => [...prev, { id: data.option.id, days: data.option.days, label: data.option.label || '' }].sort((a, b) => a.days - b.days))
                       setShowAddFixedDaysModal(false)
-                      ;(setNewPackage as any)((prev: any) => ({ ...prev, fixedDaysId: data.option.id }))
+                        ; (setNewPackage as any)((prev: any) => ({ ...prev, fixedDaysId: data.option.id }))
                       setNewFixedDays({ days: 1, label: '' })
-                    } else {
-                      const err = await res.json()
-                      alert(err.error || 'Failed to add days')
+                    } catch (err: any) {
+                      alert(err.message || 'Failed to add days')
                     }
                   }}
                   className="px-4 py-2 bg-primary text-white rounded"
@@ -1759,7 +1644,7 @@ const Packages: React.FC = () => {
                     placeholder="e.g., Standard, Deluxe, Premium"
                   />
                 </div>
-                </div>
+              </div>
               <div className="mt-6 flex justify-end gap-2">
                 <button onClick={() => setShowAddFixedPlanModal(false)} className="px-4 py-2 bg-gray-200 rounded">Cancel</button>
                 <button
@@ -1768,20 +1653,17 @@ const Packages: React.FC = () => {
                       alert('Enter plan name and select a fixed location first')
                       return
                     }
-                    const res = await fetch('/api/fixed-plans', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ city: citySlug, locationId: (newPackage as any).fixedLocationId, name: newFixedPlanName.trim() })
-                    })
-                    if (res.ok) {
-                      const data = await res.json()
+                    try {
+                      const data = await fetchApi('/api/fixed-plans', {
+                        method: 'POST',
+                        body: JSON.stringify({ city: citySlug, locationId: (newPackage as any).fixedLocationId, name: newFixedPlanName.trim() })
+                      })
                       setFixedPlans(prev => [{ id: data.plan.id, name: data.plan.name }, ...prev])
                       setNewPackage(prev => ({ ...(prev as any), fixedPlanId: data.plan.id }))
                       setNewFixedPlanName('')
                       setShowAddFixedPlanModal(false)
-                    } else {
-                      const err = await res.json().catch(async () => ({ message: await res.text() }))
-                      alert(err.error || err.message || 'Failed to add plan')
+                    } catch (err: any) {
+                      alert(err.message || 'Failed to add plan')
                     }
                   }}
                   className="px-4 py-2 bg-primary text-white rounded"
@@ -1823,27 +1705,24 @@ const Packages: React.FC = () => {
                       alert('Select a fixed location and plan first')
                       return
                     }
-                    const res = await fetch('/api/fixed-plan-options', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        city: citySlug,
-                        locationId: (newPackage as any).fixedLocationId,
-                        planId: (newPackage as any).fixedPlanId,
-                        adults: newVariant.adults,
-                        pricePerPerson: newVariant.pricePerPerson,
-                        roomsVehicle: newVariant.roomsVehicle
+                    try {
+                      const data = await fetchApi('/api/fixed-plan-options', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                          city: citySlug,
+                          locationId: (newPackage as any).fixedLocationId,
+                          planId: (newPackage as any).fixedPlanId,
+                          adults: newVariant.adults,
+                          pricePerPerson: newVariant.pricePerPerson,
+                          roomsVehicle: newVariant.roomsVehicle
+                        })
                       })
-                    })
-                    if (res.ok) {
-                      const data = await res.json()
                       setFixedPlanVariants(prev => [data.option, ...prev])
                       setNewPackage(prev => ({ ...(prev as any), fixedVariantId: data.option.id }))
                       setNewVariant({ adults: 2, pricePerPerson: 0, roomsVehicle: '' })
                       setShowAddVariantModal(false)
-                    } else {
-                      const err = await res.json().catch(async () => ({ message: await res.text() }))
-                      alert(err.error || err.message || 'Failed to add variant')
+                    } catch (err: any) {
+                      alert(err.message || 'Failed to add variant')
                     }
                   }}
                   className="px-4 py-2 bg-primary text-white rounded"

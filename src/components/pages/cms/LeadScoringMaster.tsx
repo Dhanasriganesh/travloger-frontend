@@ -5,6 +5,7 @@ import { Card, CardContent } from '../../ui/card'
 import { Badge } from '../../ui/badge'
 import { Plus, Search, Edit, Trash2, ArrowLeft, Target, TrendingUp } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { fetchApi, handleApiError } from '../../../lib/api'
 
 interface ScoringRule {
   id: number
@@ -25,32 +26,7 @@ interface ScoringRule {
   date: string
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 
-const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
-  const url = `${API_BASE_URL}${endpoint}`
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  })
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Network error' }))
-    throw new Error(errorData.error || `HTTP ${response.status}`)
-  }
-
-  return response.json()
-}
-
-const handleApiError = (error: any): string => {
-  if (error instanceof Error) {
-    return error.message
-  }
-  return String(error)
-}
 
 const LeadScoringMaster: React.FC = () => {
   const navigate = useNavigate()

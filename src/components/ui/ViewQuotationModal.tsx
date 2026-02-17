@@ -1,5 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { X, Printer, Mail, Camera } from 'lucide-react'
+import { fetchApi, handleApiError } from '../../lib/api'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 
 interface QuotationData {
   queryId: string
@@ -65,176 +68,66 @@ const fallbackQuotationData: QuotationData = {
   usefulTips: []
 }
 
-const ViewQuotationModal: React.FC<ViewQuotationModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  itineraryId, 
-  queryId 
+const ViewQuotationModal: React.FC<ViewQuotationModalProps> = ({
+  isOpen,
+  onClose,
+  itineraryId,
+  queryId
 }) => {
   const [quotationData, setQuotationData] = useState<QuotationData | null>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [shareType, setShareType] = useState<'private' | 'public'>('private')
   const [clients, setClients] = useState<Array<{ id: string; name: string; email: string; phone: string; selected: boolean }>>([])
   const [ccMail, setCcMail] = useState<string>('')
   const [message, setMessage] = useState<string>('')
   const [sending, setSending] = useState(false)
+  const [leadDetails, setLeadDetails] = useState<{ name: string; email: string; phone: string } | null>(null)
 
-  // Sample data structure - replace with actual API calls
-  // const sampleQuotationData: QuotationData = {
-  //   queryId: "100045",
-  //   customerName: "Gajanand",
-  //   destination: "Kerala",
-  //   adults: 2,
-  //   children: 0,
-  //   nights: 4,
-  //   days: 5,
-  //   startDate: "Mon, 27 Oct, 2025",
-  //   endDate: "Wed, 29 Oct, 2025",
-  //   queryDate: "10-Oct-2025",
-  //   totalPrice: 16654,
-  //   hotels: [
-  //     {
-  //       city: "Munnar",
-  //       hotelName: "June Boutique Villa (3 Star)",
-  //       checkIn: "28-Oct-2025",
-  //       checkOut: "30-Oct-2025",
-  //       nights: 2,
-  //       roomType: "Deluxe Balcony Room",
-  //       mealPlan: "CP",
-  //       rooms: 1
-  //     }
-  //   ],
-  //   itinerary: [
-  //     {
-  //       day: 1,
-  //       date: "27 Oct 2025",
-  //       title: "Cochin to Munnar",
-  //       description: "Transfer from Cochin to Munnar (4.5 Hours)",
-  //       activities: [
-  //         "Arrival at Cochin International Airport by 9 AM",
-  //         "Scenic drive to Munnar",
-  //         "Stop at Neriamangalam Bridge for views of Periyar Lake",
-  //         "Visit Cheeyappara and Valara Waterfalls",
-  //         "Experience ziplining and a fish spa at Pottas Fun Farm",
-  //         "Optional visit to Punarjani Traditional Village for Kathakali and martial arts performances",
-  //         "Check into Munnar hotel",
-  //         "Unwind for a restful night"
-  //       ]
-  //     },
-  //     {
-  //       day: 2,
-  //       date: "28 Oct 2025",
-  //       title: "Munnar Local Sightseeing",
-  //       description: "Munnar Sightseeing | With TOP STATION",
-  //       activities: [
-  //         "After breakfast, leave the hotel by 9 AM",
-  //         "Visit Photo Point and Echo Point",
-  //         "Experience jet-skiing at Matupetty Dam",
-  //         "Visit Pullu Medu Elephant Viewpoint for wild elephants",
-  //         "Continue to Yellapatty Grasslands (highlight of the tour)",
-  //         "Ascend to Top Station for panoramic views of the Munnar landscape",
-  //         "Overnight stay in Munnar"
-  //       ]
-  //     },
-  //     {
-  //       day: 3,
-  //       date: "29 Oct 2025",
-  //       title: "Munnar to Cochin",
-  //       description: "Bid farewell to God's Own Country",
-  //       activities: [
-  //         "Beautiful sunrise, breakfast, and post-out from the hotel",
-  //         "Transferred to Kochi Airport/Railway Station/Bus Stand",
-  //         "More sightseeing options depending on flight timing",
-  //         "Mattancherry—the Dutch Palace",
-  //         "Paradesi Synagogue (ancient chandeliers)",
-  //         "Fort Cochin—St. Francis Church (India's oldest European church)",
-  //         "Santa Cruz Basilica",
-  //         "Chinese Fishing Nets",
-  //         "Views of MARINE Drive"
-  //       ]
-  //     }
-  //   ],
-  //   inclusions: [
-  //     "Airport/Railway/Bus stop pick-up & drop",
-  //     "Entire travel as per the itinerary in a private vehicle",
-  //     "(Sedan/SUV/MUV/Tempo Traveller)",
-  //     "Enter sightseeing as per the mentioned itinerary only",
-  //     "Driver come guide",
-  //     "All Permits, Tolls & Taxes",
-  //     "Fuel expenses & Driver allowances"
-  //   ],
-  //   exclusions: [
-  //     "To and from fares of airlines/buses/railways",
-  //     "Entry Fee/Camera Fee/Activities/Rides not mentioned",
-  //     "Any kind of food or beverage that is not included in the package, like alcoholic drinks, mineral water, meals/refreshments/lunches on the go"
-  //   ],
-  //   terms: [
-  //     "Driver duty time will only be 8 AM to 7 PM, except for pick up",
-  //     "Driver Extra time service according to the location of hotels and will be charged ₹250/- per hour",
-  //     "Early morning pickups are only possible after 6 am",
-  //     "The provided quotation is based on the specific itinerary discussed. Any extra kilometers or stops will incur extra charges, payable directly to the driver",
-  //     "The Air conditioning in the room will not cool suddenly like in homes and hotels. It will take 30 minutes to 1 hour to be in full power",
-  //     "The guest must go to the bedroom by 10 PM. It is not allowed to be outside after 10 PM",
-  //     "A presence of flies and small insects is the natural habitat. It cannot be 100% eliminated",
-  //     "Management will not be liable for missing things during the trip",
-  //     "Please pack light, as we aim to travel minimally. Our itinerary is subject to change due to weather, road conditions, participant abilities, and other unforeseen circumstances",
-  //     "We don't permit smoking during the movement in transport",
-  //     "Travloger reserves the right to end your trip at any time due to inappropriate behavior/conduct. In such cases, no refunds will be issued",
-  //     "The individual reserving the spot is liable for any harm caused to room/camp/resort outfitting and is responsible to pay for something similar",
-  //     "If any sightseeing is cancelled due to bad weather conditions or unavoidable circumstances, no refund will be given",
-  //     "Provided rates are subject to change based on availability/changes in Hotels, fuel rates, etc."
-  //   ],
-  //   cancellationPolicy: [
-  //     "No refund shall be made with respect to the initial booking advance amount for any cancellations",
-  //     "If cancellations are made 2015 days before the start date of the trip, 50% of the trip cost will be charged as cancellation fees",
-  //     "If cancellations are made 15–7 days before the start date of the trip, 50% of the trip cost will be charged as cancellation fees",
-  //     "If cancellations are made within 7 days before the start date of the trip, 75% of the trip cost will be charged as cancellation fees",
-  //     "In the case of unforeseen weather conditions or government restrictions, certain activities may be cancelled, and in such cases, the operator will try his best to provide an alternate feasible activity. However, no refund will be provided for the same"
-  //   ],
-  //   usefulTips: [
-  //     "Ensure that you know your preferred destination, activities, travel dates, and budget. This will help us recommend the best package for your needs",
-  //     "Double-check what's covered in the package—flights, accommodations, meals, tours, and transfers—so there are no surprises later",
-  //     "Be aware of cancellation or modification fees. Make sure you're comfortable with the flexibility offered in case of unexpected changes",
-  //     "Inquire about any optional activities, resort fees, taxes, or tips that may not be included in the package price"
-  //   ]
-  // }
+  const quotationRef = useRef<HTMLDivElement>(null)
 
   const fetchQuotationData = useCallback(async () => {
     if (!itineraryId) return
-    
+
     try {
       setLoading(true)
+      setError(null)
       console.log('🔄 Fetching quotation data for itinerary:', itineraryId, 'queryId:', queryId)
-      
-      const response = await fetch(`/api/quotation/${itineraryId}?queryId=${queryId}`, { cache: 'no-store' })
-      const data = await response.json()
-      
-      if (response.ok && data.quotation) {
-        console.log('✅ Quotation data loaded:', data.quotation)
-        console.log('👤 Customer name:', data.quotation.customerName)
-        console.log('🏨 Hotels count:', data.quotation.hotels.length)
-        console.log('💰 Total price:', data.quotation.totalPrice)
-        setQuotationData(data.quotation)
-      } else {
-        console.error('❌ Failed to fetch quotation data:', data.error)
-        // Fallback to sample data if API fails
-        setQuotationData(fallbackQuotationData)
-      }
+
+      const data = await fetchApi(`/api/quotation/${itineraryId}?queryId=${queryId}`)
+
+      console.log('✅ Quotation data loaded:', data)
+      console.log('👤 Customer name:', data.customerName)
+      console.log('🏨 Hotels count:', data.hotels.length)
+      console.log('💰 Total price:', data.totalPrice)
+      setQuotationData(data)
     } catch (error) {
       console.error('❌ Error fetching quotation data:', error)
-      // Fallback to sample data if API fails
+      setError(handleApiError(error, 'Failed to load quotation data'))
       setQuotationData(fallbackQuotationData)
     } finally {
       setLoading(false)
     }
   }, [itineraryId, queryId])
 
+  const fetchLeadDetails = useCallback(async () => {
+    if (!queryId) return
+    try {
+      const data = await fetchApi(`/api/leads/${queryId}`)
+      setLeadDetails(data.lead || data)
+    } catch (error) {
+      console.error('Error fetching lead details:', error)
+      setError(handleApiError(error, 'Failed to load lead details'))
+    }
+  }, [queryId])
+
   useEffect(() => {
     if (isOpen && itineraryId) {
       fetchQuotationData()
+      fetchLeadDetails()
     }
-  }, [isOpen, itineraryId, fetchQuotationData])
+  }, [isOpen, itineraryId, fetchQuotationData, fetchLeadDetails])
 
   const handlePrint = () => {
     window.print()
@@ -243,19 +136,17 @@ const ViewQuotationModal: React.FC<ViewQuotationModalProps> = ({
   const fetchClients = async () => {
     if (!queryId) return
     try {
-      const response = await fetch(`/api/leads/${queryId}`)
-      const data = await response.json()
-      if (response.ok && data.lead) {
-        setClients([{
-          id: String(data.lead.id),
-          name: data.lead.name || '',
-          email: data.lead.email || '',
-          phone: data.lead.phone || '',
-          selected: true
-        }])
-      }
+      const response = await fetchApi(`/api/leads/${queryId}`)
+      setClients([{
+        id: String(response.lead.id),
+        name: response.lead.name || '',
+        email: response.lead.email || '',
+        phone: response.lead.phone || '',
+        selected: true
+      }])
     } catch (error) {
       console.error('Error fetching clients:', error)
+      setError(handleApiError(error, 'Failed to fetch client details'))
     }
   }
 
@@ -265,6 +156,11 @@ const ViewQuotationModal: React.FC<ViewQuotationModalProps> = ({
   }
 
   const handleSendEmail = async () => {
+    if (!quotationRef.current || !quotationData || !leadDetails) {
+      alert('Quotation data or lead details are missing.')
+      return
+    }
+
     const selectedClients = clients.filter(c => c.selected)
     if (selectedClients.length === 0 && !ccMail) {
       alert('Please select at least one client or add a CC email')
@@ -273,9 +169,25 @@ const ViewQuotationModal: React.FC<ViewQuotationModalProps> = ({
 
     try {
       setSending(true)
-      const response = await fetch('/api/email/send-quotation', {
+      setError(null)
+
+      // Capture the current view as an image for the email or PDF
+      const canvas = await html2canvas(quotationRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false
+      })
+
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const imgData = canvas.toDataURL('image/jpeg', 0.8)
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width
+
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight)
+      const pdfBase64 = pdf.output('datauristring').split(',')[1]
+
+      await fetchApi('/api/email/send-quotation', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           itineraryId,
           queryId,
@@ -283,19 +195,17 @@ const ViewQuotationModal: React.FC<ViewQuotationModalProps> = ({
           recipients: selectedClients.map(c => ({ email: c.email, name: c.name })),
           ccMail: ccMail || undefined,
           message: message || undefined,
-          quotationData
+          quotationData,
+          pdf: pdfBase64,
+          customerName: leadDetails.name,
+          itineraryName: quotationData.destination // Assuming destination can be used as itinerary name
         })
       })
 
-      const data = await response.json()
-      if (response.ok) {
-        alert('Quotation sent successfully!')
-        setShowEmailModal(false)
-        setCcMail('')
-        setMessage('')
-      } else {
-        alert(data.error || 'Failed to send quotation')
-      }
+      alert('Quotation sent successfully!')
+      setShowEmailModal(false)
+      setCcMail('')
+      setMessage('')
     } catch (error: any) {
       alert(error?.message || 'Failed to send quotation')
     } finally {
@@ -335,7 +245,7 @@ const ViewQuotationModal: React.FC<ViewQuotationModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6" ref={quotationRef}>
           {/* Branding */}
           <div className="text-center">
             <h1 className="text-2xl font-bold text-blue-600">travloger.in</h1>
@@ -349,7 +259,7 @@ const ViewQuotationModal: React.FC<ViewQuotationModalProps> = ({
           <div>
             <p className="text-lg">Dear {quotationData.customerName},</p>
             <p className="mt-2">
-              This is Travloger.in and I will be working with you to plan your trip to <strong>{quotationData.destination}</strong>. 
+              This is Travloger.in and I will be working with you to plan your trip to <strong>{quotationData.destination}</strong>.
               Please find below details for your trip and feel free to call me at +919391203737 or{' '}
               <a href="#" className="text-red-600 underline">click here</a> to view more details about this trip.
             </p>
@@ -428,7 +338,7 @@ const ViewQuotationModal: React.FC<ViewQuotationModalProps> = ({
           {/* Inclusions & Exclusions */}
           <div>
             <h3 className="text-xl font-bold mb-4">Inclusions & Exclusions</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h4 className="text-lg font-semibold mb-2">Inclusion</h4>
@@ -438,7 +348,7 @@ const ViewQuotationModal: React.FC<ViewQuotationModalProps> = ({
                   ))}
                 </ul>
               </div>
-              
+
               <div>
                 <h4 className="text-lg font-semibold mb-2">Exclusion</h4>
                 <ul className="list-disc list-inside space-y-1 text-sm">
@@ -556,7 +466,7 @@ const ViewQuotationModal: React.FC<ViewQuotationModalProps> = ({
               <div>
                 <h3 className="font-bold text-gray-900 mb-2">Clients</h3>
                 <p className="text-sm text-gray-600 mb-4">Select client you would like to email this itinerary to.</p>
-                
+
                 <div className="space-y-3">
                   {clients.map((client) => (
                     <div key={client.id} className="flex items-center gap-4 p-3 border rounded">
@@ -564,7 +474,7 @@ const ViewQuotationModal: React.FC<ViewQuotationModalProps> = ({
                         type="checkbox"
                         checked={client.selected}
                         onChange={(e) => {
-                          setClients(prev => prev.map(c => 
+                          setClients(prev => prev.map(c =>
                             c.id === client.id ? { ...c, selected: e.target.checked } : c
                           ))
                         }}
@@ -574,7 +484,7 @@ const ViewQuotationModal: React.FC<ViewQuotationModalProps> = ({
                         type="text"
                         value={client.name}
                         onChange={(e) => {
-                          setClients(prev => prev.map(c => 
+                          setClients(prev => prev.map(c =>
                             c.id === client.id ? { ...c, name: e.target.value } : c
                           ))
                         }}
@@ -585,7 +495,7 @@ const ViewQuotationModal: React.FC<ViewQuotationModalProps> = ({
                         type="email"
                         value={client.email}
                         onChange={(e) => {
-                          setClients(prev => prev.map(c => 
+                          setClients(prev => prev.map(c =>
                             c.id === client.id ? { ...c, email: e.target.value } : c
                           ))
                         }}
@@ -596,7 +506,7 @@ const ViewQuotationModal: React.FC<ViewQuotationModalProps> = ({
                         type="tel"
                         value={client.phone}
                         onChange={(e) => {
-                          setClients(prev => prev.map(c => 
+                          setClients(prev => prev.map(c =>
                             c.id === client.id ? { ...c, phone: e.target.value } : c
                           ))
                         }}

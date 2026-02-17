@@ -505,13 +505,12 @@ const AdminDashboard: React.FC = () => {
                         <td className="py-2 text-sm text-gray-900">₹{payment.amount || '0'}</td>
                         <td className="py-2">
                           <span
-                            className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                              (payment.paymentStatus || payment.payment_status || '').toLowerCase() === 'paid'
+                            className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${(payment.paymentStatus || payment.payment_status || '').toLowerCase() === 'paid'
                                 ? 'bg-green-100 text-green-800'
                                 : (payment.paymentStatus || payment.payment_status || '').toLowerCase() === 'pending'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
                           >
                             {payment.paymentStatus || payment.payment_status || 'Unknown'}
                           </span>
@@ -549,7 +548,7 @@ const AdminDashboard: React.FC = () => {
               THIS YEAR LEADS / <span className="text-green-600">CONFIRMED</span>
             </h3>
           </div>
-          <div className="h-64">
+          <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData.monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -574,7 +573,7 @@ const AdminDashboard: React.FC = () => {
             <div className="w-1 h-6 bg-teal-500 rounded-full mr-3"></div>
             <h3 className="text-lg font-semibold text-gray-900">LEADS BY STATUS</h3>
           </div>
-          <div className="h-64">
+          <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie data={chartData.leadStatusData} cx="50%" cy="50%" innerRadius={40} outerRadius={80} paddingAngle={5} dataKey="value">

@@ -5,6 +5,7 @@ import { Card, CardContent } from '../../ui/card'
 import { Badge } from '../../ui/badge'
 import { Plus, Search, Edit, Trash2, ArrowLeft, Tag } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { fetchApi, handleApiError } from '../../../lib/api'
 
 interface LeadType {
   id: number
@@ -24,32 +25,7 @@ interface LeadType {
   date: string
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 
-const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
-  const url = `${API_BASE_URL}${endpoint}`
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  })
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Network error' }))
-    throw new Error(errorData.error || `HTTP ${response.status}`)
-  }
-
-  return response.json()
-}
-
-const handleApiError = (error: any): string => {
-  if (error instanceof Error) {
-    return error.message
-  }
-  return String(error)
-}
 
 const LeadTypeMaster: React.FC = () => {
   const navigate = useNavigate()
@@ -59,7 +35,7 @@ const LeadTypeMaster: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editingLeadType, setEditingLeadType] = useState<LeadType | null>(null)
-  
+
   const [formData, setFormData] = useState({
     leadTypeName: '',
     code: '',
@@ -96,10 +72,10 @@ const LeadTypeMaster: React.FC = () => {
     setSaving(true)
 
     try {
-      const url = editingLeadType 
+      const url = editingLeadType
         ? `/api/lead-types?id=${editingLeadType.id}`
         : '/api/lead-types'
-      
+
       const method = editingLeadType ? 'PUT' : 'POST'
 
       const data = await fetchApi(url, {
@@ -254,7 +230,7 @@ const LeadTypeMaster: React.FC = () => {
                       {leadType.status}
                     </Badge>
                   </div>
-                  
+
                   {leadType.description && (
                     <p className="text-sm text-gray-600 mb-3">{leadType.description}</p>
                   )}
@@ -336,7 +312,7 @@ const LeadTypeMaster: React.FC = () => {
                       required
                       placeholder="e.g., Group Trip, FIT, Corporate"
                       value={formData.leadTypeName}
-                      onChange={(e) => setFormData({...formData, leadTypeName: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, leadTypeName: e.target.value })}
                     />
                   </div>
 
@@ -348,7 +324,7 @@ const LeadTypeMaster: React.FC = () => {
                       type="text"
                       placeholder="e.g., GROUP, FIT, CORP"
                       value={formData.code}
-                      onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase()})}
+                      onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                     />
                   </div>
                 </div>
@@ -362,7 +338,7 @@ const LeadTypeMaster: React.FC = () => {
                     rows={2}
                     placeholder="Short explanation of this lead type"
                     value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   />
                 </div>
               </div>
@@ -378,7 +354,7 @@ const LeadTypeMaster: React.FC = () => {
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.defaultDestinationHandling}
-                      onChange={(e) => setFormData({...formData, defaultDestinationHandling: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, defaultDestinationHandling: e.target.value })}
                     >
                       <option value="Fixed">Fixed (Group Tours)</option>
                       <option value="Flexible">Flexible (Custom)</option>
@@ -393,7 +369,7 @@ const LeadTypeMaster: React.FC = () => {
                       type="number"
                       min="1"
                       value={formData.followupRuleDays}
-                      onChange={(e) => setFormData({...formData, followupRuleDays: parseInt(e.target.value) || 3})}
+                      onChange={(e) => setFormData({ ...formData, followupRuleDays: parseInt(e.target.value) || 3 })}
                     />
                   </div>
 
@@ -405,7 +381,7 @@ const LeadTypeMaster: React.FC = () => {
                       type="text"
                       placeholder="e.g., Group Sales Team"
                       value={formData.defaultSalesTeam}
-                      onChange={(e) => setFormData({...formData, defaultSalesTeam: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, defaultSalesTeam: e.target.value })}
                     />
                   </div>
 
@@ -417,7 +393,7 @@ const LeadTypeMaster: React.FC = () => {
                       type="text"
                       placeholder="e.g., John Doe"
                       value={formData.defaultOwner}
-                      onChange={(e) => setFormData({...formData, defaultOwner: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, defaultOwner: e.target.value })}
                     />
                   </div>
                 </div>
@@ -435,7 +411,7 @@ const LeadTypeMaster: React.FC = () => {
                       type="text"
                       placeholder="e.g., Group Tour Workflow"
                       value={formData.defaultWorkflowName}
-                      onChange={(e) => setFormData({...formData, defaultWorkflowName: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, defaultWorkflowName: e.target.value })}
                     />
                   </div>
 
@@ -448,7 +424,7 @@ const LeadTypeMaster: React.FC = () => {
                         type="text"
                         placeholder="Gallabox template ID"
                         value={formData.defaultWhatsappTemplateId}
-                        onChange={(e) => setFormData({...formData, defaultWhatsappTemplateId: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, defaultWhatsappTemplateId: e.target.value })}
                       />
                     </div>
 
@@ -460,7 +436,7 @@ const LeadTypeMaster: React.FC = () => {
                         type="text"
                         placeholder="SendGrid/Mailgun template ID"
                         value={formData.defaultEmailTemplateId}
-                        onChange={(e) => setFormData({...formData, defaultEmailTemplateId: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, defaultEmailTemplateId: e.target.value })}
                       />
                     </div>
                   </div>
@@ -478,7 +454,7 @@ const LeadTypeMaster: React.FC = () => {
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.status}
-                      onChange={(e) => setFormData({...formData, status: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                     >
                       <option value="Active">Active</option>
                       <option value="Inactive">Inactive</option>
@@ -494,7 +470,7 @@ const LeadTypeMaster: React.FC = () => {
                       rows={3}
                       placeholder="Internal notes or developer reference"
                       value={formData.notes}
-                      onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     />
                   </div>
                 </div>

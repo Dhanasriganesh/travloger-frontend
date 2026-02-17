@@ -5,6 +5,7 @@ import { Card, CardContent } from '../../ui/card'
 import { Badge } from '../../ui/badge'
 import { Plus, Search, Edit, Trash2, ArrowLeft, Target } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { fetchApi, handleApiError } from '../../../lib/api'
 
 interface LeadSourceDetailed {
   id: number
@@ -38,7 +39,7 @@ const LeadSourceDetailed: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editingSource, setEditingSource] = useState<LeadSourceDetailed | null>(null)
-  
+
   const [formData, setFormData] = useState({
     sourceName: '',
     sourceType: '',
@@ -67,16 +68,10 @@ const LeadSourceDetailed: React.FC = () => {
   const fetchLeadSources = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/lead-source-detailed')
-      const data = await response.json()
-      
-      if (response.ok) {
-        setLeadSources(data.leadSources || [])
-      } else {
-        console.error('Failed to fetch lead sources:', data.error)
-      }
+      const data = await fetchApi('/api/lead-source-detailed')
+      setLeadSources(data.leadSources || [])
     } catch (error) {
-      console.error('Error fetching lead sources:', error)
+      console.error('Error fetching lead sources:', handleApiError(error))
     } finally {
       setLoading(false)
     }
@@ -121,45 +116,38 @@ const LeadSourceDetailed: React.FC = () => {
         notes: formData.notes.trim()
       }
 
-      const response = await fetch('/api/lead-source-detailed', {
+      const data = await fetchApi('/api/lead-source-detailed', {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
 
-      const data = await response.json()
-
-      if (response.ok) {
-        await fetchLeadSources()
-        setShowAddForm(false)
-        setFormData({
-          sourceName: '',
-          sourceType: '',
-          platformChannel: '',
-          defaultCampaignTag: '',
-          defaultLeadType: '',
-          defaultSalesTeam: '',
-          defaultOwner: '',
-          roundRobinActive: false,
-          autoWhatsappTemplateId: '',
-          autoEmailTemplateId: '',
-          utmSource: '',
-          utmMedium: '',
-          utmCampaign: '',
-          avgResponseTimeMins: 0,
-          successRatePercent: 0,
-          avgCpa: 0,
-          status: 'Active',
-          notes: ''
-        })
-        setEditingSource(null)
-        alert(data.message || 'Lead source saved successfully')
-      } else {
-        alert(data.error || 'Failed to save lead source')
-      }
+      await fetchLeadSources()
+      setShowAddForm(false)
+      setFormData({
+        sourceName: '',
+        sourceType: '',
+        platformChannel: '',
+        defaultCampaignTag: '',
+        defaultLeadType: '',
+        defaultSalesTeam: '',
+        defaultOwner: '',
+        roundRobinActive: false,
+        autoWhatsappTemplateId: '',
+        autoEmailTemplateId: '',
+        utmSource: '',
+        utmMedium: '',
+        utmCampaign: '',
+        avgResponseTimeMins: 0,
+        successRatePercent: 0,
+        avgCpa: 0,
+        status: 'Active',
+        notes: ''
+      })
+      setEditingSource(null)
+      alert(data.message || 'Lead source saved successfully')
     } catch (error) {
-      console.error('Error saving lead source:', error)
-      alert('Error saving lead source')
+      console.error('Error saving lead source:', handleApiError(error))
+      alert(`Error saving lead source: ${handleApiError(error)}`)
     } finally {
       setSaving(false)
     }
@@ -171,21 +159,15 @@ const LeadSourceDetailed: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`/api/lead-source-detailed?id=${id}`, {
+      const data = await fetchApi(`/api/lead-source-detailed?id=${id}`, {
         method: 'DELETE'
       })
 
-      const data = await response.json()
-
-      if (response.ok) {
-        await fetchLeadSources()
-        alert(data.message || 'Lead source deleted successfully')
-      } else {
-        alert(data.error || 'Failed to delete lead source')
-      }
+      await fetchLeadSources()
+      alert(data.message || 'Lead source deleted successfully')
     } catch (error) {
-      console.error('Error deleting lead source:', error)
-      alert('Error deleting lead source')
+      console.error('Error deleting lead source:', handleApiError(error))
+      alert(`Error deleting lead source: ${handleApiError(error)}`)
     }
   }
 
@@ -366,11 +348,11 @@ const LeadSourceDetailed: React.FC = () => {
 
       {showAddForm && (
         <div className="fixed inset-0 z-50 overflow-hidden">
-          <div 
+          <div
             className="absolute inset-0 backdrop-blur-sm"
             onClick={handleCloseForm}
           />
-          
+
           <div className="absolute right-0 top-0 h-full w-[700px] bg-white shadow-xl transform transition-transform duration-300 ease-in-out overflow-y-auto">
             <div className="flex flex-col h-full">
               <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
@@ -401,7 +383,7 @@ const LeadSourceDetailed: React.FC = () => {
                           type="text"
                           placeholder="e.g., Meta Ads, Google Ads, Website, WhatsApp"
                           value={formData.sourceName}
-                          onChange={(e) => setFormData({...formData, sourceName: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, sourceName: e.target.value })}
                         />
                       </div>
 
@@ -413,7 +395,7 @@ const LeadSourceDetailed: React.FC = () => {
                           <select
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             value={formData.sourceType}
-                            onChange={(e) => setFormData({...formData, sourceType: e.target.value})}
+                            onChange={(e) => setFormData({ ...formData, sourceType: e.target.value })}
                           >
                             <option value="">Select type</option>
                             <option value="Paid">Paid</option>
@@ -430,7 +412,7 @@ const LeadSourceDetailed: React.FC = () => {
                             type="text"
                             placeholder="e.g., Meta, Google, Website, WhatsApp, Offline"
                             value={formData.platformChannel}
-                            onChange={(e) => setFormData({...formData, platformChannel: e.target.value})}
+                            onChange={(e) => setFormData({ ...formData, platformChannel: e.target.value })}
                           />
                         </div>
                       </div>
@@ -449,7 +431,7 @@ const LeadSourceDetailed: React.FC = () => {
                           type="text"
                           placeholder="e.g., hampi_group_oct"
                           value={formData.defaultCampaignTag}
-                          onChange={(e) => setFormData({...formData, defaultCampaignTag: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, defaultCampaignTag: e.target.value })}
                         />
                       </div>
 
@@ -460,7 +442,7 @@ const LeadSourceDetailed: React.FC = () => {
                         <select
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={formData.defaultLeadType}
-                          onChange={(e) => setFormData({...formData, defaultLeadType: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, defaultLeadType: e.target.value })}
                         >
                           <option value="">Select lead type</option>
                           <option value="Group">Group</option>
@@ -478,7 +460,7 @@ const LeadSourceDetailed: React.FC = () => {
                             type="text"
                             placeholder="Team name"
                             value={formData.defaultSalesTeam}
-                            onChange={(e) => setFormData({...formData, defaultSalesTeam: e.target.value})}
+                            onChange={(e) => setFormData({ ...formData, defaultSalesTeam: e.target.value })}
                           />
                         </div>
 
@@ -490,7 +472,7 @@ const LeadSourceDetailed: React.FC = () => {
                             type="text"
                             placeholder="Owner name"
                             value={formData.defaultOwner}
-                            onChange={(e) => setFormData({...formData, defaultOwner: e.target.value})}
+                            onChange={(e) => setFormData({ ...formData, defaultOwner: e.target.value })}
                           />
                         </div>
                       </div>
@@ -500,7 +482,7 @@ const LeadSourceDetailed: React.FC = () => {
                           <input
                             type="checkbox"
                             checked={formData.roundRobinActive}
-                            onChange={(e) => setFormData({...formData, roundRobinActive: e.target.checked})}
+                            onChange={(e) => setFormData({ ...formData, roundRobinActive: e.target.checked })}
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                           <span className="text-sm font-medium text-gray-700">Round-Robin Active</span>
@@ -522,7 +504,7 @@ const LeadSourceDetailed: React.FC = () => {
                           type="text"
                           placeholder="Gallabox template ID"
                           value={formData.autoWhatsappTemplateId}
-                          onChange={(e) => setFormData({...formData, autoWhatsappTemplateId: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, autoWhatsappTemplateId: e.target.value })}
                         />
                       </div>
 
@@ -534,7 +516,7 @@ const LeadSourceDetailed: React.FC = () => {
                           type="text"
                           placeholder="SendGrid/Mailgun template ID"
                           value={formData.autoEmailTemplateId}
-                          onChange={(e) => setFormData({...formData, autoEmailTemplateId: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, autoEmailTemplateId: e.target.value })}
                         />
                       </div>
                     </div>
@@ -552,7 +534,7 @@ const LeadSourceDetailed: React.FC = () => {
                           type="text"
                           placeholder="For ads tracking"
                           value={formData.utmSource}
-                          onChange={(e) => setFormData({...formData, utmSource: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, utmSource: e.target.value })}
                         />
                       </div>
 
@@ -565,7 +547,7 @@ const LeadSourceDetailed: React.FC = () => {
                             type="text"
                             placeholder="For ads tracking"
                             value={formData.utmMedium}
-                            onChange={(e) => setFormData({...formData, utmMedium: e.target.value})}
+                            onChange={(e) => setFormData({ ...formData, utmMedium: e.target.value })}
                           />
                         </div>
 
@@ -577,7 +559,7 @@ const LeadSourceDetailed: React.FC = () => {
                             type="text"
                             placeholder="For ads tracking"
                             value={formData.utmCampaign}
-                            onChange={(e) => setFormData({...formData, utmCampaign: e.target.value})}
+                            onChange={(e) => setFormData({ ...formData, utmCampaign: e.target.value })}
                           />
                         </div>
                       </div>
@@ -596,7 +578,7 @@ const LeadSourceDetailed: React.FC = () => {
                           <Input
                             type="number"
                             value={formData.avgResponseTimeMins}
-                            onChange={(e) => setFormData({...formData, avgResponseTimeMins: parseFloat(e.target.value) || 0})}
+                            onChange={(e) => setFormData({ ...formData, avgResponseTimeMins: parseFloat(e.target.value) || 0 })}
                             disabled={!editingSource}
                             className="bg-gray-100"
                           />
@@ -611,7 +593,7 @@ const LeadSourceDetailed: React.FC = () => {
                             type="number"
                             step="0.1"
                             value={formData.successRatePercent}
-                            onChange={(e) => setFormData({...formData, successRatePercent: parseFloat(e.target.value) || 0})}
+                            onChange={(e) => setFormData({ ...formData, successRatePercent: parseFloat(e.target.value) || 0 })}
                             disabled={!editingSource}
                             className="bg-gray-100"
                           />
@@ -626,7 +608,7 @@ const LeadSourceDetailed: React.FC = () => {
                             type="number"
                             step="0.01"
                             value={formData.avgCpa}
-                            onChange={(e) => setFormData({...formData, avgCpa: parseFloat(e.target.value) || 0})}
+                            onChange={(e) => setFormData({ ...formData, avgCpa: parseFloat(e.target.value) || 0 })}
                             disabled={!editingSource}
                             className="bg-gray-100"
                           />
@@ -647,7 +629,7 @@ const LeadSourceDetailed: React.FC = () => {
                         <select
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={formData.status}
-                          onChange={(e) => setFormData({...formData, status: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                         >
                           <option value="Active">Active</option>
                           <option value="Inactive">Inactive</option>
@@ -663,7 +645,7 @@ const LeadSourceDetailed: React.FC = () => {
                           rows={3}
                           placeholder="Internal remarks"
                           value={formData.notes}
-                          onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                         />
                       </div>
                     </div>

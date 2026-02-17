@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
+import { fetchApi, handleApiError } from '../../../lib/api'
 import { Button } from '../../ui/button'
 import { Input } from '../../ui/input'
 import { Card, CardContent } from '../../ui/card'
@@ -73,32 +74,7 @@ interface ItineraryTemplate {
   date: string
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 
-const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
-  const url = `${API_BASE_URL}${endpoint}`
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  })
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Network error' }))
-    throw new Error(errorData.error || `HTTP ${response.status}`)
-  }
-
-  return response.json()
-}
-
-const handleApiError = (error: any): string => {
-  if (error instanceof Error) {
-    return error.message
-  }
-  return String(error)
-}
 
 const ItineraryTemplate: React.FC = () => {
   const navigate = useNavigate()
@@ -108,7 +84,7 @@ const ItineraryTemplate: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<ItineraryTemplate | null>(null)
-  
+
   // Masters
   const [destinations, setDestinations] = useState<string[]>([])
   const [dayItineraries, setDayItineraries] = useState<DayItinerary[]>([])
@@ -119,12 +95,12 @@ const ItineraryTemplate: React.FC = () => {
   const [activities, setActivities] = useState<Activity[]>([])
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([])
   const [pricingRules, setPricingRules] = useState<PricingTaxRule[]>([])
-  
+
   const [destinationInput, setDestinationInput] = useState('')
   const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false)
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-  
+
   const [formData, setFormData] = useState({
     packageName: '',
     destinations: [] as string[],
@@ -171,7 +147,7 @@ const ItineraryTemplate: React.FC = () => {
         fetchMasterData('/api/meal-plans', { mealPlans: [] }),
         fetchMasterData('/api/pricing-tax-rules', { pricingRules: [] })
       ])
-      
+
       // Set destinations with fallback data
       const destinationNames = (destData.destinations || []).map((d: any) => d.name)
       if (destinationNames.length === 0) {
@@ -260,14 +236,14 @@ const ItineraryTemplate: React.FC = () => {
 
     try {
       setSaving(true)
-      
+
       // Convert image to base64 if selected
       let images = [...formData.images]
       if (selectedImage) {
         const base64Image = await convertFileToBase64(selectedImage)
         images.push(base64Image)
       }
-      
+
       const method = editingTemplate ? 'PUT' : 'POST'
       const body = {
         ...(editingTemplate ? { id: editingTemplate.id } : {}),
@@ -501,11 +477,11 @@ const ItineraryTemplate: React.FC = () => {
 
       {showAddForm && (
         <div className="fixed inset-0 z-50 overflow-hidden">
-          <div 
+          <div
             className="absolute inset-0 backdrop-blur-sm"
             onClick={handleCloseForm}
           />
-          
+
           <div className="absolute right-0 top-0 h-full w-[700px] bg-white shadow-xl transform transition-transform duration-300 ease-in-out overflow-y-auto">
             <div className="flex flex-col h-full">
               <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
@@ -532,7 +508,7 @@ const ItineraryTemplate: React.FC = () => {
                       type="text"
                       placeholder="e.g., Kerala 5D/4N Honeymoon"
                       value={formData.packageName}
-                      onChange={(e) => setFormData({...formData, packageName: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, packageName: e.target.value })}
                     />
                   </div>
 
@@ -541,8 +517,8 @@ const ItineraryTemplate: React.FC = () => {
                       Destinations <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <Input 
-                        type="text" 
+                      <Input
+                        type="text"
                         placeholder="Type to search destinations..."
                         value={destinationInput}
                         onChange={(e) => {
@@ -552,7 +528,7 @@ const ItineraryTemplate: React.FC = () => {
                         onFocus={() => setShowDestinationSuggestions(true)}
                         className="border-l-2 border-red-500"
                       />
-                      
+
                       {showDestinationSuggestions && destinationInput && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
                           {destinations
@@ -564,7 +540,7 @@ const ItineraryTemplate: React.FC = () => {
                                 className="w-full text-left px-4 py-2 hover:bg-blue-50 text-sm"
                                 onClick={() => {
                                   if (!formData.destinations.includes(destination)) {
-                                    setFormData({...formData, destinations: [...formData.destinations, destination]})
+                                    setFormData({ ...formData, destinations: [...formData.destinations, destination] })
                                   }
                                   setDestinationInput('')
                                   setShowDestinationSuggestions(false)
@@ -586,7 +562,7 @@ const ItineraryTemplate: React.FC = () => {
                             {dest}
                             <button
                               type="button"
-                              onClick={() => setFormData({...formData, destinations: formData.destinations.filter((_, i) => i !== idx)})}
+                              onClick={() => setFormData({ ...formData, destinations: formData.destinations.filter((_, i) => i !== idx) })}
                               className="text-blue-600 hover:text-blue-800"
                             >
                               ×
@@ -605,7 +581,7 @@ const ItineraryTemplate: React.FC = () => {
                       <select
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={formData.linkedThemeId}
-                        onChange={(e) => setFormData({...formData, linkedThemeId: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, linkedThemeId: e.target.value })}
                       >
                         <option value="">Select theme (optional)</option>
                         {packageThemes.map((theme) => (
@@ -625,7 +601,7 @@ const ItineraryTemplate: React.FC = () => {
                         step="0.01"
                         placeholder="Enter base price"
                         value={formData.basePrice}
-                        onChange={(e) => setFormData({...formData, basePrice: parseFloat(e.target.value) || 0})}
+                        onChange={(e) => setFormData({ ...formData, basePrice: parseFloat(e.target.value) || 0 })}
                       />
                     </div>
                   </div>
@@ -641,7 +617,7 @@ const ItineraryTemplate: React.FC = () => {
                         if (e.target.value) {
                           const dayItId = parseInt(e.target.value, 10)
                           if (!formData.dayItineraryIds.includes(dayItId)) {
-                            setFormData({...formData, dayItineraryIds: [...formData.dayItineraryIds, dayItId]})
+                            setFormData({ ...formData, dayItineraryIds: [...formData.dayItineraryIds, dayItId] })
                           }
                           e.target.value = ''
                         }
@@ -664,7 +640,7 @@ const ItineraryTemplate: React.FC = () => {
                               {dayIt.name}
                               <button
                                 type="button"
-                                onClick={() => setFormData({...formData, dayItineraryIds: formData.dayItineraryIds.filter(id => id !== dayItId)})}
+                                onClick={() => setFormData({ ...formData, dayItineraryIds: formData.dayItineraryIds.filter(id => id !== dayItId) })}
                                 className="text-green-600 hover:text-green-800"
                               >
                                 ×
@@ -684,7 +660,7 @@ const ItineraryTemplate: React.FC = () => {
                       <Input
                         type="date"
                         value={formData.validityStartDate}
-                        onChange={(e) => setFormData({...formData, validityStartDate: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, validityStartDate: e.target.value })}
                       />
                     </div>
                     <div>
@@ -694,7 +670,7 @@ const ItineraryTemplate: React.FC = () => {
                       <Input
                         type="date"
                         value={formData.validityEndDate}
-                        onChange={(e) => setFormData({...formData, validityEndDate: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, validityEndDate: e.target.value })}
                       />
                     </div>
                   </div>
@@ -712,14 +688,14 @@ const ItineraryTemplate: React.FC = () => {
                           onChange={(e) => {
                             const next = [...formData.highlights]
                             next[idx] = e.target.value
-                            setFormData({...formData, highlights: next})
+                            setFormData({ ...formData, highlights: next })
                           }}
                         />
                         <button
                           type="button"
                           onClick={() => {
                             if (formData.highlights.length > 1) {
-                              setFormData({...formData, highlights: formData.highlights.filter((_, i) => i !== idx)})
+                              setFormData({ ...formData, highlights: formData.highlights.filter((_, i) => i !== idx) })
                             }
                           }}
                           className="text-red-600 hover:text-red-800"
@@ -730,7 +706,7 @@ const ItineraryTemplate: React.FC = () => {
                     ))}
                     <button
                       type="button"
-                      onClick={() => setFormData({...formData, highlights: [...formData.highlights, '']})}
+                      onClick={() => setFormData({ ...formData, highlights: [...formData.highlights, ''] })}
                       className="text-xs text-blue-600 hover:text-blue-800"
                     >
                       + Add Highlight
@@ -775,7 +751,7 @@ const ItineraryTemplate: React.FC = () => {
                             />
                             <button
                               type="button"
-                              onClick={() => setFormData({...formData, images: formData.images.filter((_, i) => i !== idx)})}
+                              onClick={() => setFormData({ ...formData, images: formData.images.filter((_, i) => i !== idx) })}
                               className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
                             >
                               ×
@@ -795,7 +771,7 @@ const ItineraryTemplate: React.FC = () => {
                       rows={4}
                       placeholder="Additional notes about the template"
                       value={formData.notes}
-                      onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     />
                   </div>
 
@@ -806,7 +782,7 @@ const ItineraryTemplate: React.FC = () => {
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.templateStatus}
-                      onChange={(e) => setFormData({...formData, templateStatus: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, templateStatus: e.target.value })}
                     >
                       <option value="Active">Active</option>
                       <option value="Inactive">Inactive</option>

@@ -92,37 +92,29 @@ const Reports: React.FC = () => {
         }
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reports/export`, {
+      const blob = await fetchApi('/api/reports/export', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        responseType: 'blob'
       })
 
-      if (response.ok) {
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
 
-        // Generate filename based on selections
-        const locationStr = selectedLocation === 'all' ? 'All-Locations' : selectedLocation
-        const monthStr = selectedMonth === 'all' ? 'All-Months' : selectedMonth
-        const yearStr = selectedYear === 'all' ? 'All-Years' : selectedYear
-        const filename = `${selectedSection.toUpperCase()}-Report-${locationStr}-${monthStr}-${yearStr}-${new Date().toISOString().split('T')[0]}.csv`
+      // Generate filename based on selections
+      const locationStr = selectedLocation === 'all' ? 'All-Locations' : selectedLocation
+      const monthStr = selectedMonth === 'all' ? 'All-Months' : selectedMonth
+      const yearStr = selectedYear === 'all' ? 'All-Years' : selectedYear
+      const filename = `${selectedSection.toUpperCase()}-Report-${locationStr}-${monthStr}-${yearStr}-${new Date().toISOString().split('T')[0]}.csv`
 
-        link.setAttribute('download', filename)
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        window.URL.revokeObjectURL(url)
+      link.setAttribute('download', filename)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
 
-        alert(`Report downloaded successfully: ${filename}`)
-      } else {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to download report')
-      }
+      alert(`Report downloaded successfully: ${filename}`)
     } catch (error) {
       console.error('Error generating report:', error)
       alert(handleApiError(error))

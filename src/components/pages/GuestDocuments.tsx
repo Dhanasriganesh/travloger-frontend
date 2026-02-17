@@ -1,6 +1,5 @@
-'use client'
-
 import React, { useState } from 'react'
+import { fetchApi, handleApiError } from '../../lib/api'
 // Note: This component can render inside contexts without React Router. Avoid router hooks.
 import { Card, CardContent } from '../ui/card'
 import { Button } from '../ui/button'
@@ -149,18 +148,20 @@ const GuestDocuments: React.FC<GuestDocumentsProps> = ({ queryId }) => {
                           // load existing doc from DB
                           try {
                             if (queryId) {
-                              const r = await fetch(`/api/guest-documents?queryId=${queryId}&guestId=${guest.id}`)
-                              const j = await r.json().catch(() => ({}))
-                              if (r.ok && j?.doc) {
-                                setGuests(prev => prev.map(g => g.id === guest.id ? { ...g,
-                                  panUrl: j.doc.pan_url || g.panUrl,
-                                  passportFrontUrl: j.doc.passport_front_url || g.passportFrontUrl,
-                                  passportBackUrl: j.doc.passport_back_url || g.passportBackUrl,
-                                  flightUrls: Array.isArray(j.doc.flight_urls) ? j.doc.flight_urls : (j.doc.flight_urls ? (typeof j.doc.flight_urls === 'string' ? JSON.parse(j.doc.flight_urls) : j.doc.flight_urls) : g.flightUrls)
+                              const data = await fetchApi(`/api/guest-documents?queryId=${queryId}&guestId=${guest.id}`)
+                              if (data && data.doc) {
+                                setGuests(prev => prev.map(g => g.id === guest.id ? {
+                                  ...g,
+                                  panUrl: data.doc.pan_url || g.panUrl,
+                                  passportFrontUrl: data.doc.passport_front_url || g.passportFrontUrl,
+                                  passportBackUrl: data.doc.passport_back_url || g.passportBackUrl,
+                                  flightUrls: Array.isArray(data.doc.flight_urls) ? data.doc.flight_urls : (data.doc.flight_urls ? (typeof data.doc.flight_urls === 'string' ? JSON.parse(data.doc.flight_urls) : data.doc.flight_urls) : g.flightUrls)
                                 } : g))
                               }
                             }
-                          } catch (_) {}
+                          } catch (error) {
+                            console.error('Error fetching guest documents:', error)
+                          }
                           setIsDocModalOpen(true)
                         }}>Document</Button>
                         <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => openEditModal(guest)}>Edit</Button>
@@ -340,9 +341,8 @@ const GuestDocuments: React.FC<GuestDocumentsProps> = ({ queryId }) => {
                       const fd = new FormData()
                       fd.append('file', file)
                       fd.append('path', folderBase)
-                      const res = await fetch('/api/upload', { method: 'POST', body: fd })
-                      const j = await res.json().catch(() => ({}))
-                      if (!res.ok || !j?.url) throw new Error(j?.error || `Failed to upload ${name}`)
+                      const j = await fetchApi('/api/upload', { method: 'POST', body: fd })
+                      if (!j?.url) throw new Error(j?.error || `Failed to upload ${name}`)
                       return j.url as string
                     }
                     const panUrl = await uploadOne(panFile, 'Pan Card')
@@ -352,16 +352,15 @@ const GuestDocuments: React.FC<GuestDocumentsProps> = ({ queryId }) => {
                     if (flightFiles && flightFiles.length) {
                       flightUrls = []
                       for (let i = 0; i < flightFiles.length; i++) {
-                        const url = await uploadOne(flightFiles.item(i), `Flight ${i+1}`)
+                        const url = await uploadOne(flightFiles.item(i), `Flight ${i + 1}`)
                         if (url) flightUrls.push(url)
                       }
                     }
                     setGuests(prev => prev.map(g => g.id === docGuestId ? { ...g, panUrl, passportFrontUrl, passportBackUrl, flightUrls } : g))
 
                     // Persist to DB
-                    await fetch('/api/guest-documents', {
+                    await fetchApi('/api/guest-documents', {
                       method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
                         queryId,
                         guestId: docGuestId,

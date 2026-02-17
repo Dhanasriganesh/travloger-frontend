@@ -3,12 +3,14 @@ const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').rep
 
 interface FetchOptions extends RequestInit {
   handleError?: boolean;
+  responseType?: 'json' | 'blob' | 'text';
 }
 
 export async function fetchApi<T = any>(url: string, options: FetchOptions = {}): Promise<T> {
   const {
     headers = {},
     handleError = true,
+    responseType = 'json',
     ...rest
   } = options;
 
@@ -26,7 +28,7 @@ export async function fetchApi<T = any>(url: string, options: FetchOptions = {})
   const isFormData = rest.body instanceof FormData;
   const requestHeaders: HeadersInit = {
     ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-    'Accept': 'application/json',
+    'Accept': responseType === 'blob' ? '*/*' : 'application/json',
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...headers,
   };
@@ -37,18 +39,35 @@ export async function fetchApi<T = any>(url: string, options: FetchOptions = {})
       ...rest,
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
-      // If the response has an error message, use it
-      const error = new Error(data.error || 'API request failed');
+      if (response.status === 401 && typeof window !== 'undefined') {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        errorData = { error: 'API request failed' };
+      }
+
+      const error = new Error(errorData.error || 'API request failed');
       error.name = 'ApiError';
       (error as any).status = response.status;
-      (error as any).data = data;
+      (error as any).data = errorData;
       throw error;
     }
 
-    return data;
+    if (responseType === 'blob') {
+      return await response.blob() as any;
+    } else if (responseType === 'text') {
+      return await response.text() as any;
+    }
+
+    return await response.json();
   } catch (error) {
     if (handleError) {
       console.error(`API Error (${fullUrl}):`, error);

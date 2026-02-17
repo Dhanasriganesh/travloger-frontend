@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card'
 import { Badge } from '../../ui/badge'
 import { Plus, Search, Edit, Trash2, ArrowLeft, FolderOpen } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { fetchApi } from '../../../lib/api'
+import { fetchApi, handleApiError } from '../../../lib/api'
 
 interface Activity { id: number; name: string; destination?: string }
 interface Transfer { id: number; name: string; destination?: string }
@@ -70,22 +70,21 @@ const DayItinerary: React.FC = () => {
 
   const fetchMasters = async () => {
     try {
-      // Use consistent API calls - either all Next.js routes or all Express backend
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const [destRes, actRes, trRes, hotelRes, mealRes] = await Promise.all([
-        fetch(`${API_URL}/api/destinations`).then(r => r.json()),
-        fetch(`${API_URL}/api/activities`).then(r => r.json()),
-        fetch(`${API_URL}/api/transfers`).then(r => r.json()),
-        fetch(`${API_URL}/api/hotels`).then(r => r.json()),
-        fetch(`${API_URL}/api/meal-plans`).then(r => r.json())
+      // Use consistent API calls via fetchApi
+      const [destData, actData, trData, hotelData, mealData] = await Promise.all([
+        fetchApi('/api/destinations'),
+        fetchApi('/api/activities'),
+        fetchApi('/api/transfers'),
+        fetchApi('/api/hotels'),
+        fetchApi('/api/meal-plans')
       ])
-      setDestinations((destRes.destinations || []).map((d: any) => ({ name: d.name, state: d.state || '' })))
-      setActivities((actRes.activities || []).map((a: any) => ({ id: a.id, name: a.name, destination: a.destination })))
-      setTransfers((trRes.transfers || []).map((t: any) => ({ id: t.id, name: t.name || t.transfer_name, destination: t.destination })))
-      setHotels((hotelRes.hotels || []).map((h: any) => ({ id: h.id, name: h.name, destination: h.destination })))
-      setMealPlans((mealRes.mealPlans || []).map((m: any) => ({ code: m.code, description: m.description })))
-    } catch (_) {
-      // Silent fail keeps UI usable
+      setDestinations((destData.destinations || []).map((d: any) => ({ name: d.name, state: d.state || '' })))
+      setActivities((actData.activities || []).map((a: any) => ({ id: a.id, name: a.name, destination: a.destination })))
+      setTransfers((trData.transfers || []).map((t: any) => ({ id: t.id, name: t.name || t.transfer_name, destination: t.destination })))
+      setHotels((hotelData.hotels || []).map((h: any) => ({ id: h.id, name: h.name, destination: h.destination })))
+      setMealPlans((mealData.mealPlans || []).map((m: any) => ({ code: m.code, description: m.description })))
+    } catch (error) {
+      console.error('Error fetching masters:', error)
     }
   }
 
@@ -114,7 +113,7 @@ const DayItinerary: React.FC = () => {
       }))
       setDayItineraries(items)
     } catch (error) {
-      console.error('Error fetching day itineraries:', error)
+      console.error('Error fetching day itineraries:', handleApiError(error))
     } finally {
       setLoading(false)
     }
@@ -153,8 +152,8 @@ const DayItinerary: React.FC = () => {
       setEditingDayItinerary(null)
       alert(data.message || 'Day itinerary saved successfully')
     } catch (error) {
-      console.error('Error saving day itinerary:', error)
-      alert('Error saving day itinerary')
+      console.error('Error saving day itinerary:', handleApiError(error))
+      alert(`Error saving day itinerary: ${handleApiError(error)}`)
     } finally {
       setSaving(false)
     }
@@ -173,8 +172,8 @@ const DayItinerary: React.FC = () => {
       await fetchDayItineraries()
       alert(data.message || 'Day itinerary deleted successfully')
     } catch (error) {
-      console.error('Error deleting day itinerary:', error)
-      alert('Error deleting day itinerary')
+      console.error('Error deleting day itinerary:', handleApiError(error))
+      alert(`Error deleting day itinerary: ${handleApiError(error)}`)
     }
   }
 

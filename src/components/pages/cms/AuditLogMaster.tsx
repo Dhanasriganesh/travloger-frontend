@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { fetchApi } from '../../../lib/api'
 import { Button } from '../../ui/button'
 import { Input } from '../../ui/input'
 import { Card, CardContent } from '../../ui/card'
@@ -80,12 +81,8 @@ const AuditLogMaster: React.FC = () => {
       if (filterUser !== 'all') params.append('user', filterUser)
       params.append('limit', String(limit))
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const response = await fetch(`${API_URL}/api/audit-logs?${params.toString()}`)
-      if (response.ok) {
-        const data = await response.json()
-        setLogs(data.logs || [])
-      }
+      const data = await fetchApi(`/api/audit-logs?${params.toString()}`)
+      setLogs(data.logs || [])
     } catch (error) {
       console.error('Error fetching audit logs:', error)
     } finally {
@@ -165,23 +162,16 @@ const AuditLogMaster: React.FC = () => {
     }
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const response = await fetch(`${API_URL}/api/audit-logs`, {
+      const data = await fetchApi('/api/audit-logs', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
 
-      if (response.ok) {
-        await fetchLogs()
-        resetForm()
-      } else {
-        const error = await response.json()
-        alert(`Failed to create audit log: ${error.details || error.error}`)
-      }
-    } catch (error) {
+      await fetchLogs()
+      resetForm()
+    } catch (error: any) {
       console.error('Error creating audit log:', error)
-      alert('Failed to create audit log')
+      alert(`Failed to create audit log: ${error.message || 'Unknown error'}`)
     } finally {
       setSaving(false)
     }
@@ -191,20 +181,14 @@ const AuditLogMaster: React.FC = () => {
     if (!confirm('Delete this audit log entry? This should only be done to remove erroneous records.')) return
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const response = await fetch(`${API_URL}/api/audit-logs?id=${id}`, {
+      await fetchApi(`/api/audit-logs?id=${id}`, {
         method: 'DELETE'
       })
 
-      if (response.ok) {
-        await fetchLogs()
-      } else {
-        const error = await response.json()
-        alert(`Failed to delete audit log: ${error.details || error.error}`)
-      }
-    } catch (error) {
+      await fetchLogs()
+    } catch (error: any) {
       console.error('Error deleting audit log:', error)
-      alert('Failed to delete audit log')
+      alert(`Failed to delete audit log: ${error.message || 'Unknown error'}`)
     }
   }
 

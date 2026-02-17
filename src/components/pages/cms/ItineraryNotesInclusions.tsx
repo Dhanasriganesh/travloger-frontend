@@ -5,6 +5,7 @@ import { Card, CardContent } from '../../ui/card'
 import { Badge } from '../../ui/badge'
 import { Plus, Search, Edit, Trash2, ArrowLeft, FileText } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { fetchApi, handleApiError } from '../../../lib/api'
 
 interface ItineraryNoteInclusion {
   id: number
@@ -16,32 +17,7 @@ interface ItineraryNoteInclusion {
   date: string
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 
-const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
-  const url = `${API_BASE_URL}${endpoint}`
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  })
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Network error' }))
-    throw new Error(errorData.error || `HTTP ${response.status}`)
-  }
-
-  return response.json()
-}
-
-const handleApiError = (error: any): string => {
-  if (error instanceof Error) {
-    return error.message
-  }
-  return String(error)
-}
 
 const ItineraryNotesInclusions: React.FC = () => {
   const navigate = useNavigate()
@@ -51,7 +27,7 @@ const ItineraryNotesInclusions: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editingNoteInclusion, setEditingNoteInclusion] = useState<ItineraryNoteInclusion | null>(null)
-  
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -305,11 +281,11 @@ const ItineraryNotesInclusions: React.FC = () => {
 
       {showAddForm && (
         <div className="fixed inset-0 z-50 overflow-hidden">
-          <div 
+          <div
             className="absolute inset-0 backdrop-blur-sm"
             onClick={handleCloseForm}
           />
-          
+
           <div className="absolute right-0 top-0 h-full w-[600px] bg-white shadow-xl transform transition-transform duration-300 ease-in-out overflow-y-auto">
             <div className="flex flex-col h-full">
               <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
@@ -336,7 +312,7 @@ const ItineraryNotesInclusions: React.FC = () => {
                       type="text"
                       placeholder="e.g., Inclusions, Exclusions, Important Notes"
                       value={formData.title}
-                      onChange={(e) => setFormData({...formData, title: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     />
                   </div>
 
@@ -347,7 +323,7 @@ const ItineraryNotesInclusions: React.FC = () => {
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.category}
-                      onChange={(e) => setFormData({...formData, category: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     >
                       <option value="">Select category</option>
                       <option value="Inclusion">Inclusion</option>
@@ -366,7 +342,7 @@ const ItineraryNotesInclusions: React.FC = () => {
                       rows={8}
                       placeholder="Enter the full text content for this note/inclusion. This will be used as a reusable text block in quotes."
                       value={formData.description}
-                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       This text block will be used consistently across quotes and itineraries.
@@ -380,7 +356,7 @@ const ItineraryNotesInclusions: React.FC = () => {
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.status}
-                      onChange={(e) => setFormData({...formData, status: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                     >
                       <option value="Active">Active</option>
                       <option value="Inactive">Inactive</option>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { fetchApi, handleApiError } from '../../../lib/api'
 import { Button } from '../../ui/button'
 import { Input } from '../../ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card'
@@ -48,13 +49,8 @@ const Destinations: React.FC = () => {
 
   const fetchStates = async () => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const response = await fetch(`${API_URL}/api/states`)
-      const data = await response.json()
-
-      if (response.ok) {
-        setStates(data.states || [])
-      }
+      const data = await fetchApi('/api/states')
+      setStates(data.states || [])
     } catch (error) {
       console.error('Error fetching states:', error)
     }
@@ -63,19 +59,12 @@ const Destinations: React.FC = () => {
   const fetchDestinations = async () => {
     try {
       setLoading(true)
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const response = await fetch(`${API_URL}/api/destinations`)
-      const data = await response.json()
-
-      if (response.ok) {
-        setDestinations(data.destinations || [])
-      } else {
-        console.error('Failed to fetch destinations:', data.error)
-        alert('Failed to fetch destinations: ' + (data.error || 'Unknown error'))
-      }
+      const data = await fetchApi('/api/destinations')
+      setDestinations(data.destinations || [])
     } catch (error) {
       console.error('Error fetching destinations:', error)
       alert('Error fetching destinations. Please check your connection.')
+      handleApiError(error)
     } finally {
       setLoading(false)
     }
@@ -89,41 +78,34 @@ const Destinations: React.FC = () => {
 
     try {
       setSaving(true)
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
       const method = editingDestination ? 'PUT' : 'POST'
       const body = editingDestination
         ? { id: editingDestination.id, ...formData }
         : formData
 
-      const response = await fetch(`${API_URL}/api/destinations`, {
+      const data = await fetchApi('/api/destinations', {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
 
-      const data = await response.json()
-
-      if (response.ok) {
-        await fetchDestinations()
-        setShowAddForm(false)
-        setFormData({
-          name: '',
-          status: 'Active',
-          state: '',
-          country: '',
-          description: '',
-          best_season: '',
-          default_currency: 'INR',
-          timezone: 'Asia/Kolkata'
-        })
-        setEditingDestination(null)
-        alert(data.message || 'Destination saved successfully')
-      } else {
-        alert('Error saving destination: ' + (data.error || 'Unknown error'))
-      }
-    } catch (error) {
+      await fetchDestinations()
+      setShowAddForm(false)
+      setFormData({
+        name: '',
+        status: 'Active',
+        state: '',
+        country: '',
+        description: '',
+        best_season: '',
+        default_currency: 'INR',
+        timezone: 'Asia/Kolkata'
+      })
+      setEditingDestination(null)
+      alert(data.message || 'Destination saved successfully')
+    } catch (error: any) {
       console.error('Error saving destination:', error)
       alert('Error saving destination. Please try again.')
+      handleApiError(error)
     } finally {
       setSaving(false)
     }
@@ -135,22 +117,16 @@ const Destinations: React.FC = () => {
     }
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const response = await fetch(`${API_URL}/api/destinations?id=${id}`, {
+      const data = await fetchApi(`/api/destinations?id=${id}`, {
         method: 'DELETE'
       })
 
-      const data = await response.json()
-
-      if (response.ok) {
-        await fetchDestinations()
-        alert(data.message || 'Destination deleted successfully')
-      } else {
-        alert('Error deleting destination: ' + (data.error || 'Unknown error'))
-      }
-    } catch (error) {
+      await fetchDestinations()
+      alert(data.message || 'Destination deleted successfully')
+    } catch (error: any) {
       console.error('Error deleting destination:', error)
       alert('Error deleting destination. Please try again.')
+      handleApiError(error)
     }
   }
 

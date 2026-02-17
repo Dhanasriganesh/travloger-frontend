@@ -1,4 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react'
+import { fetchApi, handleApiError } from '../../lib/api'
+import { Input } from '../ui/input'
+import { Button } from '../ui/button'
+import { Search, Filter, MoreVertical, Mail, Phone, MapPin, Calendar, Users as UsersIcon, Clock, ChevronDown, Download, Plus } from 'lucide-react'
+import { Badge } from '../ui/badge'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu'
 
 // Type definitions
 interface Query {
@@ -59,9 +70,8 @@ const Queries: React.FC = () => {
   const fetchQueries = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/leads')
-      const data = await response.json()
-      
+      const data = await fetchApi('/api/leads')
+
       if (data.leads) {
         // Transform leads to queries with additional fields
         const transformedQueries: Query[] = data.leads.map((lead: any, index: number) => ({
@@ -91,6 +101,7 @@ const Queries: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch queries:', error)
+      // Optional: show error to user
     } finally {
       setLoading(false)
     }
@@ -125,8 +136,8 @@ const Queries: React.FC = () => {
 
   // Handle query selection
   const handleQuerySelect = (queryId: number) => {
-    setSelectedQueries(prev => 
-      prev.includes(queryId) 
+    setSelectedQueries(prev =>
+      prev.includes(queryId)
         ? prev.filter(id => id !== queryId)
         : [...prev, queryId]
     )
@@ -208,7 +219,7 @@ const Queries: React.FC = () => {
         <div className="bg-green-600 text-white p-3 rounded-lg text-center">
           <div className="text-lg font-bold">{stats.confirmed}</div>
           <div className="text-xs">CONFIRMED</div>
-          </div>
+        </div>
         <div className="bg-red-500 text-white p-3 rounded-lg text-center">
           <div className="text-lg font-bold">{stats.invalid}</div>
           <div className="text-xs">INVALID</div>
@@ -242,14 +253,13 @@ const Queries: React.FC = () => {
                     {/* Status Badge and Requirement */}
                     <div className="col-span-2">
                       <div className="flex flex-col space-y-2">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          query.status === 'New' ? 'bg-purple-100 text-purple-800' :
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${query.status === 'New' ? 'bg-purple-100 text-purple-800' :
                           query.status === 'Proposal Sent' ? 'bg-teal-100 text-teal-800' :
-                          query.status === 'Hot Lead' ? 'bg-red-100 text-red-800' :
-                          query.status === 'Confirmed' ? 'bg-green-100 text-green-800' :
-                          query.status === 'Follow Up' ? 'bg-orange-100 text-orange-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
+                            query.status === 'Hot Lead' ? 'bg-red-100 text-red-800' :
+                              query.status === 'Confirmed' ? 'bg-green-100 text-green-800' :
+                                query.status === 'Follow Up' ? 'bg-orange-100 text-orange-800' :
+                                  'bg-gray-100 text-gray-800'
+                          }`}>
                           {query.status}
                         </span>
                         <div className="text-sm text-gray-900">Requirement: {query.requirement}</div>
@@ -295,7 +305,7 @@ const Queries: React.FC = () => {
                           {query.travel_dates || '10-11-2025 Till 14-11-2025'}
                         </div>
                         <div className="text-sm text-gray-600">
-                          Assigned to: 
+                          Assigned to:
                           <select className="ml-1 text-blue-600 bg-transparent border-none focus:ring-0 text-sm">
                             <option>Assign to me</option>
                             <option>Unassigned</option>
@@ -332,7 +342,7 @@ const Queries: React.FC = () => {
                           <svg className="h-4 w-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
-                          Last Updated: {new Date(query.last_updated || query.created_at).toLocaleDateString()} - {new Date(query.last_updated || query.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                          Last Updated: {new Date(query.last_updated || query.created_at).toLocaleDateString()} - {new Date(query.last_updated || query.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                         <div className="flex items-center space-x-2 mt-2">
                           <button className="p-1 text-gray-400 hover:text-gray-600">
@@ -372,7 +382,7 @@ const Queries: React.FC = () => {
               </div>
               <h3 className="mt-2 text-sm font-medium text-gray-900">No queries found</h3>
               <p className="mt-1 text-sm text-gray-500">
-                {filterStatus !== 'all' 
+                {filterStatus !== 'all'
                   ? `No queries found with status "${filterStatus}".`
                   : 'No queries have been created yet.'
                 }

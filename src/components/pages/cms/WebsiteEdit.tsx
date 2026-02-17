@@ -15,6 +15,7 @@ interface HeroContent {
   title: string
   subtitle: string
   backgroundImageUrl: string
+  mobileBackgroundImageUrl?: string
   mobileVideoUrl: string
   desktopVideoUrl?: string
   whatsappPhone: string
@@ -260,6 +261,7 @@ const WebsiteEdit: React.FC = () => {
     title: 'Discover Your Next Adventure',
     subtitle: 'Curated experiences across the globe',
     backgroundImageUrl: '',
+    mobileBackgroundImageUrl: '',
     mobileVideoUrl: '',
     desktopVideoUrl: '',
     whatsappPhone: '+919876543210',
@@ -540,11 +542,13 @@ const WebsiteEdit: React.FC = () => {
           title: 'Discover Your Next Adventure',
           subtitle: 'Curated experiences across the globe',
           backgroundImageUrl: '',
+          mobileBackgroundImageUrl: '',
           whatsappPhone: '+919876543210',
           whatsappMessage: 'Hi! I am interested in your tour packages. Can you help me plan my trip?'
         }
         setHero({
           ...heroData,
+          mobileBackgroundImageUrl: heroData.mobileBackgroundImageUrl || '',
           mobileVideoUrl: heroData.mobileVideoUrl || '',
           desktopVideoUrl: heroData.desktopVideoUrl || '',
           trustIndicators: heroData.trustIndicators ?? DEFAULT_TRUST_INDICATORS
@@ -1268,6 +1272,75 @@ const WebsiteEdit: React.FC = () => {
                         className="text-xs text-red-600 hover:text-red-800"
                       >
                         Remove Image
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Mobile Background Image URL
+                </label>
+                <input
+                  type="url"
+                  value={hero.mobileBackgroundImageUrl || ''}
+                  onChange={(e) => setHero(prev => ({ ...prev, mobileBackgroundImageUrl: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
+                  placeholder="https://example.com/mobile-image.jpg"
+                />
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Or upload mobile image
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+
+                      // Check file size (4MB limit)
+                      const maxSize = 4 * 1024 * 1024 // 4MB
+                      if (file.size > maxSize) {
+                        alert(`File too large. Maximum size is 4MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB. Please compress the image and try again.`)
+                        return
+                      }
+
+                      try {
+                        const form = new FormData()
+                        form.append('file', file)
+                        form.append('slug', citySlug || 'common')
+                        form.append('folder', 'hero')
+
+                        const data = await fetchApi<{ url: string }>('/api/upload', { method: 'POST', body: form })
+                        setHero(prev => ({ ...prev, mobileBackgroundImageUrl: data.url }))
+                      } catch (err: any) {
+                        setError(err?.message || 'Failed to upload image')
+                      }
+                    }}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
+                  />
+                </div>
+
+                {hero.mobileBackgroundImageUrl && (
+                  <div className="mt-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Mobile Preview</label>
+                    <div className="relative w-24 h-40 rounded-md overflow-hidden border border-gray-200">
+                      <Image
+                        src={hero.mobileBackgroundImageUrl}
+                        alt="Hero mobile background preview"
+                        fill
+                        className="object-cover"
+                        unoptimized={true}
+                      />
+                    </div>
+                    <div className="mt-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setHero(prev => ({ ...prev, mobileBackgroundImageUrl: '' }))}
+                        className="text-xs text-red-600 hover:text-red-800"
+                      >
+                        Remove Mobile Image
                       </button>
                     </div>
                   </div>
@@ -2392,7 +2465,7 @@ const WebsiteEdit: React.FC = () => {
                                         }
                                         setTripOptions({ ...tripOptions, customTrips: newTrips })
                                       }}
-                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                                       placeholder="Inclusion"
                                     />
                                     <button
@@ -2454,7 +2527,7 @@ const WebsiteEdit: React.FC = () => {
                                         newTrips[tripIndex] = { ...trip, features: newFeatures }
                                         setTripOptions({ ...tripOptions, customTrips: newTrips })
                                       }}
-                                      className="flex-1 border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+                                      className="flex-1 border border-gray-300 rounded-md px-3 py-1.5 text-sm text-black bg-white"
                                       placeholder="Feature name"
                                     />
                                     <select

@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react'
-import { useAuth } from '../../contexts/AuthContext'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext'
+import { fetchApi, handleApiError } from '../../lib/api'
 import logo from '../../assets/images/logo.png'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
-import { Eye, FileText, CreditCard } from 'lucide-react'
+import { Eye, FileText, CreditCard, Menu, X, Bell, Search, LayoutDashboard, ClipboardList, Package, Users, Settings, LogOut, ChevronRight, LayoutTemplate, MapPin, Calendar, Clock, CheckCircle2, AlertCircle, TrendingUp, DollarSign, ArrowUpRight, ArrowDownRight, MoreVertical, Filter, Download } from 'lucide-react'
 import QueryDetail from './QueryDetail'
 
 const Employeedashboard: React.FC = () => {
@@ -27,12 +28,11 @@ const Employeedashboard: React.FC = () => {
   }
 
   // Function to update employee active session
-  const updateActiveSession = React.useCallback(async () => {
+  const updateActiveSession = useCallback(async () => {
     if (employeeId) {
       try {
-        await fetch('/api/employees/active-sessions', {
+        await fetchApi('/api/employees/active-sessions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ employeeId })
         })
       } catch (error) {
@@ -127,15 +127,11 @@ const Employeedashboard: React.FC = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/leads?assignedTo=${employeeId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch leads');
-      }
-      const data = await response.json();
+      const data = await fetchApi(`/api/leads?assignedTo=${employeeId}`);
       setLeads(data.leads || []);
     } catch (error) {
       console.error('Error fetching leads:', error);
-      setError(error instanceof Error ? error.message : 'Failed to fetch leads');
+      setError(handleApiError(error));
     } finally {
       setLoading(false);
     }
@@ -180,9 +176,8 @@ const Employeedashboard: React.FC = () => {
 
         // Fetch employee destination
         if (user?.email) {
-          const employeeRes = await fetch(`/api/employees/by-email/${user.email}`)
-          if (employeeRes.ok) {
-            const employeeData = await employeeRes.json()
+          const employeeData = await fetchApi(`/api/employees/by-email/${user.email}`)
+          if (employeeData) {
             // Handle destination as either string or object
             const destinationValue = employeeData.destination || ''
             const destination = typeof destinationValue === 'string'
@@ -193,25 +188,23 @@ const Employeedashboard: React.FC = () => {
 
             // Fetch packages based on destination
             const url = destination && destination !== 'all' ? `/api/packages/city/${destination}` : '/api/packages'
-            const res = await fetch(url)
-            const data = await res.json()
-            if (res.ok) {
+            const data = await fetchApi(url)
+            if (data) {
               setPackages(data.packages || [])
               setError(null)
             } else {
-              setError(data.error || 'Failed to load packages')
+              setError('Failed to load packages')
             }
 
             // Fetch leads assigned to this employee
             if (employeeData?.id) {
-              const assignedRes = await fetch(`/api/leads?assignedTo=${employeeData.id}`)
-              const assignedJson = await assignedRes.json().catch(() => ({ leads: [] }))
-              if (assignedRes.ok) setAssignedLeads(assignedJson.leads || [])
+              const assignedJson = await fetchApi(`/api/leads?assignedTo=${employeeData.id}`).catch(() => ({ leads: [] }))
+              setAssignedLeads(assignedJson.leads || [])
             }
           }
         }
-      } catch (_) {
-        setError('Failed to load packages')
+      } catch (error) {
+        setError(handleApiError(error))
       } finally {
         setLoading(false)
       }
@@ -244,11 +237,10 @@ const Employeedashboard: React.FC = () => {
       // Clean up session on page unload (logout, close tab, navigate away)
       const handleBeforeUnload = async () => {
         try {
-          await fetch('/api/employees/active-sessions', {
+          await fetchApi('/api/employees/active-sessions', {
             method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ employeeId }),
-            keepalive: true // Ensures request completes even if page is closing
+            keepalive: true // Note: might need special handling in fetchApi or use raw if persistent header isn't needed here
           })
         } catch (error) {
           console.error('Error clearing session on unload:', error)
@@ -266,9 +258,8 @@ const Employeedashboard: React.FC = () => {
 
         // Also clear session when component unmounts
         if (employeeId) {
-          fetch('/api/employees/active-sessions', {
+          fetchApi('/api/employees/active-sessions', {
             method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ employeeId }),
             keepalive: true
           }).catch(error => console.error('Error clearing session on unmount:', error))
@@ -281,29 +272,21 @@ const Employeedashboard: React.FC = () => {
   useEffect(() => {
     const loadAssets = async () => {
       try {
-        const [hotLocRes, vehLocRes] = await Promise.all([
-          fetch('/api/locations/hotels'),
-          fetch('/api/locations/vehicles')
+        const [hotLocData, vehLocData] = await Promise.all([
+          fetchApi('/api/locations/hotels'),
+          fetchApi('/api/locations/vehicles')
         ])
-        if (hotLocRes.ok) {
-          const j = await hotLocRes.json(); setHotelLocations(j.locations || [])
-        }
-        if (vehLocRes.ok) {
-          const j = await vehLocRes.json(); setVehicleLocations(j.locations || [])
-        }
+        if (hotLocData) setHotelLocations(hotLocData.locations || [])
+        if (vehLocData) setVehicleLocations(vehLocData.locations || [])
       } catch (_) { }
 
       try {
-        const [hotRes, vehRes] = await Promise.all([
-          fetch('/api/hotels'),
-          fetch('/api/vehicles')
+        const [hotData, vehData] = await Promise.all([
+          fetchApi('/api/hotels'),
+          fetchApi('/api/vehicles')
         ])
-        if (hotRes.ok) {
-          const j = await hotRes.json(); setHotels(j.hotels || [])
-        }
-        if (vehRes.ok) {
-          const j = await vehRes.json(); setVehicles(j.vehicles || [])
-        }
+        if (hotData) setHotels(hotData.hotels || [])
+        if (vehData) setVehicles(vehData.vehicles || [])
       } catch (_) { }
     }
     loadAssets()
@@ -315,18 +298,16 @@ const Employeedashboard: React.FC = () => {
       try {
         if (!employeeDestination) return
         // Fixed days
-        const daysRes = await fetch(`/api/fixed-days?city=${toSlug(employeeDestination)}`)
-        if (daysRes.ok) {
-          const data = await daysRes.json()
+        const data = await fetchApi(`/api/fixed-days?city=${toSlug(employeeDestination)}`)
+        if (data) {
           setFixedDaysOptions((data.options || []).map((o: any) => ({ id: o.id, days: o.days, label: o.label || '' })))
         } else {
           setFixedDaysOptions([])
         }
         // Fixed locations
-        const locRes = await fetch(`/api/locations/fixed?city=${toSlug(employeeDestination)}`)
-        if (locRes.ok) {
-          const data = await locRes.json()
-          setFixedLocations(data.locations || [])
+        const locData = await fetchApi(`/api/locations/fixed?city=${toSlug(employeeDestination)}`)
+        if (locData) {
+          setFixedLocations(locData.locations || [])
         } else {
           setFixedLocations([])
         }
@@ -350,9 +331,8 @@ const Employeedashboard: React.FC = () => {
       await Promise.all(locationIds.map(async (locId) => {
         if (fixedPlansByLocation[locId]) return
         try {
-          const res = await fetch(`/api/fixed-plans?city=${toSlug(employeeDestination)}&locationId=${locId}`)
-          if (res.ok) {
-            const data = await res.json()
+          const data = await fetchApi(`/api/fixed-plans?city=${toSlug(employeeDestination)}&locationId=${locId}`)
+          if (data) {
             setFixedPlansByLocation(prev => ({ ...prev, [locId]: (data.plans || []).map((p: any) => ({ id: p.id, name: p.name })) }))
           }
         } catch (_) {
@@ -373,9 +353,8 @@ const Employeedashboard: React.FC = () => {
 
         await Promise.all(assignedLeads.map(async (lead) => {
           try {
-            const res = await fetch(`/api/bookings?leadId=${lead.id}`)
-            const data = await res.json()
-            if (res.ok && data.bookings && data.bookings.length > 0) {
+            const data = await fetchApi(`/api/bookings?leadId=${lead.id}`)
+            if (data && data.bookings && data.bookings.length > 0) {
               // Get the most recent booking for this lead
               const latestBooking = data.bookings[0]
               statusMap[lead.id] = {
@@ -413,15 +392,13 @@ const Employeedashboard: React.FC = () => {
       console.log('Checking payment status for booking:', bookingStatus.bookingId)
 
       // Check payment status with Razorpay
-      const checkRes = await fetch('/api/bookings/check-payment', {
+      const checkData = await fetchApi('/api/bookings/check-payment', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           bookingId: bookingStatus.bookingId
         })
       })
 
-      const checkData = await checkRes.json()
       console.log('Payment check response:', checkData)
 
       // Check the status returned from Razorpay
@@ -449,7 +426,7 @@ const Employeedashboard: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error checking payment status:', error)
-      alert('❌ Failed to check payment status:\n\n' + error.message)
+      alert('❌ Failed to check payment status:\n\n' + handleApiError(error))
     }
   }
 
@@ -469,20 +446,18 @@ const Employeedashboard: React.FC = () => {
       setSelectedLead(lead)
 
       // Load lead details
-      const leadRes = await fetch(`/api/leads/${leadId}`)
-      const leadData = await leadRes.json().catch(() => ({ lead: null }))
-      if (leadRes.ok) setSelectedLead(leadData.lead || lead)
+      const leadData = await fetchApi(`/api/leads/${leadId}`).catch(() => ({ lead: null }))
+      if (leadData?.lead) setSelectedLead(leadData.lead)
 
       // Load itineraries
-      const res = await fetch('/api/packages')
-      const data = await res.json()
-      if (res.ok) {
+      const data = await fetchApi('/api/packages')
+      if (data) {
         setLeadItineraries(data.packages || [])
       } else {
-        setLeadItinerariesError(data.error || 'Failed to load itineraries')
+        setLeadItinerariesError('Failed to load itineraries')
       }
     } catch (error) {
-      setLeadItinerariesError('Failed to load itineraries')
+      setLeadItinerariesError(handleApiError(error))
     } finally {
       setLeadItinerariesLoading(false)
     }
@@ -534,9 +509,8 @@ const Employeedashboard: React.FC = () => {
 
       // Step 1: Create Razorpay payment link
       console.log('Creating payment link...')
-      const paymentLinkRes = await fetch('/api/razorpay/create-payment-link', {
+      const paymentLinkData = await fetchApi('/api/razorpay/create-payment-link', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount,
           customer_name: selectedLead.name,
@@ -547,22 +521,12 @@ const Employeedashboard: React.FC = () => {
         })
       })
 
-      const paymentLinkData = await paymentLinkRes.json()
-
-      if (!paymentLinkRes.ok) {
-        throw new Error(paymentLinkData.error || 'Failed to create payment link')
-      }
-
       console.log('Payment link created:', paymentLinkData.payment_link)
 
       // Step 2: Create booking in database
       console.log('Creating booking...')
-      console.log('Lead ID:', selectedLead.id, 'Type:', typeof selectedLead.id)
-      console.log('Package ID:', selectedItinerary.id, 'Type:', typeof selectedItinerary.id)
-
-      const bookingRes = await fetch('/api/bookings', {
+      const bookingData = await fetchApi('/api/bookings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           lead_id: String(selectedLead.id), // Ensure it's a string
           customer: selectedLead.name,
@@ -581,14 +545,6 @@ const Employeedashboard: React.FC = () => {
         })
       })
 
-      console.log('Booking payload - razorpay_order_id:', paymentLinkData.payment_link_id || paymentLinkData.order_id)
-
-      const bookingData = await bookingRes.json()
-
-      if (!bookingRes.ok) {
-        throw new Error(bookingData.error || 'Failed to create booking')
-      }
-
       console.log('Booking created:', bookingData.booking)
 
       // Step 3: Send email with payment link
@@ -597,9 +553,8 @@ const Employeedashboard: React.FC = () => {
         ? vehicles.find(v => v.id === selectedItinerary.selected_vehicle_id)
         : null
 
-      const emailRes = await fetch('/api/email/send-payment-link', {
+      const emailData = await fetchApi('/api/email/send-payment-link', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           member: {
             name: selectedLead.name,
@@ -640,9 +595,7 @@ const Employeedashboard: React.FC = () => {
         })
       })
 
-      const emailData = await emailRes.json()
-
-      if (!emailRes.ok) {
+      if (emailData.error) {
         console.error('Email sending failed:', emailData.error)
         alert(`Booking created but email failed to send. Please contact the customer directly.\n\nPayment link: ${paymentLinkData.payment_link}`)
       } else {
@@ -656,7 +609,7 @@ const Employeedashboard: React.FC = () => {
 
     } catch (error: any) {
       console.error('Error generating payment link:', error)
-      alert('Failed to generate payment link: ' + error.message)
+      alert('Failed to generate payment link: ' + handleApiError(error))
     }
   }
 
@@ -679,8 +632,8 @@ const Employeedashboard: React.FC = () => {
             <button
               onClick={() => setActiveSection('queries')}
               className={`w-full flex items-center space-x-3 px-3 py-2.5 text-sm font-semibold rounded-lg transition-colors ${activeSection === 'queries'
-                  ? 'bg-gray-300 text-gray-800'
-                  : 'text-gray-300 hover:bg-gray-700 hover:text-gray-100'
+                ? 'bg-gray-300 text-gray-800'
+                : 'text-gray-300 hover:bg-gray-700 hover:text-gray-100'
                 }`}
             >
               <svg className={`h-6 w-6 ${activeSection === 'queries' ? 'text-gray-800' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1282,10 +1235,10 @@ const Employeedashboard: React.FC = () => {
                                         )}
                                         <div className="absolute top-2 right-2">
                                           <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${pkg.status === 'Active'
+                                            ? 'bg-primary/10 text-primary border border-primary/20'
+                                            : pkg.status === 'Draft'
                                               ? 'bg-primary/10 text-primary border border-primary/20'
-                                              : pkg.status === 'Draft'
-                                                ? 'bg-primary/10 text-primary border border-primary/20'
-                                                : 'bg-primary/10 text-primary border border-primary/20'
+                                              : 'bg-primary/10 text-primary border border-primary/20'
                                             }`}>
                                             {pkg.status}
                                           </span>
@@ -1621,10 +1574,10 @@ const Employeedashboard: React.FC = () => {
                                   <div
                                     key={lead.id}
                                     className={`group bg-white border-2 rounded-lg hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer ${isPaymentConfirmed
-                                        ? 'border-green-300 bg-green-50/30'
-                                        : isPending
-                                          ? 'border-yellow-300 bg-yellow-50/30'
-                                          : 'border-gray-200 hover:border-primary'
+                                      ? 'border-green-300 bg-green-50/30'
+                                      : isPending
+                                        ? 'border-yellow-300 bg-yellow-50/30'
+                                        : 'border-gray-200 hover:border-primary'
                                       }`}
                                     onClick={() => {
                                       setSelectedLeadId(lead.id.toString())
@@ -1634,8 +1587,8 @@ const Employeedashboard: React.FC = () => {
                                     {/* Payment Status Banner */}
                                     {hasPayment && (
                                       <div className={`px-3 py-1.5 text-xs font-medium flex items-center justify-between ${isPaymentConfirmed
-                                          ? 'bg-green-100 text-green-800 border-b border-green-200'
-                                          : 'bg-yellow-100 text-yellow-800 border-b border-yellow-200'
+                                        ? 'bg-green-100 text-green-800 border-b border-green-200'
+                                        : 'bg-yellow-100 text-yellow-800 border-b border-yellow-200'
                                         }`}>
                                         <div className="flex items-center space-x-1.5">
                                           {isPaymentConfirmed ? (
@@ -1663,16 +1616,16 @@ const Employeedashboard: React.FC = () => {
                                       <div className="flex items-start justify-between mb-2">
                                         <div className="flex items-center space-x-2">
                                           <div className={`h-8 w-8 rounded-full flex items-center justify-center ${isPaymentConfirmed
-                                              ? 'bg-green-200'
-                                              : isPending
-                                                ? 'bg-yellow-200'
-                                                : 'bg-primary/20'
+                                            ? 'bg-green-200'
+                                            : isPending
+                                              ? 'bg-yellow-200'
+                                              : 'bg-primary/20'
                                             }`}>
                                             <span className={`font-semibold text-xs ${isPaymentConfirmed
-                                                ? 'text-green-700'
-                                                : isPending
-                                                  ? 'text-yellow-700'
-                                                  : 'text-primary'
+                                              ? 'text-green-700'
+                                              : isPending
+                                                ? 'text-yellow-700'
+                                                : 'text-primary'
                                               }`}>
                                               {(lead.name || 'Lead').charAt(0).toUpperCase()}
                                             </span>

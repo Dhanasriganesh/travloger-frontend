@@ -1,15 +1,16 @@
 'use client'
 import React, { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { fetchApi, handleApiError } from '../../../lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card'
 import { Badge } from '../../ui/badge'
 import { Button } from '../../ui/button'
-import { 
-  ArrowLeft, 
-  Calendar, 
-  MapPin, 
-  Users, 
-  DollarSign, 
+import {
+  ArrowLeft,
+  Calendar,
+  MapPin,
+  Users,
+  DollarSign,
   Car,
   CheckCircle,
   XCircle,
@@ -21,7 +22,7 @@ import {
   Package
 } from 'lucide-react'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+
 
 interface PackageData {
   id: number
@@ -109,25 +110,22 @@ const PackageDetails: React.FC = () => {
   // Calculate total price from all events
   const calculateTotalPrice = useCallback(async (itineraryId: number): Promise<number> => {
     try {
-      const response = await fetch(`${API_URL}/api/itineraries/${itineraryId}/events`)
-      if (!response.ok) return 0
-      
-      const data = await response.json()
+      const data = await fetchApi(`/api/itineraries/${itineraryId}/events`)
       const events = data.events || []
-      
+
       let total = 0
       events.forEach((event: any) => {
         const eventData = event.event_data
         if (eventData && eventData.price) {
-          const price = typeof eventData.price === 'string' 
-            ? parseFloat(eventData.price) 
+          const price = typeof eventData.price === 'string'
+            ? parseFloat(eventData.price)
             : eventData.price
           if (!isNaN(price)) {
             total += price
           }
         }
       })
-      
+
       return total
     } catch (error) {
       console.error('Error calculating total price:', error)
@@ -139,20 +137,15 @@ const PackageDetails: React.FC = () => {
   useEffect(() => {
     const fetchPackageData = async () => {
       if (!id) return
-      
+
       try {
         setLoading(true)
         setError(null)
-        
+
         // Fetch package details
-        const response = await fetch(`${API_URL}/api/itineraries/${id}`)
-        if (!response.ok) {
-          throw new Error('Failed to fetch package details')
-        }
-        
-        const data = await response.json()
+        const data = await fetchApi(`/api/itineraries/${id}`)
         const pkg = data.itinerary
-        
+
         if (!pkg) {
           throw new Error('Package not found')
         }
@@ -173,8 +166,8 @@ const PackageDetails: React.FC = () => {
 
         setPackageData(normalizedPackage)
       } catch (err) {
-        console.error('Error fetching package:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load package details')
+        console.error('Error fetching package:', handleApiError(err))
+        setError(handleApiError(err))
       } finally {
         setLoading(false)
       }
@@ -187,13 +180,10 @@ const PackageDetails: React.FC = () => {
   useEffect(() => {
     const fetchDayItineraries = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/day-itineraries`)
-        if (response.ok) {
-          const data = await response.json()
-          setDayItineraries(data.dayItineraries || [])
-        }
+        const data = await fetchApi('/api/day-itineraries')
+        setDayItineraries(data.dayItineraries || [])
       } catch (error) {
-        console.error('Error fetching day itineraries:', error)
+        console.error('Error fetching day itineraries:', handleApiError(error))
       }
     }
 
@@ -233,8 +223,8 @@ const PackageDetails: React.FC = () => {
     )
   }
 
-  const otherDestinations = Array.isArray(packageData.other_destinations) 
-    ? packageData.other_destinations 
+  const otherDestinations = Array.isArray(packageData.other_destinations)
+    ? packageData.other_destinations
     : []
   const packageItineraries = Array.isArray(packageData.package_itineraries)
     ? packageData.package_itineraries
@@ -270,23 +260,21 @@ const PackageDetails: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Badge 
-                className={`${
-                  packageData.status === 'Active' 
-                    ? 'bg-green-100 text-green-800' 
-                    : packageData.status === 'Draft'
+              <Badge
+                className={`${packageData.status === 'Active'
+                  ? 'bg-green-100 text-green-800'
+                  : packageData.status === 'Draft'
                     ? 'bg-yellow-100 text-yellow-800'
                     : 'bg-gray-100 text-gray-800'
-                }`}
+                  }`}
               >
                 {packageData.status || 'Active'}
               </Badge>
-              <Badge 
-                className={`${
-                  packageData.marketplace_shared 
-                    ? 'bg-blue-100 text-blue-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}
+              <Badge
+                className={`${packageData.marketplace_shared
+                  ? 'bg-blue-100 text-blue-800'
+                  : 'bg-red-100 text-red-800'
+                  }`}
               >
                 {packageData.marketplace_shared ? 'Marketplace Shared' : 'Not Shared'}
               </Badge>
@@ -445,10 +433,10 @@ const PackageDetails: React.FC = () => {
                   <div className="space-y-6">
                     {packageItineraries.map((day, index) => {
                       const dayItinerary = getDayItinerary(day.dayItineraryId)
-                      
+
                       return (
-                        <div 
-                          key={day.id} 
+                        <div
+                          key={day.id}
                           className="border border-gray-200 rounded-lg overflow-hidden"
                         >
                           {/* Day Header */}
@@ -497,7 +485,7 @@ const PackageDetails: React.FC = () => {
                                           {dayPlan.title}
                                         </h5>
                                       )}
-                                      
+
                                       {/* Description */}
                                       {dayPlan.description && (
                                         <p className="text-sm text-gray-700 mb-3">
@@ -519,7 +507,7 @@ const PackageDetails: React.FC = () => {
                                             </div>
                                           </div>
                                         )}
-                                        
+
                                         {dayPlan.transferIds && dayPlan.transferIds.length > 0 && (
                                           <div className="flex items-start gap-2">
                                             <span className="text-xs font-medium text-gray-600 min-w-[80px]">Transfers:</span>
@@ -562,10 +550,10 @@ const PackageDetails: React.FC = () => {
                               )}
 
                               {/* Empty State */}
-                              {(!dayItinerary.days || dayItinerary.days.length === 0) && 
-                               (!dayItinerary.destinations || dayItinerary.destinations.length === 0) && (
-                                <p className="text-sm text-gray-500 italic">No detailed itinerary available for this day.</p>
-                              )}
+                              {(!dayItinerary.days || dayItinerary.days.length === 0) &&
+                                (!dayItinerary.destinations || dayItinerary.destinations.length === 0) && (
+                                  <p className="text-sm text-gray-500 italic">No detailed itinerary available for this day.</p>
+                                )}
                             </div>
                           )}
 
@@ -745,14 +733,14 @@ const PackageDetails: React.FC = () => {
                 <div>
                   <p className="font-medium text-gray-700">Created</p>
                   <p className="text-gray-600">
-                    {packageData.created_at 
+                    {packageData.created_at
                       ? new Date(packageData.created_at).toLocaleDateString('en-GB', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })
                       : 'N/A'
                     }
                   </p>
@@ -760,14 +748,14 @@ const PackageDetails: React.FC = () => {
                 <div>
                   <p className="font-medium text-gray-700">Last Updated</p>
                   <p className="text-gray-600">
-                    {packageData.updated_at 
+                    {packageData.updated_at
                       ? new Date(packageData.updated_at).toLocaleDateString('en-GB', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })
                       : 'N/A'
                     }
                   </p>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { fetchApi, handleApiError } from '../../../lib/api'
 import { Button } from '../../ui/button'
 import { Input } from '../../ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card'
@@ -125,25 +126,18 @@ const Hotels: React.FC = () => {
   const fetchHotels = async () => {
     try {
       setLoading(true)
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 
       const queryParams = new URLSearchParams()
       Object.entries(filters).forEach(([key, value]) => {
         if (value) queryParams.append(key, value)
       })
 
-      const response = await fetch(`${API_URL}/api/hotels?${queryParams}`)
-      const data = await response.json()
-
-      if (response.ok) {
-        setHotels(data.hotels || [])
-      } else {
-        console.error('Failed to fetch hotels:', data.error)
-        alert('Failed to fetch hotels: ' + (data.error || 'Unknown error'))
-      }
+      const data = await fetchApi(`/api/hotels?${queryParams}`)
+      setHotels(data.hotels || [])
     } catch (error) {
       console.error('Error fetching hotels:', error)
       alert('Error fetching hotels. Please check your connection.')
+      handleApiError(error)
     } finally {
       setLoading(false)
     }
@@ -151,13 +145,8 @@ const Hotels: React.FC = () => {
 
   const fetchStates = async () => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const response = await fetch(`${API_URL}/api/states`)
-      const data = await response.json()
-
-      if (response.ok) {
-        setStates(data.states || [])
-      }
+      const data = await fetchApi('/api/states')
+      setStates(data.states || [])
     } catch (error) {
       console.error('Error fetching states:', error)
     }
@@ -165,14 +154,9 @@ const Hotels: React.FC = () => {
 
   const fetchDestinations = async (state?: string) => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const url = state ? `${API_URL}/api/destinations?state=${encodeURIComponent(state)}` : `${API_URL}/api/destinations`
-      const response = await fetch(url)
-      const data = await response.json()
-
-      if (response.ok) {
-        setDestinations(data.destinations || [])
-      }
+      const url = state ? `/api/destinations?state=${encodeURIComponent(state)}` : `/api/destinations`
+      const data = await fetchApi(url)
+      setDestinations(data.destinations || [])
     } catch (error) {
       console.error('Error fetching destinations:', error)
       setDestinations([])
@@ -187,31 +171,24 @@ const Hotels: React.FC = () => {
 
     try {
       setSaving(true)
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
       const method = editingHotel ? 'PUT' : 'POST'
       const body = editingHotel
         ? { id: editingHotel.id, ...formData }
         : formData
 
-      const response = await fetch(`${API_URL}/api/hotels`, {
+      const data = await fetchApi('/api/hotels', {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
 
-      const data = await response.json()
-
-      if (response.ok) {
-        await fetchHotels()
-        setShowAddForm(false)
-        resetForm()
-        alert(data.message || 'Hotel saved successfully')
-      } else {
-        alert('Error saving hotel: ' + (data.error || 'Unknown error'))
-      }
-    } catch (error) {
+      await fetchHotels()
+      setShowAddForm(false)
+      resetForm()
+      alert(data.message || 'Hotel saved successfully')
+    } catch (error: any) {
       console.error('Error saving hotel:', error)
       alert('Error saving hotel. Please try again.')
+      handleApiError(error)
     } finally {
       setSaving(false)
     }
@@ -223,22 +200,16 @@ const Hotels: React.FC = () => {
     }
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const response = await fetch(`${API_URL}/api/hotels?id=${id}`, {
+      const data = await fetchApi(`/api/hotels?id=${id}`, {
         method: 'DELETE'
       })
 
-      const data = await response.json()
-
-      if (response.ok) {
-        await fetchHotels()
-        alert(data.message || 'Hotel deleted successfully')
-      } else {
-        alert('Error deleting hotel: ' + (data.error || 'Unknown error'))
-      }
-    } catch (error) {
+      await fetchHotels()
+      alert(data.message || 'Hotel deleted successfully')
+    } catch (error: any) {
       console.error('Error deleting hotel:', error)
       alert('Error deleting hotel. Please try again.')
+      handleApiError(error)
     }
   }
 

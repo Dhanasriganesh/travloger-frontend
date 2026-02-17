@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import { fetchApi, handleApiError } from '../../../lib/api'
 
 interface PricingPageProps {
   itinerary: any
@@ -49,50 +50,39 @@ const PricingPage: React.FC<PricingPageProps> = ({ itinerary }) => {
   useEffect(() => {
     const fetchData = async () => {
       if (!itinerary?.id) return
-      
+
       try {
         setLoading(true)
         console.log('🚀 Starting super optimized data fetch for itinerary:', itinerary.id)
-        
+
         // Parallel fetch: itinerary data, days data, and ALL events simultaneously
-        const [itineraryRes, daysRes, eventsRes, hotelsRes] = await Promise.all([
-          fetch(`/api/itineraries/${itinerary.id}`),
-          fetch(`/api/itineraries/${itinerary.id}/days`),
-          fetch(`/api/itineraries/${itinerary.id}/events`), // New optimized endpoint
-          fetch('/api/hotels')
+        const [itineraryData, daysData, eventsData, hotelsData] = await Promise.all([
+          fetchApi(`/api/itineraries/${itinerary.id}`),
+          fetchApi(`/api/itineraries/${itinerary.id}/days`),
+          fetchApi(`/api/itineraries/${itinerary.id}/events`), // New optimized endpoint
+          fetchApi('/api/hotels')
         ])
-        
+
         // Process itinerary data
-        if (itineraryRes.ok) {
-          const itineraryData = await itineraryRes.json()
-          if (itineraryData.itinerary?.pricing_data) {
-            const savedPricingData = typeof itineraryData.itinerary.pricing_data === 'string' 
-              ? JSON.parse(itineraryData.itinerary.pricing_data) 
-              : itineraryData.itinerary.pricing_data
-            setPricingData(prev => ({ ...prev, ...savedPricingData }))
-          }
-        }
-        
-        // Process days data
-        if (daysRes.ok) {
-          const daysData = await daysRes.json()
-          setDays(daysData.days || [])
-        }
-        
-        // Process events data (single optimized query)
-        if (eventsRes.ok) {
-          const eventsData = await eventsRes.json()
-          setEvents(eventsData.events || [])
-          console.log('✅ Loaded', eventsData.count || 0, 'events in single query')
+        if (itineraryData.itinerary?.pricing_data) {
+          const savedPricingData = typeof itineraryData.itinerary.pricing_data === 'string'
+            ? JSON.parse(itineraryData.itinerary.pricing_data)
+            : itineraryData.itinerary.pricing_data
+          setPricingData(prev => ({ ...prev, ...savedPricingData }))
         }
 
-        if (hotelsRes.ok) {
-          const hotelsData = await hotelsRes.json()
-          setHotels(hotelsData.hotels || [])
-        }
-        
+        // Process days data
+        setDays(daysData.days || [])
+
+        // Process events data (single optimized query)
+        setEvents(eventsData.events || [])
+        console.log('✅ Loaded', eventsData.count || 0, 'events in single query')
+
+        setHotels(hotelsData.hotels || [])
+
       } catch (error) {
         console.error('❌ Error fetching pricing data:', error)
+        handleApiError(error)
       } finally {
         setLoading(false)
         console.log('🏁 Super optimized data fetch completed')
@@ -109,13 +99,12 @@ const PricingPage: React.FC<PricingPageProps> = ({ itinerary }) => {
         .map(e => (typeof e.event_data === 'string' ? JSON.parse(e.event_data) : e.event_data))
         .filter(ed => ed && ed.hotelName)
         .map(ed => ed.hotelName as string)
-      const uniqueHotelIds = Array.from(new Set(hotelNames.map(name => hotels.find(h => h.name === name)?.id).filter(Boolean))) as (string|number)[]
+      const uniqueHotelIds = Array.from(new Set(hotelNames.map(name => hotels.find(h => h.name === name)?.id).filter(Boolean))) as (string | number)[]
       const missing = uniqueHotelIds.filter(id => hotelRatesByHotel[id as any] === undefined)
       if (missing.length === 0) return
       const results = await Promise.all(missing.map(async (id) => {
         try {
-          const res = await fetch(`/api/hotel-rates?hotelId=${id}`)
-          const data = await res.json().catch(() => ({}))
+          const data = await fetchApi(`/api/hotel-rates?hotelId=${id}`).catch(() => ({}))
           return [id, data.rates || []] as const
         } catch {
           return [id, []] as const
@@ -134,7 +123,7 @@ const PricingPage: React.FC<PricingPageProps> = ({ itinerary }) => {
     if (!start || !end) return 1
     const s = new Date(start)
     const e = new Date(end)
-    const diff = Math.ceil((e.getTime() - s.getTime()) / (1000*60*60*24))
+    const diff = Math.ceil((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24))
     return diff > 0 ? diff : 1
   }
 
@@ -144,9 +133,9 @@ const PricingPage: React.FC<PricingPageProps> = ({ itinerary }) => {
     let serviceId = 1
 
     events.forEach((event) => {
-      const eventData = event.event_data ? 
+      const eventData = event.event_data ?
         (typeof event.event_data === 'string' ? JSON.parse(event.event_data) : event.event_data) : {}
-      
+
       const day = days.find(d => d.id === event.day_id)
       const dayNumber = day?.day_number || 'Unknown'
 
@@ -175,7 +164,7 @@ const PricingPage: React.FC<PricingPageProps> = ({ itinerary }) => {
             const selected = matches[0]
             // Find which room count was chosen
             const rc = eventData.roomCounts || {}
-            const keyOrder = ['double','triple','single','quad','cwb','cnb']
+            const keyOrder = ['double', 'triple', 'single', 'quad', 'cwb', 'cnb']
             const pickedKey = keyOrder.find(k => {
               const v = rc[k === 'single' ? 'single' : k]
               return v && v !== '0'
@@ -205,7 +194,7 @@ const PricingPage: React.FC<PricingPageProps> = ({ itinerary }) => {
         const endTime = eventData.endTime || 'Not specified'
         const vehicleInfo = eventData.content ? ` - ${eventData.content}` : ''
         const price = typeof eventData.price === 'number' ? eventData.price : parseFloat(eventData.price) || 0
-        
+
         serviceItems.push({
           id: serviceId++,
           item: {
@@ -224,7 +213,7 @@ const PricingPage: React.FC<PricingPageProps> = ({ itinerary }) => {
         const startTime = eventData.startTime || 'Not specified'
         const endTime = eventData.endTime || 'Not specified'
         const price = typeof eventData.price === 'number' ? eventData.price : parseFloat(eventData.price) || 0
-        
+
         serviceItems.push({
           id: serviceId++,
           item: {
@@ -242,7 +231,7 @@ const PricingPage: React.FC<PricingPageProps> = ({ itinerary }) => {
         const date = eventData.date || 'Not specified'
         const mealType = eventData.mealType || 'Not specified'
         const price = typeof eventData.price === 'number' ? eventData.price : parseFloat(eventData.price) || 0
-        
+
         serviceItems.push({
           id: serviceId++,
           item: {
@@ -261,7 +250,7 @@ const PricingPage: React.FC<PricingPageProps> = ({ itinerary }) => {
         const fromDest = eventData.fromDestination || 'Not specified'
         const toDest = eventData.toDestination || 'Not specified'
         const price = typeof eventData.price === 'number' ? eventData.price : parseFloat(eventData.price) || 0
-        
+
         serviceItems.push({
           id: serviceId++,
           item: {
@@ -301,28 +290,20 @@ const PricingPage: React.FC<PricingPageProps> = ({ itinerary }) => {
   // Save pricing data to database
   const savePricingData = async () => {
     if (!itinerary?.id) return
-    
+
     try {
-      const response = await fetch(`/api/itineraries/${itinerary.id}`, {
+      await fetchApi(`/api/itineraries/${itinerary.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           pricingData: pricingData
         }),
       })
-      
-      if (response.ok) {
-        console.log('✅ Pricing data saved successfully')
-        alert('Pricing data updated successfully!')
-      } else {
-        const error = await response.json()
-        console.error('❌ Error saving pricing data:', error)
-        alert('Error saving pricing data: ' + error.error)
-      }
+
+      console.log('✅ Pricing data saved successfully')
+      alert('Pricing data updated successfully!')
     } catch (error: unknown) {
       console.error('❌ Error saving pricing data:', error)
+      handleApiError(error)
       const message =
         error instanceof Error
           ? error.message
@@ -353,7 +334,7 @@ const PricingPage: React.FC<PricingPageProps> = ({ itinerary }) => {
               {itinerary?.name || '8 DAYS ULTIMATE KERALA'}
             </h1>
             <p className="text-sm text-gray-600">
-              {itinerary?.destinations || 'Kerala, Munnar, Thekkady, Alleppey, Kovalam, Kanyakumari, Trivandrum, Cochin, Varkala'} - 
+              {itinerary?.destinations || 'Kerala, Munnar, Thekkady, Alleppey, Kovalam, Kanyakumari, Trivandrum, Cochin, Varkala'} -
               Adult: {itinerary?.adults || 2} | Child: {itinerary?.children || 0}
             </p>
           </div>
@@ -415,7 +396,7 @@ const PricingPage: React.FC<PricingPageProps> = ({ itinerary }) => {
             )}
           </tbody>
         </table>
-        
+
         {/* Markup Summary */}
         <div className="bg-gray-50 px-4 py-3 border-t border-gray-200">
           <div className="flex justify-between items-center">
@@ -423,7 +404,7 @@ const PricingPage: React.FC<PricingPageProps> = ({ itinerary }) => {
               <span className="text-gray-600">Base Markup: {pricingData.baseMarkup}%</span>
               <span className="ml-4 text-gray-600">Extra Markup: ₹{pricingData.extraMarkup.toLocaleString()}</span>
             </div>
-            <button 
+            <button
               onClick={() => setShowMarkupModal(true)}
               className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
             >
@@ -492,59 +473,59 @@ const PricingPage: React.FC<PricingPageProps> = ({ itinerary }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             <div>
               <label htmlFor="cgst" className="block text-sm font-medium text-gray-700 mb-2">CGST %</label>
-              <input 
-                type="number" 
-                id="cgst" 
-                value={pricingData.cgst} 
+              <input
+                type="number"
+                id="cgst"
+                value={pricingData.cgst}
                 onChange={(e) => setPricingData(prev => ({ ...prev, cgst: parseFloat(e.target.value) || 0 }))}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               />
             </div>
             <div>
               <label htmlFor="sgst" className="block text-sm font-medium text-gray-700 mb-2">SGST %</label>
-              <input 
-                type="number" 
-                id="sgst" 
-                value={pricingData.sgst} 
+              <input
+                type="number"
+                id="sgst"
+                value={pricingData.sgst}
                 onChange={(e) => setPricingData(prev => ({ ...prev, sgst: parseFloat(e.target.value) || 0 }))}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               />
             </div>
             <div>
               <label htmlFor="igst" className="block text-sm font-medium text-gray-700 mb-2">IGST %</label>
-              <input 
-                type="number" 
-                id="igst" 
-                value={pricingData.igst} 
+              <input
+                type="number"
+                id="igst"
+                value={pricingData.igst}
                 onChange={(e) => setPricingData(prev => ({ ...prev, igst: parseFloat(e.target.value) || 0 }))}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               />
             </div>
             <div>
               <label htmlFor="tcs" className="block text-sm font-medium text-gray-700 mb-2">TCS %</label>
-              <input 
-                type="number" 
-                id="tcs" 
-                value={pricingData.tcs} 
+              <input
+                type="number"
+                id="tcs"
+                value={pricingData.tcs}
                 onChange={(e) => setPricingData(prev => ({ ...prev, tcs: parseFloat(e.target.value) || 0 }))}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               />
             </div>
             <div>
               <label htmlFor="discount" className="block text-sm font-medium text-gray-700 mb-2">Discount</label>
-              <input 
-                type="number" 
-                id="discount" 
-                value={pricingData.discount} 
+              <input
+                type="number"
+                id="discount"
+                value={pricingData.discount}
                 onChange={(e) => setPricingData(prev => ({ ...prev, discount: parseFloat(e.target.value) || 0 }))}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               />
             </div>
             <div>
               <label htmlFor="price-in" className="block text-sm font-medium text-gray-700 mb-2">Price In:</label>
-              <select 
-                id="price-in" 
-                value={pricingData.priceIn || 'INR'} 
+              <select
+                id="price-in"
+                value={pricingData.priceIn || 'INR'}
                 onChange={(e) => setPricingData(prev => ({ ...prev, priceIn: e.target.value }))}
                 className="w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
               >
@@ -562,7 +543,7 @@ const PricingPage: React.FC<PricingPageProps> = ({ itinerary }) => {
 
       {/* Update Billing Button */}
       <div className="mt-6 flex justify-end">
-        <button 
+        <button
           onClick={savePricingData}
           className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
         >
