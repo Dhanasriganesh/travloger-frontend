@@ -62,6 +62,7 @@ interface TripOption {
     briefItinerary: TripDay[]
     keyAttractions: string[]
     inclusions: string[]
+    showInclusions?: boolean
   }
   features?: FeatureTag[]
 }
@@ -120,6 +121,7 @@ interface FAQContent {
 interface USPContent {
   heading: string
   subheading?: string
+  ctaText?: string
   items: {
     id: string
     title: string
@@ -154,11 +156,18 @@ interface AccommodationContent {
 
 // Removed advanced sections (USP, FAQ, GroupCTA) from editor to reduce confusion
 
+/** Enquiry form header image ratios (width:height) for tooltips */
+const ENQUIRY_FORM_IMAGE_RATIO_DESKTOP = '3:1'
+const ENQUIRY_FORM_IMAGE_RATIO_MOBILE = '1:1'
+const ENQUIRY_FORM_IMAGE_TOOLTIP_DESKTOP = `Recommended ratio: ${ENQUIRY_FORM_IMAGE_RATIO_DESKTOP} (e.g. 1200×400 px)`
+const ENQUIRY_FORM_IMAGE_TOOLTIP_MOBILE = `Recommended ratio: ${ENQUIRY_FORM_IMAGE_RATIO_MOBILE} (e.g. 600×600 px)`
+
 interface ContactContent {
   email: string
   phone: string
   address: string
   formBackgroundImageUrl?: string
+  formBackgroundImageUrlMobile?: string
   whatsapp?: string
   expertButtonText?: string
 }
@@ -276,7 +285,8 @@ const WebsiteEdit: React.FC = () => {
     email: 'info@example.com',
     phone: '+1 555-0100',
     address: '123 Main St, City, Country',
-    formBackgroundImageUrl: ''
+    formBackgroundImageUrl: '',
+    formBackgroundImageUrlMobile: ''
   })
 
   const [accommodation, setAccommodation] = useState<AccommodationContent>({
@@ -363,6 +373,7 @@ const WebsiteEdit: React.FC = () => {
   const [usp, setUsp] = useState<USPContent>({
     heading: 'Why Travloger is trusted by thousands?',
     subheading: '',
+    ctaText: 'Ready to experience Kashmir like never before?',
     items: [
       {
         id: '1',
@@ -566,7 +577,8 @@ const WebsiteEdit: React.FC = () => {
           email: 'info@example.com',
           phone: '+1 555-0100',
           address: '123 Main St, City, Country',
-          formBackgroundImageUrl: ''
+          formBackgroundImageUrl: '',
+          formBackgroundImageUrlMobile: ''
         })
         setAccommodation(data.accommodation ?? {
           heading: "What You See Is Where You'll Stay. Literally.",
@@ -630,6 +642,7 @@ const WebsiteEdit: React.FC = () => {
         setUsp({
           heading: data.usp?.heading || 'Why Travloger is trusted by thousands?',
           subheading: data.usp?.subheading || '',
+          ctaText: data.usp?.ctaText || 'Ready to experience Kashmir like never before?',
           items: mergedUspItems
         })
         setBrands(data.brands ?? {
@@ -1499,27 +1512,61 @@ const WebsiteEdit: React.FC = () => {
                 />
               </div>
 
-              <div className="md:col-span-2">
+              <div className="md:col-span-2 space-y-4">
                 <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Enquiry Form Background Image</label>
+                {/* Desktop image */}
                 <div className="flex items-center gap-4">
                   {contact.formBackgroundImageUrl && (
-                    <div className="relative w-20 h-12 rounded border border-gray-300 overflow-hidden">
-                      <Image src={contact.formBackgroundImageUrl} alt="Form BG" fill className="object-cover" unoptimized />
+                    <div className="relative w-20 h-12 rounded border border-gray-300 overflow-hidden flex-shrink-0">
+                      <Image src={contact.formBackgroundImageUrl} alt="Form BG Desktop" fill className="object-cover" unoptimized />
                     </div>
                   )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0]
-                      if (file) {
-                        await handleImageUpload(file, (url) => {
-                          setContact(prev => ({ ...prev, formBackgroundImageUrl: url }))
-                        })
-                      }
-                    }}
-                    className="flex-1 text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 bg-white text-black"
-                  />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] text-gray-400 block mb-0.5" title={ENQUIRY_FORM_IMAGE_TOOLTIP_DESKTOP}>
+                      Desktop: ratio {ENQUIRY_FORM_IMAGE_RATIO_DESKTOP} (e.g. 1200×400 px)
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      title={ENQUIRY_FORM_IMAGE_TOOLTIP_DESKTOP}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          await handleImageUpload(file, (url) => {
+                            setContact(prev => ({ ...prev, formBackgroundImageUrl: url }))
+                          })
+                        }
+                      }}
+                      className="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 bg-white text-black"
+                    />
+                  </div>
+                </div>
+                {/* Mobile image (optional) */}
+                <div className="flex items-center gap-4">
+                  {contact.formBackgroundImageUrlMobile && (
+                    <div className="relative w-12 h-12 rounded border border-gray-300 overflow-hidden flex-shrink-0">
+                      <Image src={contact.formBackgroundImageUrlMobile} alt="Form BG Mobile" fill className="object-cover" unoptimized />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] text-gray-400 block mb-0.5" title={ENQUIRY_FORM_IMAGE_TOOLTIP_MOBILE}>
+                      Mobile (optional): ratio {ENQUIRY_FORM_IMAGE_RATIO_MOBILE} (e.g. 600×600 px)
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      title={ENQUIRY_FORM_IMAGE_TOOLTIP_MOBILE}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          await handleImageUpload(file, (url) => {
+                            setContact(prev => ({ ...prev, formBackgroundImageUrlMobile: url }))
+                          })
+                        }
+                      }}
+                      className="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 bg-white text-black"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -1909,7 +1956,8 @@ const WebsiteEdit: React.FC = () => {
                           { day: 1, title: '', description: '' }
                         ],
                         keyAttractions: [],
-                        inclusions: []
+                        inclusions: [],
+                        showInclusions: true
                       },
                       features: [
                         { name: 'Sightseeing', icon: 'default' as const, included: true },
@@ -2443,7 +2491,31 @@ const WebsiteEdit: React.FC = () => {
 
                             {/* Inclusions */}
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Inclusions</label>
+                              <div className="flex items-center justify-between mb-2">
+                                <label className="block text-sm font-medium text-gray-700">Inclusions</label>
+                                <label className="flex items-center gap-2 text-sm text-gray-600">
+                                  <input
+                                    type="checkbox"
+                                    checked={trip.detailedItinerary?.showInclusions !== false}
+                                    onChange={(e) => {
+                                      const newTrips = [...(tripOptions.customTrips || [])]
+                                      newTrips[tripIndex] = {
+                                        ...trip,
+                                        detailedItinerary: {
+                                          subtitle: trip.detailedItinerary?.subtitle || '',
+                                          briefItinerary: trip.detailedItinerary?.briefItinerary || [],
+                                          keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                          inclusions: trip.detailedItinerary?.inclusions || [],
+                                          showInclusions: e.target.checked
+                                        }
+                                      }
+                                      setTripOptions({ ...tripOptions, customTrips: newTrips })
+                                    }}
+                                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                  />
+                                  <span>Show Inclusions Section</span>
+                                </label>
+                              </div>
                               <div className="space-y-2">
                                 {(trip.detailedItinerary?.inclusions || []).map((inclusion, inclusionIndex) => (
                                   <div key={inclusionIndex} className="flex gap-2 items-center">
@@ -2460,7 +2532,8 @@ const WebsiteEdit: React.FC = () => {
                                             subtitle: trip.detailedItinerary?.subtitle || '',
                                             briefItinerary: trip.detailedItinerary?.briefItinerary || [],
                                             keyAttractions: trip.detailedItinerary?.keyAttractions || [],
-                                            inclusions: newInclusions
+                                            inclusions: newInclusions,
+                                            showInclusions: trip.detailedItinerary?.showInclusions !== false
                                           }
                                         }
                                         setTripOptions({ ...tripOptions, customTrips: newTrips })
@@ -2478,7 +2551,8 @@ const WebsiteEdit: React.FC = () => {
                                             subtitle: trip.detailedItinerary?.subtitle || '',
                                             briefItinerary: trip.detailedItinerary?.briefItinerary || [],
                                             keyAttractions: trip.detailedItinerary?.keyAttractions || [],
-                                            inclusions: newInclusions
+                                            inclusions: newInclusions,
+                                            showInclusions: trip.detailedItinerary?.showInclusions !== false
                                           }
                                         }
                                         setTripOptions({ ...tripOptions, customTrips: newTrips })
@@ -2499,7 +2573,8 @@ const WebsiteEdit: React.FC = () => {
                                         subtitle: trip.detailedItinerary?.subtitle || '',
                                         briefItinerary: trip.detailedItinerary?.briefItinerary || [],
                                         keyAttractions: trip.detailedItinerary?.keyAttractions || [],
-                                        inclusions: newInclusions
+                                        inclusions: newInclusions,
+                                        showInclusions: trip.detailedItinerary?.showInclusions !== false
                                       }
                                     }
                                     setTripOptions({ ...tripOptions, customTrips: newTrips })
@@ -2647,7 +2722,8 @@ const WebsiteEdit: React.FC = () => {
                           { day: 1, title: '', description: '' }
                         ],
                         keyAttractions: [],
-                        inclusions: []
+                        inclusions: [],
+                        showInclusions: true
                       },
                       features: [
                         { name: 'Sightseeing', icon: 'default' as const, included: true },
@@ -3181,7 +3257,31 @@ const WebsiteEdit: React.FC = () => {
 
                             {/* Inclusions */}
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Inclusions</label>
+                              <div className="flex items-center justify-between mb-2">
+                                <label className="block text-sm font-medium text-gray-700">Inclusions</label>
+                                <label className="flex items-center gap-2 text-sm text-gray-600">
+                                  <input
+                                    type="checkbox"
+                                    checked={trip.detailedItinerary?.showInclusions !== false}
+                                    onChange={(e) => {
+                                      const newTrips = [...(tripOptions.groupTrips || [])]
+                                      newTrips[tripIndex] = {
+                                        ...trip,
+                                        detailedItinerary: {
+                                          subtitle: trip.detailedItinerary?.subtitle || '',
+                                          briefItinerary: trip.detailedItinerary?.briefItinerary || [],
+                                          keyAttractions: trip.detailedItinerary?.keyAttractions || [],
+                                          inclusions: trip.detailedItinerary?.inclusions || [],
+                                          showInclusions: e.target.checked
+                                        }
+                                      }
+                                      setTripOptions({ ...tripOptions, groupTrips: newTrips })
+                                    }}
+                                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                  />
+                                  <span>Show Inclusions Section</span>
+                                </label>
+                              </div>
                               <div className="space-y-2">
                                 {(trip.detailedItinerary?.inclusions || []).map((inclusion, inclusionIndex) => (
                                   <div key={inclusionIndex} className="flex gap-2 items-center">
@@ -3701,6 +3801,19 @@ const WebsiteEdit: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Bottom CTA Text
+                  </label>
+                  <input
+                    type="text"
+                    value={usp.ctaText || ''}
+                    onChange={(e) => setUsp(prev => ({ ...prev, ctaText: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black"
+                    placeholder="Ready to experience Kashmir like never before?"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">This text appears at the bottom of the USP section</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Select USP Item to Edit
                   </label>
                   <select
@@ -3822,6 +3935,17 @@ const WebsiteEdit: React.FC = () => {
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                     placeholder="Brands Who've Worked with Us"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Subheading</label>
+                  <input
+                    type="text"
+                    value={brands.subheading || ''}
+                    onChange={(e) => setBrands({ ...brands, subheading: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
+                    placeholder="Corporate clients who trust Travloger for their offsites & escapes"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">This text appears below the brand logos</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
