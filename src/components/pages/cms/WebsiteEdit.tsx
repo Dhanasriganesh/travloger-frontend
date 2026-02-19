@@ -152,6 +152,8 @@ interface AccommodationContent {
   heading: string
   stockImage: string
   realImage: string
+  promiseText?: string
+  getText?: string
 }
 
 // Removed advanced sections (USP, FAQ, GroupCTA) from editor to reduce confusion
@@ -292,7 +294,9 @@ const WebsiteEdit: React.FC = () => {
   const [accommodation, setAccommodation] = useState<AccommodationContent>({
     heading: "What You See Is Where You'll Stay. Literally.",
     stockImage: '',
-    realImage: ''
+    realImage: '',
+    promiseText: 'What they promise',
+    getText: 'What you get'
   })
 
   const [header, setHeader] = useState<HeaderContent>({
@@ -583,7 +587,9 @@ const WebsiteEdit: React.FC = () => {
         setAccommodation(data.accommodation ?? {
           heading: "What You See Is Where You'll Stay. Literally.",
           stockImage: '',
-          realImage: ''
+          realImage: '',
+          promiseText: 'What they promise',
+          getText: 'What you get'
         })
         setReviews(data.reviews ?? {
           heading: 'Unfiltered Reviews',
@@ -1774,51 +1780,77 @@ const WebsiteEdit: React.FC = () => {
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
                 />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Stock Image (What they promise)</label>
-                  <div className="space-y-3">
-                    {accommodation.stockImage && (
-                      <div className="relative w-full h-40 rounded-lg border border-gray-300 overflow-hidden bg-gray-50">
-                        <Image src={accommodation.stockImage} alt="Stock" fill className="object-cover" unoptimized />
-                      </div>
-                    )}
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Promise Text Label</label>
                     <input
-                      type="file"
-                      accept="image/*"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0]
-                        if (file) {
-                          await handleImageUpload(file, (url) => {
-                            setAccommodation(prev => ({ ...prev, stockImage: url }))
-                          })
-                        }
-                      }}
-                      className="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      type="text"
+                      value={accommodation.promiseText || 'What they promise'}
+                      onChange={(e) => setAccommodation(prev => ({ ...prev, promiseText: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
+                      placeholder="What they promise"
                     />
+                    <p className="text-xs text-gray-500 mt-1">Text displayed on the stock image</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Get Text Label</label>
+                    <input
+                      type="text"
+                      value={accommodation.getText || 'What you get'}
+                      onChange={(e) => setAccommodation(prev => ({ ...prev, getText: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-black bg-white"
+                      placeholder="What you get"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Text displayed on the real image</p>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Real Image (What you get)</label>
-                  <div className="space-y-3">
-                    {accommodation.realImage && (
-                      <div className="relative w-full h-40 rounded-lg border border-gray-300 overflow-hidden bg-gray-50">
-                        <Image src={accommodation.realImage} alt="Real" fill className="object-cover" unoptimized />
-                      </div>
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0]
-                        if (file) {
-                          await handleImageUpload(file, (url) => {
-                            setAccommodation(prev => ({ ...prev, realImage: url }))
-                          })
-                        }
-                      }}
-                      className="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Stock Image</label>
+                    <div className="space-y-3">
+                      {accommodation.stockImage && (
+                        <div className="relative w-full h-40 rounded-lg border border-gray-300 overflow-hidden bg-gray-50">
+                          <Image src={accommodation.stockImage} alt="Stock" fill className="object-cover" unoptimized />
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            await handleImageUpload(file, (url) => {
+                              setAccommodation(prev => ({ ...prev, stockImage: url }))
+                            })
+                          }
+                        }}
+                        className="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Real Image</label>
+                    <div className="space-y-3">
+                      {accommodation.realImage && (
+                        <div className="relative w-full h-40 rounded-lg border border-gray-300 overflow-hidden bg-gray-50">
+                          <Image src={accommodation.realImage} alt="Real" fill className="object-cover" unoptimized />
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            await handleImageUpload(file, (url) => {
+                              setAccommodation(prev => ({ ...prev, realImage: url }))
+                            })
+                          }
+                        }}
+                        className="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
