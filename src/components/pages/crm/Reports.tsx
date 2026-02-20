@@ -2,8 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { fetchApi, handleApiError } from '../../../lib/api'
 import ErrorBoundary from '../../ErrorBoundary'
 
-type SectionType = 'leads' | 'payments' | 'bookings' | 'expenses' | 'profit'
+type SectionType = 'leads' | 'payments' | 'bookings' | 'expenses' | 'profit' | 'engagement'
 type LocationType = 'all' | 'Kashmir' | 'Ladakh' | 'Kerala' | 'Gokarna' | 'Meghalaya' | 'Mysore' | 'Singapore' | 'Hyderabad' | 'Bengaluru' | 'Manali'
+
+type EngagementReport = {
+  by_landing_page: { landing_page: string; total_seconds: number; unique_sessions: number; event_count: number }[]
+  by_section: { landing_page_section: string; total_seconds: number; unique_sessions: number; event_count: number }[]
+  filters?: { landing_page?: string; start_date?: string; end_date?: string }
+}
 
 const Reports: React.FC = () => {
   const [selectedLocation, setSelectedLocation] = useState<LocationType>('all')
@@ -11,6 +17,7 @@ const Reports: React.FC = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>('all')
   const [selectedYear, setSelectedYear] = useState<string>('all')
   const [reportData, setReportData] = useState<any[]>([])
+  const [engagementReport, setEngagementReport] = useState<EngagementReport | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
   const [generatingReport, setGeneratingReport] = useState<boolean>(false)
   const [analytics, setAnalytics] = useState<any>(null)
@@ -19,40 +26,51 @@ const Reports: React.FC = () => {
   const fetchReportData = useCallback(async () => {
     setLoading(true)
     try {
+      if (selectedSection === 'engagement') {
+        setReportData([])
+        setAnalytics(null)
+        const params = new URLSearchParams()
+        if (selectedLocation !== 'all') {
+          params.set('landing_page', selectedLocation.toLowerCase())
+        }
+        if (selectedMonth !== 'all' || selectedYear !== 'all') {
+          const year = selectedYear !== 'all' ? parseInt(selectedYear) : new Date().getFullYear()
+          const month = selectedMonth !== 'all' ? parseInt(selectedMonth) : 1
+          if (selectedMonth !== 'all') {
+            params.set('start_date', new Date(year, month - 1, 1).toISOString().split('T')[0])
+            params.set('end_date', new Date(year, month, 0).toISOString().split('T')[0])
+          } else {
+            params.set('start_date', new Date(year, 0, 1).toISOString().split('T')[0])
+            params.set('end_date', new Date(year, 11, 31).toISOString().split('T')[0])
+          }
+        }
+        const data = await fetchApi(`/api/engagement/report?${params.toString()}`)
+        setEngagementReport(data || null)
+        return
+      }
+
+      setEngagementReport(null)
       const queryParams = new URLSearchParams()
-
-      // Add filters
       queryParams.append('section', selectedSection)
-
       if (selectedLocation !== 'all') {
         queryParams.append('destination', selectedLocation)
       }
-
-      // Convert month/year to date range if specified
       if (selectedMonth !== 'all' || selectedYear !== 'all') {
         const year = selectedYear !== 'all' ? parseInt(selectedYear) : new Date().getFullYear()
         const month = selectedMonth !== 'all' ? parseInt(selectedMonth) : 1
-
         if (selectedMonth !== 'all') {
-          const startDate = new Date(year, month - 1, 1).toISOString().split('T')[0]
-          const endDate = new Date(year, month, 0).toISOString().split('T')[0]
-          queryParams.append('start_date', startDate)
-          queryParams.append('end_date', endDate)
+          queryParams.append('start_date', new Date(year, month - 1, 1).toISOString().split('T')[0])
+          queryParams.append('end_date', new Date(year, month, 0).toISOString().split('T')[0])
         } else if (selectedYear !== 'all') {
-          const startDate = new Date(year, 0, 1).toISOString().split('T')[0]
-          const endDate = new Date(year, 11, 31).toISOString().split('T')[0]
-          queryParams.append('start_date', startDate)
-          queryParams.append('end_date', endDate)
+          queryParams.append('start_date', new Date(year, 0, 1).toISOString().split('T')[0])
+          queryParams.append('end_date', new Date(year, 11, 31).toISOString().split('T')[0])
         }
       }
 
       const data = await fetchApi(`/api/reports?${queryParams.toString()}`)
-
       if (data) {
         const rawData = data[selectedSection] || []
         setReportData(rawData)
-
-        // Fetch analytics
         const analyticsData = await fetchApi(`/api/reports/analytics?${queryParams.toString()}`)
         setAnalytics(analyticsData?.analytics || null)
       } else {
@@ -62,6 +80,7 @@ const Reports: React.FC = () => {
     } catch (error) {
       console.error('Error fetching report data:', handleApiError(error))
       setReportData([])
+      setEngagementReport(null)
       setAnalytics(null)
     } finally {
       setLoading(false)
@@ -140,6 +159,7 @@ const Reports: React.FC = () => {
             <p className="text-gray-600">Generate detailed reports based on location, section, and time period</p>
           </div>
           <div className="flex items-center space-x-2">
+            {selectedSection !== 'engagement' && (
             <button
               onClick={downloadExcelReport}
               disabled={generatingReport || reportData.length === 0}
@@ -159,6 +179,7 @@ const Reports: React.FC = () => {
                 </>
               )}
             </button>
+            )}
           </div>
         </div>
 
@@ -274,6 +295,7 @@ const Reports: React.FC = () => {
                 <option value="bookings">Bookings</option>
                 <option value="expenses">Expenses</option>
                 <option value="profit">Profit Analysis</option>
+                <option value="engagement">Engagement (Landing &amp; Sections)</option>
               </select>
             </div>
 
@@ -324,21 +346,100 @@ const Reports: React.FC = () => {
           <div className="mt-4 p-3 bg-gray-50 rounded-md">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">
-                <span className="font-medium">Report Summary:</span> {selectedSection.toUpperCase()} data for {selectedLocation === 'all' ? 'All Locations' : selectedLocation}
+                <span className="font-medium">Report Summary:</span>{' '}
+                {selectedSection === 'engagement'
+                  ? 'Engagement by landing page and section'
+                  : `${selectedSection.toUpperCase()} data for ${selectedLocation === 'all' ? 'All Locations' : selectedLocation}`}
                 {selectedMonth !== 'all' && ` in ${new Date(0, parseInt(selectedMonth) - 1).toLocaleString('default', { month: 'long' })}`}
                 {selectedYear !== 'all' && ` ${selectedYear}`}
               </div>
               <div className="text-sm font-medium text-gray-900">
-                {loading ? 'Loading...' : `${reportData.length} records found`}
+                {loading ? 'Loading...' : selectedSection === 'engagement'
+                  ? (engagementReport ? `${engagementReport.by_landing_page.length} pages, ${engagementReport.by_section.length} section rows` : 'No data')
+                  : `${reportData.length} records found`}
               </div>
             </div>
-            {!loading && reportData.length === 0 && (
+            {!loading && selectedSection !== 'engagement' && reportData.length === 0 && (
               <div className="mt-2 text-sm text-amber-600">
                 ⚠️ No data found for the selected filters. Try adjusting your location, month, or year selection.
               </div>
             )}
+            {!loading && selectedSection === 'engagement' && engagementReport && engagementReport.by_landing_page.length === 0 && engagementReport.by_section.length === 0 && (
+              <div className="mt-2 text-sm text-amber-600">
+                ⚠️ No engagement data yet. Data appears when users view landing pages and sections on Travloger.
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Engagement Report (by landing page & section) */}
+        {selectedSection === 'engagement' && engagementReport && (
+          <div className="mt-4 space-y-4">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-gray-700">
+              <strong>Note:</strong> Engagement is tracked by <strong>anonymous session</strong> (no username). Each visitor gets a session ID. To see which <strong>section</strong> gets the most attention, use the <strong>By section</strong> table below — rows are sorted by <strong>Total sec</strong> (highest first), so the section at the top is where users spend the most time.
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white shadow rounded-lg">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-medium text-gray-900">By landing page</h3>
+                  <p className="text-sm text-gray-600">Total time and sessions per page</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Landing page</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total sec</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Sessions</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Events</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {engagementReport.by_landing_page.map((row, i) => (
+                        <tr key={i}>
+                          <td className="px-4 py-2 text-sm text-gray-900">{row.landing_page || '—'}</td>
+                          <td className="px-4 py-2 text-sm text-gray-900 text-right">{row.total_seconds}</td>
+                          <td className="px-4 py-2 text-sm text-gray-900 text-right">{row.unique_sessions}</td>
+                          <td className="px-4 py-2 text-sm text-gray-900 text-right">{row.event_count}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="bg-white shadow rounded-lg">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-medium text-gray-900">By section</h3>
+                  <p className="text-sm text-gray-600">Sorted by total time (most engaged section first). Page:section e.g. ladakh:reviews</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Page : Section</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total sec</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Sessions</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Events</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {[...engagementReport.by_section]
+                        .sort((a, b) => (b.total_seconds || 0) - (a.total_seconds || 0))
+                        .map((row, i) => (
+                          <tr key={i}>
+                            <td className="px-4 py-2 text-sm text-gray-900">{row.landing_page_section || '—'}</td>
+                            <td className="px-4 py-2 text-sm text-gray-900 text-right font-medium">{row.total_seconds}</td>
+                            <td className="px-4 py-2 text-sm text-gray-900 text-right">{row.unique_sessions}</td>
+                            <td className="px-4 py-2 text-sm text-gray-900 text-right">{row.event_count}</td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Data Preview */}
         {reportData.length > 0 && (
